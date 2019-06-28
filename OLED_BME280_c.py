@@ -52,7 +52,7 @@ print (bme280_data)
 #######################
 #def oledSetup():  too many globals for function at present
 # Raspberry Pi pin configuration:
-OLED_RST = 5     # on the PiOLED this pin isnt used
+OLED_RST = 4     # on the PiOLED this pin isnt used
 
 # 128x64 display with hardware I2C:
 disp = Adafruit_SSD1306.SSD1306_128_64(rst=OLED_RST, i2c_address=0x3D)
