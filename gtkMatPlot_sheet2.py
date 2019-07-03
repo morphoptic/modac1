@@ -78,9 +78,11 @@ class DataWindow(Gtk.Window):
         #self.listStore = Gtk.ListStore(str,float, float, float)
         self.treeview = Gtk.TreeView(model=self.listStore)
         for i in range( len(columnNames)) :
-            column = Gtk.TreeViewColumn(columnNames[i], Gtk.CellRendererText(),text=1)
-            column.set_min_width(80)
+            column = Gtk.TreeViewColumn(columnNames[i], Gtk.CellRendererText(),text=i)
+            column.set_min_width(100)
             column.set_alignment(0.5)
+            column.set_clickable(True)
+            column.connect("clicked", self.clickedColumn, i)
             self.treeview.append_column(column)
             
         self.getBMEData() # put one item in data
@@ -90,7 +92,7 @@ class DataWindow(Gtk.Window):
         sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         sw.set_vexpand(True)
         sw.add(self.treeview)
-        self.treeview.connect('row-activated', self.clickRow)
+        #self.treeview.connect('row-activated', self.clickRow)
         self.vbox.pack_start(sw, True, True, 0)
 
         # Matplotlib stuff
@@ -99,6 +101,8 @@ class DataWindow(Gtk.Window):
         self.canvas = FigureCanvas(self.fig)  # a Gtk.DrawingArea
         self.vbox.pack_start(self.canvas, True, True, 0)
         self.ax = self.fig.add_subplot(1,1,1)
+        
+        self.plotColumn = 1
         self.line, = self.ax.plot(self.times, self.temps)  # plot the first row
 
         #self.add_columns()
@@ -128,8 +132,8 @@ class DataWindow(Gtk.Window):
         it = self.listStore.append([timeStr,tStr,hStr,pStr])
         #it = self.listStore.append([timeStr,self.bme.temperature, self.bme.humidity, self.bme.pressure])
         #
-        self.printBMEData()
-        print("Row: ",self.listStore[it][0],self.listStore[it][1],self.listStore[it][2],self.listStore[it][3])
+        #self.printBMEData()
+        #print("Row: ",self.listStore[it][0],self.listStore[it][1],self.listStore[it][2],self.listStore[it][3])
         
     def printBMEData(self):
         #dateStr = self.bme.timestamp.strftime("Date  %Y-%m-%d") 
@@ -139,41 +143,59 @@ class DataWindow(Gtk.Window):
         pStr = 'Pressure:  %0.3f hPa'% self.bme.pressure
         print("BME: ",self.count, timeStr,tStr,hStr,pStr)
         
-    def plotTemp(self): #, treeview, path, view_column):
-        #self.line.set_ydata(self.dataModel.temps)
+    def plotTemp(self,widget): #, treeview, path, view_column):
+        self.plotColumn = 1
+        #self.line.set_ydata(self.temps)
+        #self.line.set_xdata(self.times)
+        self.ax.clear()
         self.line, = self.ax.plot(self.times, self.temps)  # plot the first row
         #_min = np.amin(self.dataModel.temps)
         _max = np.amax(self.temps)
         if _max < 35:
             _max = 35
-        self.ax.set_title('temperature')
+        self.ax.set_title('Ambient Temperature')
         self.ax.set_ylim(25,_max+_max*0.1)
         self.canvas.draw()
         
-    def plotHumid(self): #, treeview, path, view_column):
-        self.line.set_ydata(self.humid)
+    def plotHumid(self,widget): #, treeview, path, view_column):
+        #self.line.set_ydata(self.humid)
+        self.plotColumn=2
+        self.ax.clear()
+        self.line, = self.ax.plot(self.times, self.humid)  # plot the first row
+        self.ax.set_title('Humidity')
+        self.ax.set_ylim(30,100)
         self.canvas.draw()
         
-    def plotPressure(self): #, treeview, path, view_column):
-        self.line.set_ydata(self.press)
+    def plotPressure(self,widget): #, treeview, path, view_column):
+        #self.line.set_ydata(self.press)
+        self.plotColumn=3
+        self.ax.clear()
+        self.line, = self.ax.plot(self.times, self.press)  # plot the first row
+        self.ax.set_title('Pressure')
+        self.ax.set_ylim(960,1000)
         self.canvas.draw()
+        
+    def updatePlot(self):
+        if self.plotColumn == 1:
+            self.plotTemp(self.tempButton)
+        elif self.plotColumn == 2:
+            self.plotHumid(None)
+        else :
+            self.plotPressure(None)
         
     def getNextData(self):
         self.getBMEData()
-        self.plotTemp()
+        self.updatePlot()
         return True
 
     def printList(self,widget):
         for row in self.listStore :
             print(row[:])
-    def clickRow(self, treeview, path, view_column):
-        ind, = path  # get the index into data
-
-#    def add_columns(self):
-#        for i in self.model.columnNames:
-#            column = Gtk.TreeViewColumn(str(i), Gtk.CellRendererText(), text=i)
-#            self.treeview.append_column(column)
-
+    
+    def clickedColumn(self, treeCol, idx):
+        print("clicked column ", idx, columnNames[idx])
+        self.plotColumn = idx
+        self.updatePlot()
 
 
 manager = DataWindow()
