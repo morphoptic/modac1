@@ -1,6 +1,5 @@
 # MODAC Test OLED + BME280
 # displays CPU Stats and Ambient Env on OLED display
-intent is to change this to use the new moBME280 class, but not yet
 #
 # portions derived from stats.py from Adafruit_PythonSSD1306 Example stats.py
 # Copyright (c) 2017 Adafruit Industries
@@ -25,8 +24,8 @@ intent is to change this to use the new moBME280 class, but not yet
 # THE SOFTWARE.
 import time
 import datetime
-import moBME280
-
+import bme280
+import smbus2
 from time import sleep
 
 import Adafruit_GPIO.SPI as SPI
@@ -40,19 +39,18 @@ import subprocess
 
 #######################
 print ("OLED/BME280 Test")
-#i2cport = 1 
-#bme280Address = 0x77 # Adafruit BME280 address. Other BME280s may be different
-#i2cbus = smbus2.SMBus(i2cport)
-#calibration_params = bme280.load_calibration_params(i2cbus,bme280Address)
+i2cport = 1 
+bme280Address = 0x77 # Adafruit BME280 address. Other BME280s may be different
+i2cbus = smbus2.SMBus(i2cport)
+calibration_params = bme280.load_calibration_params(i2cbus,bme280Address)
 #sleep(1)
-#bme280_data = bme280.sample(i2cbus,bme280Address)
-bme = moBME()
+bme280_data = bme280.sample(i2cbus,bme280Address)
 print (bme280_data)
 
 #######################
 #def oledSetup():  too many globals for function at present
 # Raspberry Pi pin configuration:
-OLED_RST = 5     # on the PiOLED this pin isnt used
+OLED_RST = 4     # on the PiOLED this pin isnt used
 
 # 128x64 display with hardware I2C:
 disp = Adafruit_SSD1306.SSD1306_128_64(rst=OLED_RST, i2c_address=0x3D)
@@ -93,12 +91,12 @@ print("start forever loop")
 
 lineHeight = 9
 while True:
-    bme.read()
-    dateStr = bme.timestamp.strftime("Date  %Y-%m-%d") 
-    timeStr = bme.timestamp.strftime("Time: %H:%M:%S%Z") 
-    hStr = 'Humidity:  %0.3f %%rH'% bme.humidity
-    tStr = 'Temp:      %0.3f °C'%bme.temperature
-    pStr = 'Pressure:  %0.3f hPa'% bme.pressure
+    bme280_data = bme280.sample(i2cbus,bme280Address)
+    dateStr = bme280_data.timestamp.strftime("Date  %Y-%m-%d") 
+    timeStr = bme280_data.timestamp.strftime("Time: %H:%M:%S%Z") 
+    hStr = 'Humidity:  %0.3f %%rH'% bme280_data.humidity
+    tStr = 'Temp:      %0.3f °C'%bme280_data.temperature
+    pStr = 'Pressure:  %0.3f hPa'% bme280_data.pressure
     print(timeStr)
     print(hStr)
     print(tStr)
