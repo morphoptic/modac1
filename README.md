@@ -1,5 +1,12 @@
 #Morph Optics Data Acquistion (MODAC) Unit Tests
-This folder holds python tools for testing MODAC components
+This folder holds python tools for testing MODAC components. 
+Contents may vary over time with older versions moving to sub folder oldTests.
+Due to nature of Packages, some subfolders are used to create support libraries that are imported into tools
+MODAC_UnitTests contains the python scripts used for the Phase 1 demo/unit test proof of concepts
+
+Expect this to be reorganized early in Phase 2, where we combine various aspects into common code tool
+and explore other aspects such as multi-processing and communictation with local/remote UI.
+
 
 blinkgpio26: use gpio to toggle #26 (led or relay) - connected to relay power strip
 blinkgpio26: use gpiozero to toggle #26 (led or relay)
