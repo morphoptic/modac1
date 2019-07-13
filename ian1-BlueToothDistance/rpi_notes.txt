@@ -1,0 +1,33 @@
+Got Rasbian Stretch Lite
+https://www.raspberrypi.org/downloads/raspbian/
+
+Flashed SD card with balenaEthcer
+
+Followed this guide for getting WiFi connected and SSH enabled
+https://medium.com/@danidudas/install-raspbian-jessie-lite-and-setup-wi-fi-without-access-to-command-line-or-using-the-network-97f065af722e
+
+Put SD card in rPI, booted up, found IP through router, ssh'd in, changed password
+
+scp over script
+
+# Install pip
+https://pip.pypa.io/en/stable/installing/
+# This might be ugly cross installation, but needed pip3 
+sudo apt-get install python3-pip
+
+sudo pip install pexpect
+sudo pip3 install pexpect
+
+Install BlueZ
+https://learn.adafruit.com/install-bluez-on-the-raspberry-pi/installation
+
+Turn on leica and scan for it via hcitool
+sudo hcitool lescan
+
+# If no such device 
+sudo hciconfig hci0 up
+
+
+# Temp installation
+https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
+sudo pip3 --default-timeout=1000 install adafruit-circuitpython-max31855
