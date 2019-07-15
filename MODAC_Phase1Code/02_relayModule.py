@@ -1,8 +1,6 @@
 from gpiozero import OutputDevice
 from time import sleep
 
-sleepDelay = 0.5 # delay in seconds
-
 relay1 = OutputDevice(21,active_high=False)
 relay2 = OutputDevice(20,active_high=False)
 relay3 = OutputDevice(16,active_high=False)
@@ -15,17 +13,15 @@ relays = [relay1,relay2,relay3,relay4,relay5,relay6,relay7,relay8]
 
 for index in range(len(relays)):    
     relays[index].on()
-    sleep(sleepDelay)
+    sleep(1)
     relays[index].off()
-    sleep(sleepDelay)
+    sleep(1)
 
 for relay in relays:
     relay.on()
-    sleep(sleepDelay)
+    sleep(1)
     
 for relay in relays:
     relay.off()
-    sleep(sleepDelay)
-    
-print ("End of 02_relayModule unit test")
+    sleep(1)
     
