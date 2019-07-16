@@ -1,0 +1,41 @@
+Pin,GPIO,MODAC,WaveShareUse
+3,2,I2C SDA,NC
+5,3,I2C SCL,NC (I2C SCL)
+7,4,oled,NC
+29,5,powerOutlet,nc
+31,6,w,sensor?
+26,7,Relay_5,nc
+24,8,Relay_6,nc
+21,9,w,DOUT SPI data output
+19,10,w,DIN SPI data input
+23,11,w,SCK SPI clock
+32,12,Relay_4,nc
+33,13,w,sensor?
+8,14,Serial TXD,nc
+10,15,Serial RXD,nc
+36,16,Relay_3,nc
+11,17,w,"DRDY ADS1256 data ready, active low"
+12,18,w,RESET ADS1256 reset input
+35,19,w,sensor?
+38,20,Relay_2,nc
+40,21,Relay_1,nc
+15,22,w,"CS0 ADS1256 chip select, low active"
+16,23,w,"CS1 DAC8532 chip select, low active"
+18,24,Relay_8,nc
+22,25,Relay_7,nc
+37,26,w,sensor?
+13,27,w,"PDWN ADS1256 sync/power off input, low active"
+1,V3.3,,3.3V
+17,V3.3,,3.3V
+2,V5,,5V
+4,V5,,5V
+6,gnd,,GND
+9,gnd,,GND
+14,gnd,,GND
+20,gnd,,GND
+25,gnd,,GND
+30,gnd,,GND
+34,gnd,,GND
+39,gnd,,GND
+27,id_sc1,,id sc
+28,id_sc2,,id sc

@@ -1,0 +1,242 @@
+[
+    {
+        "MODAC": "I2C SDA",
+        "GPIO": "2",
+        "WaveShareUse": "NC",
+        "Pin": "3"
+    },
+    {
+        "MODAC": "I2C SCL",
+        "GPIO": "3",
+        "WaveShareUse": "NC (I2C SCL)",
+        "Pin": "5"
+    },
+    {
+        "MODAC": "oled",
+        "GPIO": "4",
+        "WaveShareUse": "NC",
+        "Pin": "7"
+    },
+    {
+        "MODAC": "powerOutlet",
+        "GPIO": "5",
+        "WaveShareUse": "nc",
+        "Pin": "29"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "6",
+        "WaveShareUse": "sensor?",
+        "Pin": "31"
+    },
+    {
+        "MODAC": "Relay_5",
+        "GPIO": "7",
+        "WaveShareUse": "nc",
+        "Pin": "26"
+    },
+    {
+        "MODAC": "Relay_6",
+        "GPIO": "8",
+        "WaveShareUse": "nc",
+        "Pin": "24"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "9",
+        "WaveShareUse": "DOUT SPI data output",
+        "Pin": "21"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "10",
+        "WaveShareUse": "DIN SPI data input",
+        "Pin": "19"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "11",
+        "WaveShareUse": "SCK SPI clock",
+        "Pin": "23"
+    },
+    {
+        "MODAC": "Relay_4",
+        "GPIO": "12",
+        "WaveShareUse": "nc",
+        "Pin": "32"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "13",
+        "WaveShareUse": "sensor?",
+        "Pin": "33"
+    },
+    {
+        "MODAC": "Serial TXD",
+        "GPIO": "14",
+        "WaveShareUse": "nc",
+        "Pin": "8"
+    },
+    {
+        "MODAC": "Serial RXD",
+        "GPIO": "15",
+        "WaveShareUse": "nc",
+        "Pin": "10"
+    },
+    {
+        "MODAC": "Relay_3",
+        "GPIO": "16",
+        "WaveShareUse": "nc",
+        "Pin": "36"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "17",
+        "WaveShareUse": "DRDY ADS1256 data ready, active low",
+        "Pin": "11"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "18",
+        "WaveShareUse": "RESET ADS1256 reset input",
+        "Pin": "12"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "19",
+        "WaveShareUse": "sensor?",
+        "Pin": "35"
+    },
+    {
+        "MODAC": "Relay_2",
+        "GPIO": "20",
+        "WaveShareUse": "nc",
+        "Pin": "38"
+    },
+    {
+        "MODAC": "Relay_1",
+        "GPIO": "21",
+        "WaveShareUse": "nc",
+        "Pin": "40"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "22",
+        "WaveShareUse": "CS0 ADS1256 chip select, low active",
+        "Pin": "15"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "23",
+        "WaveShareUse": "CS1 DAC8532 chip select, low active",
+        "Pin": "16"
+    },
+    {
+        "MODAC": "Relay_8",
+        "GPIO": "24",
+        "WaveShareUse": "nc",
+        "Pin": "18"
+    },
+    {
+        "MODAC": "Relay_7",
+        "GPIO": "25",
+        "WaveShareUse": "nc",
+        "Pin": "22"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "26",
+        "WaveShareUse": "sensor?",
+        "Pin": "37"
+    },
+    {
+        "MODAC": "w",
+        "GPIO": "27",
+        "WaveShareUse": "PDWN ADS1256 sync/power off input, low active",
+        "Pin": "13"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "V3.3",
+        "WaveShareUse": "3.3V",
+        "Pin": "1"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "V3.3",
+        "WaveShareUse": "3.3V",
+        "Pin": "17"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "V5",
+        "WaveShareUse": "5V",
+        "Pin": "2"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "V5",
+        "WaveShareUse": "5V",
+        "Pin": "4"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "6"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "9"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "14"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "20"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "25"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "30"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "34"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "gnd",
+        "WaveShareUse": "GND",
+        "Pin": "39"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "id_sc1",
+        "WaveShareUse": "id sc",
+        "Pin": "27"
+    },
+    {
+        "MODAC": "",
+        "GPIO": "id_sc2",
+        "WaveShareUse": "id sc",
+        "Pin": "28"
+    }
+]
