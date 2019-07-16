@@ -4,8 +4,6 @@ sudo apt-get -y update
 sudo apt-get -y upgrade
 sudo apt-get -y install build-essential checkinstall
 sudo apt-get install python-dev python3-dev
-#sudo apt-get -y install qt-5default
-#sudo apt-get -y install qtcreator
 #
 sudo apt-get -y install i2c-tools
 sudo apt-get -y install python3-gpiozero
@@ -20,7 +18,7 @@ sudo python3 -m pip install --upgrade pip setuptools wheel
 sudo pip3 install spidev
 sudo pip3 install smbus2
 sudo pip3 install adafruit-blinka
-sudo pip3 install adafruit-circuitpython-bme280
+#sudo pip3 install adafruit-circuitpython-bme280
 sudo pip3 install Rpi.bme280
 #sudo pip3 install Adafruit-SSD1306
 sudo pip3 install adafruit-circuitpython-ads1x15
@@ -30,4 +28,7 @@ sudo apt install -y libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-
 sudo pip3 install pycairo
 sudo pip3 install PyGObject
 sudo apt-get install glade
+#
+#sudo apt-get -y install qt-5default
+#sudo apt-get -y install qtcreator
 

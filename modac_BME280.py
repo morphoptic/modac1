@@ -1,7 +1,15 @@
-# moBME280 class wrapper over Adafruit BME280
-import bme280
-import smbus2
+# moBME280 class wrapper over Adafruit BME280 I2C temp-humidity-pressure
+# err this does NOT use adafruit code, just hardware
+# i think it uses Rpi.bme280  https://github.com/rm-hull/bme280
+# adafruit library does not use gpioZero
+# hopefully there isnt a conflict
+#import gpiozero
+import logging, logging.handlers
+import sys
 from time import sleep
+#
+import smbus2
+import bme280
 
 class moBME280:
     """Morphoptic class to read BME280 Temp/Humidity/Pressure Sensor"""
@@ -29,16 +37,72 @@ class moBME280:
         string= "{:.3f} %rH {:.3f}°C {:.3f} hPa".format(self.humidity, self.temperature, self.pressure)
         return string
 
-if __name__ == "__main__":
-    print("MorpOptics BME280 Sensor class test")
-    bme = moBME280()
+__modacBME280 = None
 
-    while True:
-        bme.read()
-        hStr = 'Humidity: %0.3f %%rH '% bme.humidity
-        tStr = 'Temp: %0.3f °C '%bme.temperature
-        pStr = 'Pressure: %0.3f hPa' % bme.pressure
-        print(bme.timestamp,": ",hStr, tStr, pStr)
+def init():
+    global __modacBME280
+    logging.info("modac_BME280.init")
+    __modacBME280 = moBME280()
+    update()
+
+def update():
+    __modacBME280.read()
+
+def temperature():
+    if not isinstance(__modacBME280.temperature, float):
+        logging.warn("bme280 temp is not a float")
+        return 0.0
+    return __modacBME280.temperature
+
+def humidity():
+    if not isinstance(__modacBME280.humidity, float):
+        logging.warn("bme280 humidity is not a float")
+        return 0.0
+    return __modacBME280.humidity
+
+def pressure():
+    if not isinstance(__modacBME280.pressure, float):
+        logging.warn("bme280 pressure is not a float")
+        return 0.0
+    return __modacBME280.pressure
+
+def timestamp():
+    return __modacBME280.timestamp
+
+def timestampStr():
+    return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
+
+def testBME280():
+    logging.info("test BME temp, pressure, humidity sensor")
+    print("test BME temp, pressure, humidity sensor")
+    for i in range(0,10):
+        update()
+        hStr = 'Humidity: %0.3f %%rH '% humidity()
+        tStr = 'Temp: %0.3f °C '% temperature()
+        pStr = 'Pressure: %0.3f hPa' % pressure()
+        timeStr = timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
+        msg = timeStr + hStr+tStr+pStr
+        #print(msg)
+        logging.info(msg)
         #print("alt :", bme)
         sleep(1)
+
+if __name__ == "__main__":
+    print("MorpOptics BME280 Sensor class stand alone test")
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)#, format=logFormatStr)
+    logging.captureWarnings(True)
+    logging.info("Logging Initialized for MO BME280 main unitTest")
+    init()
+    update()
+    
+    #while True:
+    for i in range(0,6):
+        testBME280()
+#        update()
+#        hStr = 'Humidity: %0.3f %%rH '% humidity()
+#        tStr = 'Temp: %0.3f °C '% temperature()
+#        pStr = 'Pressure: %0.3f hPa' % pressure()
+#        print(timestamp(),": ",hStr, tStr, pStr)
+#        #print("alt :", bme)
+#        sleep(1)
 
