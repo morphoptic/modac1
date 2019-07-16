@@ -72,6 +72,10 @@ def timestamp():
 def timestampStr():
     return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
 
+def getDataAsDict():
+    d = {"timestamp":timestamp(), "temperature":temperature(), "humidity":humidity(), "pressure":pressure()}
+    return d
+
 def testBME280():
     logging.info("test BME temp, pressure, humidity sensor")
     print("test BME temp, pressure, humidity sensor")
@@ -84,6 +88,7 @@ def testBME280():
         msg = timeStr + hStr+tStr+pStr
         #print(msg)
         logging.info(msg)
+        print(getDataAsDict())
         #print("alt :", bme)
         sleep(1)
 

@@ -161,7 +161,7 @@ class ADS1256:
         self.ADS1256_reset()
         id = self.ADS1256_ReadChipID()
         if id == 3 :
-            print("ID Read success  ")
+            print("ADS1256 ID Read success  ")
         else:
             print("ID Read failed   ")
             return -1

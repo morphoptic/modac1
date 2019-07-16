@@ -9,9 +9,10 @@ import gpiozero
 #others
 import modac_OutputDevices
 import modac_BME280
+import modac_AD24Bit
 
 loggerInit = False
-runTests = True
+runTests = False #True
 
 def modac_exit():
     logging.info("modac_exit")
@@ -24,7 +25,13 @@ def modac_testLogging():
         #print(i)
         logging.info("I is now %s",i)
         sleep(0.05)
-        
+
+def modac_getInputs():
+    bme_data = modac_BME280.getDataAsDict()
+    ad24Data = modac_AD24Bit.getAll0To5()
+    moData = {"bme":bme_data, "ad24":ad24Data}
+    return moData
+    
 #def testBME280():
 #    logging.info("test BME temp, pressure, humidity sensor")
 #    print("test BME temp, pressure, humidity sensor")
@@ -39,6 +46,14 @@ def modac_testLogging():
 #        logging.info(msg)
 #        #print("alt :", bme)
 #        sleep(1)
+
+def modac_eventLoop():
+    print("event Loop")
+    logging.info("Enter Event Loop")
+    modac_BME280.update()
+    modac_AD24Bit.update()
+    inputData = modac_getInputs()
+    print("moData",inputData)
 
 def modac_io_server():
     logging.info("start modac_io_server()")
@@ -56,11 +71,11 @@ def modac_io_server():
     try:
         if runTests == True:
             modac_OutputDevices.outDevice_testAll()
-            for i in range(0,6):
+            for i in range(0,2):
                 modac_BME280.testBME280()
                 
         #   run event loop
-        print("event Loop")
+        modac_eventLoop()
     except Exception as e:
         print("Exception somewhere in modac_io_server event loop. see log files")
         logging.error("Exception happened", exc_info=True)
@@ -81,7 +96,8 @@ def modac_initHardware():
     #    BME280
     modac_BME280.init()
     #    not oled, that is other tool
-    # modac_BLE_Laser.init()   
+    # modac_BLE_Laser.init()
+    modac_AD24Bit.init()
     
 def modac_argparse():
     """ parse command line arguments into global __modac_args """
