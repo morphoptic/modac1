@@ -6,10 +6,13 @@ import os
 import logging, logging.handlers
 import argparse
 import gpiozero
-#others
+import json
+
+# my stuff
 import modac_OutputDevices
 import modac_BME280
 import modac_AD24Bit
+import modac_ktype
 
 loggerInit = False
 runTests = False #True
@@ -26,10 +29,17 @@ def modac_testLogging():
         logging.info("I is now %s",i)
         sleep(0.05)
 
+__kTypeIdx= [6]
+
 def modac_getInputs():
     bme_data = modac_BME280.getDataAsDict()
     ad24Data = modac_AD24Bit.getAll0To5()
-    moData = {"bme":bme_data, "ad24":ad24Data}
+    temps = []
+    for i in __kTypeIdx:
+        t = modac_ktype.mVToC(ad24Data[i],modac_BME280.temperature())
+        print("ktype ", i, ad24Data[i],t )
+        temps.append(t)
+    moData = {"bme":bme_data, "ad24":ad24Data, "kTypes":temps}    
     return moData
     
 #def testBME280():
@@ -47,13 +57,26 @@ def modac_getInputs():
 #        #print("alt :", bme)
 #        sleep(1)
 
+
 def modac_eventLoop():
     print("event Loop")
     logging.info("Enter Event Loop")
     modac_BME280.update()
     modac_AD24Bit.update()
     inputData = modac_getInputs()
-    print("moData",inputData)
+    print("moData:",inputData)
+    test_json(inputData)
+
+def test_json(inputData):
+    print("------------ write JSON File modacData.json --------")
+    with open("modacData.json",'w') as jsonFile:
+        json.dump(inputData, jsonFile, indent=4)
+        
+    print("------------ read JSON File modacData --------")
+    with open("modacData.json",'r') as jsonFile:
+        data = json.load(jsonFile)
+        print("Read: ", data)
+        print("asJson: ", json.dumps(data, indent=4))
 
 def modac_io_server():
     logging.info("start modac_io_server()")

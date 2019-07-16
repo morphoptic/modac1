@@ -16,6 +16,7 @@ def init():
     logging.debug("ad24Bit init()")
     __ads1256 = ADS1256.ADS1256()
     __ads1256.ADS1256_init()
+
     
 def update():
     global __ads1256,__adsRaw,__ads0to5,__adsRawToV

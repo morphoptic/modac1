@@ -13,7 +13,8 @@ sudo apt-get -y install libffi-dev
 #
 sudo cp /usr/bin/pip3 /usr/bin/pip3.5
 sudo python3 -m pip install --upgrade pip setuptools wheel
-#sudo python3 -m pip install -U matplotlib
+sudo pip3 install numpy scipy
+sudo python3 -m pip install -U matplotlib
 #sudo pip3 install pyqtgraph
 sudo pip3 install spidev
 sudo pip3 install smbus2
@@ -31,4 +32,6 @@ sudo apt-get install glade
 #
 #sudo apt-get -y install qt-5default
 #sudo apt-get -y install qtcreator
+#
+sudo pip3 install thermocouples_reference scipy
 

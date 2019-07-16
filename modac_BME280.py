@@ -34,7 +34,7 @@ class moBME280:
     def __str__(self):
         self.read()
         #return "{0}: {1} z: {2} {3}".format(self.timestamp, self.temperature, self.humidity, self.pressure)
-        string= "{:.3f} %rH {:.3f}°C {:.3f} hPa".format(self.humidity, self.temperature, self.pressure)
+        string= self.timestamp.isoformat() + "{:.3f} %rH {:.3f}°C {:.3f} hPa".format(self.humidity, self.temperature, self.pressure)
         return string
 
 __modacBME280 = None
@@ -72,8 +72,11 @@ def timestamp():
 def timestampStr():
     return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
 
+def timestampISOStr():
+    return timestamp().isoformat()
+
 def getDataAsDict():
-    d = {"timestamp":timestamp(), "temperature":temperature(), "humidity":humidity(), "pressure":pressure()}
+    d = {"timestamp":timestampISOStr(), "temperature":temperature(), "humidity":humidity(), "pressure":pressure()}
     return d
 
 def testBME280():
@@ -88,7 +91,7 @@ def testBME280():
         msg = timeStr + hStr+tStr+pStr
         #print(msg)
         logging.info(msg)
-        print(getDataAsDict())
+        print("AsDict: ", getDataAsDict())
         #print("alt :", bme)
         sleep(1)
 
