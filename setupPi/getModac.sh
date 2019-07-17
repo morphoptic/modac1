@@ -13,8 +13,10 @@ sudo apt-get -y install libffi-dev
 #
 sudo cp /usr/bin/pip3 /usr/bin/pip3.5
 sudo python3 -m pip install --upgrade pip setuptools wheel
-sudo pip3 install numpy scipy
-sudo python3 -m pip install -U matplotlib
+#
+sudo apt install libatlas3-base
+sudo apt-get -y install python-numpy python-scipy python-matplotlib
+sudo python3 -m pip install -U matplotlib scipy numpy
 #sudo pip3 install pyqtgraph
 sudo pip3 install spidev
 sudo pip3 install smbus2
@@ -28,7 +30,7 @@ sudo pip3 install adafruit-circuitpython-ads1x15
 sudo apt install -y libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
 sudo pip3 install pycairo
 sudo pip3 install PyGObject
-sudo apt-get install glade
+sudo apt-get -y install glade
 #
 #sudo apt-get -y install qt-5default
 #sudo apt-get -y install qtcreator
