@@ -14,8 +14,77 @@ import modac_BME280
 import modac_AD24Bit
 import modac_ktype
 
+from pynng import Pub0, Sub0, Timeout
+
+
 loggerInit = False
 runTests = False #True
+address = 'tcp://127.0.0.1:31313'
+
+pub = None
+sub0 = None
+sub1 = None
+sub2 = None
+sub3 = None
+subscribers = []
+
+# msg topics
+topic_ktype = b'ktype'
+topic_bme = b'bme'
+topic_rawA = b'rawA'
+topic_5vA = b'5vA'
+topic_modac = b'modac' 
+
+def startPubSub():
+    global pub, sub0, sub1, sub2, sub3, subscribers
+    logging.debug("startPubSub")
+    pub = Pub0(listen=address)
+    timeout = 100
+    sub0 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_ktype])
+    subscribers.append(sub0)
+    sub1 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_bme])
+    subscribers.append(sub1)
+    sub2 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_ktype,topic_bme])
+    subscribers.append(sub2)
+    sub3 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_modac])
+    subscribers.append(sub3)
+
+def sendKtype():
+    global topic_ktype, pub, ktypeData
+    tempStr = json.dumps({"kTypes":ktypeData})
+    print("tempStr for kType:",tempStr)
+    msg = topic_ktype +tempStr.encode()
+    pub.send(msg)
+    print("pub: ",msg)
+    
+def parseKtype(msg):
+    print("parseKType: ", msg)
+
+def sendBme():
+    global topic_bme, pub, bme_data
+    tempStr = json.dumps({"bme":bme_data})
+    msg = topic_bme +tempStr.encode()
+    pub.send(msg)
+    print("pub: ",msg)
+    
+def parseBme(msg):
+    print("parseKType: ", msg)
+
+def sendModac():
+    global topic_ktype, pub, inputData
+    tempStr = json.dumps(inputData)
+    msg = topic_modac + tempStr.encode()
+    pub.send(msg)
+    print("pub: ",msg)
+    
+def parseModac(msg):
+    print("parseKType: ", msg)
+    
+def publish():
+    logging.debug("publish")
+    sendKtype()
+    sendBme()
+    sendModac()
 
 def modac_exit():
     logging.info("modac_exit")
@@ -31,16 +100,22 @@ def modac_testLogging():
 
 __kTypeIdx= [4,5,6] #indexs into AD24Bit array for k-type thermocouple
 
+bme_data ={}
+ad24Data =[]
+ktypeData = []
+inputData = {}
+
 def modac_getInputs():
+    global __kTypeIdx, bme_data, ad24Data, temps, ktypeData
     bme_data = modac_BME280.getDataAsDict()
     ad24Data = modac_AD24Bit.getAll0To5()
-    temps = []
+    ktypeData = []
     roomTemp = modac_BME280.temperature()
     for i in __kTypeIdx:
         t = modac_ktype.mVToC(ad24Data[i],roomTemp)
-        print("ktype ", i, ad24Data[i],t )
-        temps.append(t)
-    moData = {"bme":bme_data, "ad24":ad24Data, "kTypes":temps}    
+        #print("ktype", i, t)
+        ktypeData.append(t)
+    moData = {"bme":bme_data, "ad24":ad24Data, "kTypes":ktypeData}    
     return moData
     
 #def testBME280():
@@ -59,16 +134,35 @@ def modac_getInputs():
 #        sleep(1)
 
 
+def handleSubscriptions():
+    global subscribers
+    for i in range(len(subscribers)):
+        try:
+            while(1):
+                msg = subscribers[i].recv()
+                print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
+        except Timeout:
+            print('timeout on ', i)
+        except :
+            print("Some other exeption! on sub ", i)
+
 def modac_eventLoop():
+    global inputData
+    global subscribers
+
     print("event Loop")
+    print(subscribers)
     logging.info("Enter Event Loop")
     for i in range(30):
+        #update inputs
         modac_BME280.update()
         modac_AD24Bit.update()
         inputData = modac_getInputs()
+        # output
         #test_json(inputData)
-        log_data(inputData)
-        sleep(1)
+        publish()
+        handleSubscriptions()        
+        sleep(2)
 
 def test_json(inputData):
     print("------------ write JSON File modacData.json --------")
@@ -83,7 +177,7 @@ def test_json(inputData):
 
 def log_data(inputData):
     print("moData:",inputData)
-    #print(json.dumps(data, indent=4))
+    print(json.dumps(inputData, indent=4))
     
 def modac_io_server():
     logging.info("start modac_io_server()")
@@ -95,15 +189,10 @@ def modac_io_server():
     # initialize data structures
     # initialize GPIO channels
     modac_initHardware()
-
+    startPubSub()
     # run hardware tests
     # initialize message passing, network & threads
     try:
-        if runTests == True:
-            modac_OutputDevices.outDevice_testAll()
-            for i in range(0,2):
-                modac_BME280.testBME280()
-                
         #   run event loop
         modac_eventLoop()
     except Exception as e:
@@ -188,7 +277,7 @@ def setupLogging():
 if __name__ == "__main__":
     modac_argparse() # capture cmd line args to modac_args dictionary for others
     setupLogging() # start logging (could use cmd line args config files)
-    print("logging init in main, should see info")
+    print("modac_nngPubSub testing nng publish-subscribe")
     try:
         modac_io_server()
     except Exception as e:

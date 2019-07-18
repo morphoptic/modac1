@@ -14,17 +14,23 @@ sudo apt-get -y install libffi-dev
 sudo cp /usr/bin/pip3 /usr/bin/pip3.5
 sudo python3 -m pip install --upgrade pip setuptools wheel
 #
+# need latest numpy, scipy etc
 sudo apt install libatlas3-base
 sudo apt-get -y install python-numpy python-scipy python-matplotlib
+# why? do we really need both installs for these 3?
 sudo python3 -m pip install -U matplotlib scipy numpy
-#sudo pip3 install pyqtgraph
+#
+# hardware support
 sudo pip3 install spidev
 sudo pip3 install smbus2
-sudo pip3 install adafruit-blinka
-#sudo pip3 install adafruit-circuitpython-bme280
 sudo pip3 install Rpi.bme280
+#
+#  ADAfruit for oled and other devices
+#  not using them mid-july so leave off
+#sudo pip3 install adafruit-blinka
+#sudo pip3 install adafruit-circuitpython-bme280
 #sudo pip3 install Adafruit-SSD1306
-sudo pip3 install adafruit-circuitpython-ads1x15
+#sudo pip3 install adafruit-circuitpython-ads1x15
 #
 # getting GTK3 installed
 sudo apt install -y libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
@@ -32,8 +38,10 @@ sudo pip3 install pycairo
 sudo pip3 install PyGObject
 sudo apt-get -y install glade
 #
+# experiment with QT and pyQTGraph
 #sudo apt-get -y install qt-5default
 #sudo apt-get -y install qtcreator
+#sudo pip3 install pyqtgraph
 #
 sudo pip3 install thermocouples_reference scipy
 
