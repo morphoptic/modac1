@@ -4,12 +4,39 @@
 # adafruit library does not use gpioZero
 # hopefully there isnt a conflict
 #import gpiozero
+# cute hack to use module namespace this.fIO this.value should work
+import sys
+this = sys.modules[__name__]
+#import rest of modac
+#from . import someModule
+
+# locally required for this module
 import logging, logging.handlers
 import sys
 from time import sleep
+import json
 #
 import smbus2
 import bme280
+
+__key = "enviro"
+def key():
+    return __key;
+
+def topic():
+    return __key.encode() # encode as binary UTF8 bytes
+
+__modacBME280 = None
+
+def init():
+    logging.info("modac_BME280.init")
+    this.__modacBME280 = moBME280()
+    assert not this.__modacBME280 == None
+    this.update()
+
+def update():
+    this.__modacBME280.read()
+
 
 class moBME280:
     """Morphoptic class to read BME280 Temp/Humidity/Pressure Sensor"""
@@ -39,35 +66,26 @@ class moBME280:
 
 __modacBME280 = None
 
-def init():
-    global __modacBME280
-    logging.info("modac_BME280.init")
-    __modacBME280 = moBME280()
-    update()
-
-def update():
-    __modacBME280.read()
-
 def temperature():
-    if not isinstance(__modacBME280.temperature, float):
+    if not isinstance(this.__modacBME280.temperature, float):
         logging.warn("bme280 temp is not a float")
         return 0.0
-    return __modacBME280.temperature
+    return this.__modacBME280.temperature
 
 def humidity():
-    if not isinstance(__modacBME280.humidity, float):
+    if not isinstance(this.__modacBME280.humidity, float):
         logging.warn("bme280 humidity is not a float")
         return 0.0
-    return __modacBME280.humidity
+    return this.__modacBME280.humidity
 
 def pressure():
-    if not isinstance(__modacBME280.pressure, float):
+    if not isinstance(this.__modacBME280.pressure, float):
         logging.warn("bme280 pressure is not a float")
         return 0.0
-    return __modacBME280.pressure
+    return this.__modacBME280.pressure
 
 def timestamp():
-    return __modacBME280.timestamp
+    return this.__modacBME280.timestamp
 
 def timestampStr():
     return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
@@ -75,23 +93,35 @@ def timestampStr():
 def timestampISOStr():
     return timestamp().isoformat()
 
-def getDataAsDict():
-    d = {"timestamp":timestampISOStr(), "temperature":temperature(), "humidity":humidity(), "pressure":pressure()}
+def asDict():
+    d = {"timestamp":timestampISOStr(), "degC":temperature(), "rHumidity":humidity(), "hPa":pressure()}
     return d
+
+def asJson():
+    s = json.dumps({key():asDict()})
+
+def degC():
+    return temperature()
+
+def degF():
+    return degC()*1.8 + 32
 
 def testBME280():
     logging.info("test BME temp, pressure, humidity sensor")
     print("test BME temp, pressure, humidity sensor")
+    print("Key is", key())
+    
     for i in range(0,10):
         update()
         hStr = 'Humidity: %0.3f %%rH '% humidity()
         tStr = 'Temp: %0.3f °C '% temperature()
         pStr = 'Pressure: %0.3f hPa' % pressure()
-        timeStr = timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
+        timeStr = timestampStr() #timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
         msg = timeStr + hStr+tStr+pStr
         #print(msg)
         logging.info(msg)
-        print("AsDict: ", getDataAsDict())
+        print("AsDict: ", asDict())
+        print("asJson ", asJson())
         #print("alt :", bme)
         sleep(1)
 

@@ -1,113 +1,132 @@
-# modac_OutputDevices
-# module to hold and control GPIO OutputDevices
-# only those low level ones directly to GPIOZero
-# other output/input devices by separate modules
-#
-# initial version is hard coding crude, later should develop object/class/config channel stuff
-# july 14 2019
+# binaryOutputs = module to hold and control binary gpio output
+# uses gpiozero OutputDevice
+
+# cute hack to use module namespace this.fIO this.value should work
+import sys
+this = sys.modules[__name__]
+#import rest of modac
+#from . import module name
+
+# locally required for this module
 from gpiozero import OutputDevice
 import logging
-import sys
 from time import sleep
 
+__key = "binaryOut"
+def key():
+    return __key;
 
-modac_relay0 = OutputDevice(5,active_high=True) # 0 is power outlet
+def topic():
+    return __key.encode() # encode as binary UTF8 bytes
+
+
+__relay0 = OutputDevice(5,active_high=True) # 0 is power outlet
 # 1-8 are relay board
-modac_relay1 = OutputDevice(21,active_high=False)
-modac_relay2 = OutputDevice(20,active_high=False)
-modac_relay3 = OutputDevice(16,active_high=False)
-modac_relay4 = OutputDevice(12,active_high=False)
-modac_relay5 = OutputDevice(7,active_high=False)
-modac_relay6 = OutputDevice(8,active_high=False)
-modac_relay7 = OutputDevice(25,active_high=False)
-modac_relay8 = OutputDevice(24,active_high=False)
-modac_relays = [
-        modac_relay0,
-        modac_relay1,
-        modac_relay2,
-        modac_relay3,
-        modac_relay4,
-        modac_relay5,
-        modac_relay6,
-        modac_relay7,
-        modac_relay8
+__relay1 = OutputDevice(21,active_high=False)
+__relay2 = OutputDevice(20,active_high=False)
+__relay3 = OutputDevice(16,active_high=False)
+__relay4 = OutputDevice(12,active_high=False)
+__relay5 = OutputDevice(7,active_high=False)
+__relay6 = OutputDevice(8,active_high=False)
+__relay7 = OutputDevice(25,active_high=False)
+__relay8 = OutputDevice(24,active_high=False)
+__relays = [
+        __relay0,
+        __relay1,
+        __relay2,
+        __relay3,
+        __relay4,
+        __relay5,
+        __relay6,
+        __relay7,
+        __relay8
         ]
 
-def outputDevice_init():
+def init():
     logging.info("modac_initOutputDevices")
-    outDevice_allOff()
+    allOff()
     
-def outDevice_on(deviceId):
+def update():
+    pass
+
+def asArray():
+    a = []
+    for r in __relays:
+        a.append(r.value)
+    return a
+
+def asDict():
+    return {__key():asArray()}
+    
+def on(deviceId):
     # good place for an assert()
     if deviceId < 0 or deviceId > 8:
         logging.error("outDevice_on Range error for device id {0}".format(deviceId))
         #raise Exception("Unknown OutputDeviceId" +str(deviceId))
         return
     logging.debug("outDev ON "+str(deviceId))
-    modac_relays[deviceId].on()
+    this.__relays[deviceId].on()
     
-def outDevice_off(deviceId):
+def off(deviceId):
     if deviceId < 0 or deviceId > 8:
         logging.error("outDevice_off Range error for device id {0}".format(deviceId))
         #raise Exception("Unknown OutputDeviceId" +str(deviceId))
         return
     logging.debug("outDev OFF "+str(deviceId))
-    modac_relays[deviceId].off()
+    this.__relays[deviceId].off()
     
-def outDevice_allOn():
+def allOn():
     logging.debug("outDev allOn ")
-    for i in range(0,len(modac_relays)):
-        outDevice_on(i)
+    for i in range(0,len(__relays)):
+        this.on(i)
 
-def outDevice_allOff():
+def allOff():
     logging.debug("outDev allOff")
-    for i in range(0,len(modac_relays)) : #range(0,8):
-        outDevice_off(i)
+    for i in range(0,len(__relays)) : #range(0,8):
+        this.off(i)
 
 def powerOutlet_on():
     logging.debug("outDev powerOutlet On ")
-    outDevice_on(0)
+    this.on(0)
     
 def powerOutlet_off():
     logging.debug("outDev powerOutlet Off ")
-    outDevice_off(0)
+    this.off(0)
 
-def outDevice_testAll():
+def testAll():
     sleepDelay = 0.5 # delay in seconds
     logging.info("outDev outDevice_testAll delay= " +str(sleepDelay))
     
     logging.info("power Outlet on/off")
-    powerOutlet_on()
+    this.powerOutlet_on()
     sleep(sleepDelay)
-    powerOutlet_off()
+    this.powerOutlet_off()
     sleep(sleepDelay)
     
     logging.info("Step each on off w delay")
-    for i in range(0,len(modac_relays)):#in range(0,8):
-        outDevice_on(i)
+    for i in range(0,len(__relays)):#in range(0,8):
+        this.on(i)
         sleep(sleepDelay)
-        outDevice_off(i)
+        this.off(i)
         
     logging.info("All on then off w delay")
-    outDevice_allOn()
+    this.allOn()
     sleep(sleepDelay)
-    outDevice_allOff()
+    this.allOff()
 
     logging.info("***test catch out of bounds request")
     try:
         for i in range(-5,10):
             print("try ", i)
-            outDevice_on(i)
+            this.on(i)
     except IndexError:
         logging.info("caught IndexError in outDevice_testAll()")
-    finally:
-        print("finally - i get here")
-    print("*** and after try/except")
+
     logging.info("last test = all On Off")
     logging.info("All on then off w delay")
-    outDevice_allOn()
+    this.allOn()
     sleep(sleepDelay)
-    outDevice_allOff()
+    this.allOff()
     
     logging.info("outDev outDevice_testAll complete")
      
@@ -119,13 +138,13 @@ if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format=logFormatStr)
     
     logging.info("modac_OutputDevices.py self test")
-    num_relays = len(modac_relays)
+    num_relays = len(__relays)
     logging.info("modac_outputDevices count is " + str( num_relays))
     
     try:
-        outDevice_testAll()
+        this.testAll()
     except Exception as e:
         print("MAIN Exception somewhere in outDevice_testAll. see log files")
         logging.error("Exception happened in outDevice_testAll", exc_info=True)
-    
+    this.allOff()
 

@@ -1,6 +1,7 @@
+#!/usr/bin/python3 
 from gpiozero import OutputDevice
 from time import sleep
-
+print("MODAC turn all relays off")
 sleepDelay = 0.01 # delay in seconds
 
 relay1 = OutputDevice(21,active_high=False)
@@ -17,5 +18,5 @@ for relay in relays:
     relay.off()
     sleep(sleepDelay)
     
-print ("End of realyModuleOff")
+print ("End of relayModuleOff")
     

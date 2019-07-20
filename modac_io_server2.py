@@ -9,144 +9,33 @@ import gpiozero
 import json
 
 # my stuff
-import modac_OutputDevices
-import modac_BME280
-import modac_AD24Bit
-import modac_ktype
-
-from pynng import Pub0, Sub0, Timeout
-
+from modac import moData, moNetwork
 
 loggerInit = False
 runTests = False #True
-address = 'tcp://127.0.0.1:31313'
-
-pub = None
-sub0 = None
-sub1 = None
-sub2 = None
-sub3 = None
-subscribers = []
-
-# msg topics
-topic_ktype = b'ktype'
-topic_bme = b'bme'
-topic_rawA = b'rawA'
-topic_5vA = b'5vA'
-topic_modac = b'modac' 
-
-def startPubSub():
-    global pub, sub0, sub1, sub2, sub3, subscribers
-    logging.debug("startPubSub")
-    pub = Pub0(listen=address)
-    timeout = 100
-    sub0 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_ktype])
-    subscribers.append(sub0)
-    sub1 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_bme])
-    subscribers.append(sub1)
-    sub2 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_ktype,topic_bme])
-    subscribers.append(sub2)
-    sub3 = Sub0(dial=address, recv_timeout=timeout, topics=[topic_modac])
-    subscribers.append(sub3)
-
-def sendKtype():
-    global topic_ktype, pub, ktypeData
-    tempStr = json.dumps({"kTypes":ktypeData})
-    print("tempStr for kType:",tempStr)
-    msg = topic_ktype +tempStr.encode()
-    pub.send(msg)
-    print("pub: ",msg)
-    
-def parseKtype(msg):
-    print("parseKType: ", msg)
-
-def sendBme():
-    global topic_bme, pub, bme_data
-    tempStr = json.dumps({"bme":bme_data})
-    msg = topic_bme +tempStr.encode()
-    pub.send(msg)
-    print("pub: ",msg)
-    
-def parseBme(msg):
-    print("parseKType: ", msg)
-
-def sendModac():
-    global topic_ktype, pub, inputData
-    tempStr = json.dumps(inputData)
-    msg = topic_modac + tempStr.encode()
-    pub.send(msg)
-    print("pub: ",msg)
-    
-def parseModac(msg):
-    print("parseKType: ", msg)
-    
-def publish():
-    logging.debug("publish")
-    sendKtype()
-    sendBme()
-    sendModac()
+mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
     logging.info("modac_exit")
+    moData.allOff()
     #gpioZero takes care of this: GPIO.cleanup()
     # anything else?
     exit()
-    
-def modac_testLogging():
-    for i in range(100):
-        #print(i)
-        logging.info("I is now %s",i)
-        sleep(0.05)
-
-__kTypeIdx= [4,5,6] #indexs into AD24Bit array for k-type thermocouple
-
-bme_data ={}
-ad24Data =[]
-ktypeData = []
-inputData = {}
-
-def modac_getInputs():
-    global __kTypeIdx, bme_data, ad24Data, temps, ktypeData
-    bme_data = modac_BME280.getDataAsDict()
-    ad24Data = modac_AD24Bit.getAll0To5()
-    ktypeData = []
-    roomTemp = modac_BME280.temperature()
-    for i in __kTypeIdx:
-        t = modac_ktype.mVToC(ad24Data[i],roomTemp)
-        #print("ktype", i, t)
-        ktypeData.append(t)
-    moData = {"bme":bme_data, "ad24":ad24Data, "kTypes":ktypeData}    
-    return moData
-    
-def handleSubscriptions():
-    global subscribers
-    for i in range(len(subscribers)):
-        try:
-            while(1):
-                msg = subscribers[i].recv()
-                print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
-        except Timeout:
-            print('timeout on ', i)
-        except :
-            print("Some other exeption! on sub ", i)
 
 def modac_eventLoop():
-    global inputData
-    global subscribers
 
     print("event Loop")
-    print(subscribers)
+    print(moNetwork.subscribers)
     logging.info("Enter Event Loop")
     for i in range(30):
-        #update inputs
-        modac_BME280.update()
-        modac_AD24Bit.update()
-        inputData = modac_getInputs()
-        # output
+        #update inputs & run filters on data
+        moData.update()
+        log_data()
+        # run any filters
         #test_json(inputData)
-        publish()
-        handleSubscriptions()        
-        sleep(2)
+        moNetwork.publish()
+        moNetwork.receive()        
+        sleep(mainLoopDelay)
 
 def test_json(inputData):
     print("------------ write JSON File modacData.json --------")
@@ -159,9 +48,12 @@ def test_json(inputData):
         print("Read: ", data)
         print("asJson: ", json.dumps(data, indent=4))
 
-def log_data(inputData):
-    print("moData:",inputData)
-    print(json.dumps(inputData, indent=4))
+def log_data():
+    moDict = moData.asDict()
+    print("moData:",moDict)
+    moJson = json.dumps(moDict, indent=4)
+    print(moJson)
+    logging.info(moJson)
     
 def modac_io_server():
     logging.info("start modac_io_server()")
@@ -172,8 +64,8 @@ def modac_io_server():
     modac_argDispatch()
     # initialize data structures
     # initialize GPIO channels
-    modac_initHardware()
-    startPubSub()
+    moData.init()
+    moNetwork.startPubSub()
     # run hardware tests
     # initialize message passing, network & threads
     try:
@@ -185,23 +77,14 @@ def modac_io_server():
         logging.exception("Exception Happened")
     
     modac_exit()
-    
+
+# if we decide to use cmd line args, its 2 step process parsing and dispatch
+# parsing happens early to grab cmd line into argparse data model
+# dispatching converts the parse tree into modac data/confi settings
+
 __modac_argparse = argparse.ArgumentParser()
 __modac_args = None
-
-def modac_initHardware():
-    """ modac_initHardware: Initialize Hardware Drivers based on config structures and hard coded stuff,"""
-    logging.info("modac_initHardware")
-    # init digital I/O
-    modac_OutputDevices.outputDevice_init()
-    # init SPI 1&2 (AD/DA HAT)
-    # init I2C
-    #    BME280
-    modac_BME280.init()
-    #    not oled, that is other tool
-    modac_AD24Bit.init()
-    # modac_BLE_Laser.init()
-    
+  
 def modac_argparse():
     """ parse command line arguments into global __modac_args """
     #logging.info("modac_argparse")
@@ -213,9 +96,11 @@ def modac_argDispatch():
     logging.info("modac_argDispatch")
     # assumes config files & structures are loaded
     # dispatches actions requested by
+    pass
 
 def modac_loadConfig():
     logging.info("modac_loadConfig")
+    pass
 
 def setupLogging():
     global loggerInit
