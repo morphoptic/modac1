@@ -1,7 +1,8 @@
-# modac_io_server v0.3
-# replacing server2 from last git commit
-# working now on pub/sub server later on the cmd back channel
-# moNetwork is key, modac_netLogger is first client
+# modac_netLogger v0.
+# first client of pub/sub modac_io_server
+# subscribes to pub channel
+# logs any messages to file
+#
 import datetime
 from time import sleep
 import sys
@@ -20,23 +21,23 @@ mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
     logging.info("modac_exit")
-    moData.allOff()
+    moNetwork.shutdownNet()
     #gpioZero takes care of this: GPIO.cleanup()
     # anything else?
     exit()
 
-def modac_ServerEventLoop():
-    print("event Loop")
+def modac_SubscriberEventLoop():
+
+    print("modac_SubscriberEventLoop Loop")
     print(moNetwork.subscribers)
     logging.info("Enter Event Loop")
-    for i in range(30):
+    for i in range(30): #currently only do a few while we get it running
+        logging.debug("modac_SubscriberEventLoop - loop %d"%(i))
         #update inputs & run filters on data
-        moData.update()
-        log_data()
         # run any filters
         #test_json(inputData)
-        moNetwork.publish()
-#        moNetwork.receive()        
+#        moNetwork.publish()
+        moNetwork.receive()        
         sleep(mainLoopDelay)
 
 def test_json(inputData):
@@ -57,8 +58,8 @@ def log_data():
     print(moJson)
     logging.info(moJson)
     
-def modac_io_server():
-    logging.info("start modac_io_server()")
+def modac_netLogger():
+    logging.info("start modac_netLogger()")
     # modac_testLogging()
     # load config files
     modac_loadConfig()
@@ -67,14 +68,14 @@ def modac_io_server():
     # initialize data structures
     # initialize GPIO channels
     moData.init()
-    moNetwork.startPublisher()
+    moNetwork.startSubscriber()
     # run hardware tests
     # initialize message passing, network & threads
     try:
         #   run event loop
-        modac_ServerEventLoop()
+        modac_SubscriberEventLoop()
     except Exception as e:
-        print("Exception somewhere in modac_io_server event loop. see log files")
+        print("Exception somewhere in modac_netLogger event loop. see log files")
         logging.error("Exception happened", exc_info=True)
         logging.exception("Exception Happened")
     
@@ -114,7 +115,7 @@ def setupLogging():
     # setup logger
     now = datetime.datetime.now()
     nowStr = now.strftime("%Y%m%d_%H%M%S")
-    logName = "modac_"+nowStr+".log"
+    logName = "modac_neLogger_"+nowStr+".log"
     logFormatStr = "%(asctime)s [%(threadName)-12.12s] [%(name)s] [%(levelname)-5.5s] %(message)s"
     # setup base level logging to stderr (console?)
     # consider using logging.config.fileConfig()
@@ -150,13 +151,13 @@ if __name__ == "__main__":
     setupLogging() # start logging (could use cmd line args config files)
     print("modac_nngPubSub testing nng publish-subscribe")
     try:
-        modac_io_server()
+        modac_netLogger()
     except Exception as e:
-        print("Exception somewhere in modac_io_server. see log files")
+        print("Exception somewhere in modac_netLogger. see log files")
         logging.error("Exception happened", exc_info=True)
         logging.exception("huh?")
     finally:
-        print("end main")
+        print("end main of modac_netLogger")
     modac_exit()
     
 

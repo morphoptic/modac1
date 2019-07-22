@@ -18,17 +18,17 @@ from . import moData
 # locally required for this module
 from pynng import Pub0, Sub0, Timeout
 
-address = 'tcp://127.0.0.1:31313'
+pubAddress = 'tcp://127.0.0.1:31313'
+
+def shutdownNet():
+    pass
 
 # pub sub messages
-pub = None
-sub0 = None
-sub1 = None
-sub2 = None
-sub3 = None
+publisher = None
 subscribers = []
 
-# msg topics
+# msg topics, dont really need these here
+# as they are just local copies of moData topics
 topic_ktype = moData.kType.topic() #b'ktype'
 topic_enviro = moData.enviro.topic() # b'enviro'
 topic_rawA = moData.ad24.topicRaw() #b'rawA'
@@ -39,24 +39,23 @@ topic_allData = moData.topic() #b'allData'
 def init():
     startPubSub()
     
-def startPubSub():
-    logging.debug("startPubSub")
-    this.pub = Pub0(listen=this.address)
+def startPublisher():
+    logging.debug("startPublisher")
+    this.publisher = Pub0(listen=this.pubAddress)
+    logging.debug("startPublisher: ", this.publisher)
+    
+def startSubscriber():
     timeout = 100
-    this.sub0 = Sub0(dial=this.address, recv_timeout=timeout, topics=[this.topic_ktype])
-    this.subscribers.append(this.sub0)
-    this.sub1 = Sub0(dial=this.this.address, recv_timeout=timeout, topics=[this.topic_enviro])
-    this.subscribers.append(sub1)
-    this.sub2 = Sub0(dial=this.address, recv_timeout=timeout, topics=[this.topic_ktype,this.topic_enviro])
-    this.subscribers.append(this.sub2)
-    this.sub3 = Sub0(dial=this.address, recv_timeout=timeout, topics=[this.topic_allData])
-    this.subscribers.append(this.sub3)
+    subscriber = Sub0(dial=this.pubAddress, recv_timeout=timeout, topics=[moData.topic()])
+    this.subscribers.append(subscriber)
+    logging.debug("startSubscriber: ", subscriber)
+    return subscriber
 
 def sendData(topic, key, value):
     tempStr = json.dumps({key:value})
     print("dataStr: ", tempStr)
     msg = topic + tempStr.encode()
-    this.pub.send(msg)
+    this.publisher.send(msg)
     print("pub: ", msg)
     
 def sendKtype():
@@ -78,20 +77,20 @@ def parseAllData(msg):
     print("parseKType: ", msg)
     
 def publish():
-    logging.debug("publish")
-    sendKtype()
-    sendEnviro()
+    logging.debug("publish - only AllData for now")
+#    sendKtype()
+#    sendEnviro()
     sendAllData()
     
 def receive():
-    global subscribers
     for i in range(len(subscribers)):
         try:
-            while(1):
-                msg = subscribers[i].recv()
+            while(1): #stays here till timeout or receive
+                msg = this.subscribers[i].recv()
                 print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
+                logging.info("sub %d rcv: %s"%(i,msg.decode()))  # prints b'wolf...' since that is the matching message
         except Timeout:
-            print('timeout on ', i)
+            logging.debug("receive timeout on subsciber %d"%(i))
         except :
             print("Some other exeption! on sub ", i)
             
