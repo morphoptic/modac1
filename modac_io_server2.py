@@ -1,4 +1,6 @@
-# modac_io_server v0
+# modac_io_server v0.3
+# working now on pub/sub server later on the cmd back channel
+# moNetwork is key, modac_netLogger is first client
 import datetime
 from time import sleep
 import sys
