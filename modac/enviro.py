@@ -40,7 +40,7 @@ def update():
 
 def asDict():
     d = {keyForTimeStamp():timestampStr(),
-         keyForHumpidity():humidity(),
+         keyForHumidity():humidity(),
          keyForTemperature():degC(),
          keyForPressure():pressure()
          }

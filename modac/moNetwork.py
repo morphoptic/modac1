@@ -19,6 +19,8 @@ from . import moData
 # locally required for this module
 from pynng import Pub0, Sub0, Timeout
 
+# convert this from raw ip to a zeroConf address
+zConfigName = "modac.local"
 pubAddress = 'tcp://127.0.0.1:31313'
 
 def shutdownNet():
@@ -83,6 +85,7 @@ def splitTopicBody(msg):
     return rv
     
 def receive():
+    msgReceived = False
     for i in range(len(subscribers)):
         try:
             while(1): #stays here till timeout or receive
@@ -91,10 +94,12 @@ def receive():
                 logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 topic, body = splitTopicBody(msgRaw)
                 dispatch(topic,body)
+                msgReceived = True
         except Timeout:
             logging.debug("receive timeout on subsciber %d"%(i))
         except :
             logging.exception("Some other exeption! on sub%d "%(i))
+    return msgReceived
             
 def dispatch(topic,body):
     print("Dispatch: Topic:%s Obj:%s"%(topic,body))

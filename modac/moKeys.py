@@ -22,7 +22,7 @@ def keyForAD24Raw():
     return "ad24Raw"
 def keyForAD24v05():
     return "ad24v05"
-def keyForHumpidity():
+def keyForHumidity():
     return "humidity"
 def keyForTemperature():
     return "temperature"

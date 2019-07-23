@@ -57,3 +57,4 @@ def updateAllData(d):
     for key, value in d.items():
         update(key,value)
     print("Updated: ", asJson())
+    

@@ -9,7 +9,6 @@ import sys
 import os
 import logging, logging.handlers
 import argparse
-import gpiozero
 import json
 
 # my stuff
@@ -39,17 +38,6 @@ def modac_SubscriberEventLoop():
 #        moNetwork.publish()
         moNetwork.receive()        
         sleep(mainLoopDelay)
-
-def test_json(inputData):
-    print("------------ write JSON File modacData.json --------")
-    with open("modacData.json",'w') as jsonFile:
-        json.dump(inputData, jsonFile, indent=4)
-        
-    print("------------ read JSON File modacData --------")
-    with open("modacData.json",'r') as jsonFile:
-        data = json.load(jsonFile)
-        print("Read: ", data)
-        print("asJson: ", json.dumps(data, indent=4))
 
 def log_data():
     moDict = moData.asDict()
