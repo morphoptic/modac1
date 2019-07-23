@@ -12,7 +12,7 @@ import gpiozero
 import json
 
 # my stuff
-from modac import moData, moNetwork
+from modac import moKeys, moData, moHardware, moNetwork
 
 loggerInit = False
 runTests = False #True
@@ -20,7 +20,7 @@ mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
     logging.info("modac_exit")
-    moData.allOff()
+    moHardware.allOff()
     #gpioZero takes care of this: GPIO.cleanup()
     # anything else?
     exit()
@@ -31,7 +31,7 @@ def modac_ServerEventLoop():
     logging.info("Enter Event Loop")
     for i in range(30):
         #update inputs & run filters on data
-        moData.update()
+        moHardware.update()
         log_data()
         # run any filters
         #test_json(inputData)
@@ -52,9 +52,9 @@ def test_json(inputData):
 
 def log_data():
     moDict = moData.asDict()
-    print("moData:",moDict)
+    #print("moData:",moDict)
     moJson = json.dumps(moDict, indent=4)
-    print(moJson)
+    #print(moJson)
     logging.info(moJson)
     
 def modac_io_server():
@@ -67,11 +67,13 @@ def modac_io_server():
     # initialize data structures
     # initialize GPIO channels
     moData.init()
+    moHardware.init()
     moNetwork.startPublisher()
     # run hardware tests
     # initialize message passing, network & threads
     try:
         #   run event loop
+        print("modata:",moData.rawDict())
         modac_ServerEventLoop()
     except Exception as e:
         print("Exception somewhere in modac_io_server event loop. see log files")

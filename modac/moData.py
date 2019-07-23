@@ -7,43 +7,45 @@ if __name__ == "__main__":
 import sys
 this = sys.modules[__name__]
 #import rest of modac
-from . import enviro, ad24, kType, binaryOutputs
+from .moKeys import *
 
 # locally required for this module
+import datetime
 
-__key = "moData"
-def key():
-    return key;
-
-def topic():
-    return __key.encode() # encode as binary UTF8 bytes
+__moDataDictionary = {}
 
 def init():
-    enviro.init()
-    binaryOutputs.init()
-    ad24.init()
-    kType.init()
+    # here we dont init hardware, only data collection
+    update(keyForBinaryOut(),None)
+    update(keyForEnviro(), None)
+    update(keyForAD24(),None)
+    update(keyForKType(), None)
+    print("Initialized moData",rawDict())
+    
     # modac_BLE_Laser.init()
     pass
 
-def update():
-    enviro.update()
-    binaryOutputs.update()
-    ad24.update()
-    kType.update()
+def update(key,value):
+    if key == keyForTimeStamp():
+        if isinstance(str, datetime.datetime):
+            value = value.strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
+    __moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass
 
 def asDict():
-    moData = {
-        enviro.key():enviro.asDict(),
-        ad24.key():ad24.all0to5Array(),
-        kType.key():kType.asArray(),
-        binaryOutputs.key():binaryOutputs.asArray()
-        }    
-    return moData
+#    moData = {
+#        keyForEnviro():enviro.asDict(),
+#        keyForAD24:ad24.all0to5Array(),
+#        keyForKType:kType.asArray(),
+#        keyForBinaryOutKey.key():binaryOutputs.asArray()
+#        }    
+    return __moDataDictionary
 
-def allOff():
-    binaryOutputs.allOff()
-    
+def getValue(key):
+    # will throw KeyError if key is not in dictionary
+    return __moDataDictionary[key]
+
+def rawDict():
+    return __moDataDictionary
 

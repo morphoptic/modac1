@@ -7,18 +7,14 @@ if __name__ == "__main__":
 import sys
 this = sys.modules[__name__]
 #import rest of modac
+from .moKeys import *
+from . import moData
+# should revise this so it gets direct from moData rather than having knowledge of other device api?
 from . import ad24, enviro
 # locally required for this module
 import logging, logging.handlers
 
 from thermocouples_reference import thermocouples
-
-__key = "kType"
-def key():
-    return __key;
-
-def topic():
-    return __key.encode() # encode as binary UTF8 bytes
 
 __typeK = thermocouples['K']
 __kTypeIdx= [4,5,6] #indexs into AD24Bit array for k-type thermocouple
@@ -28,9 +24,13 @@ def mVToC(mV,tempRef=0):
     return __typeK.inverse_CmV(mV, Tref=tempRef)
 
 def init():
+    update()
     pass
 
 def update():
+    assert not moData.getValue(keyForAD24()) == None
+    assert not moData.getValue(keyForEnviro()) == None
+    moData.update(keyForKType(), asArray())
     pass
 
 def asArray():
@@ -44,4 +44,4 @@ def asArray():
     return ktypeData
 
 def asDict():
-    return {__key : asArray() }
+    return {keyForKType(): asArray() }

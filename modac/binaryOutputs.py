@@ -6,19 +6,12 @@ import sys
 this = sys.modules[__name__]
 #import rest of modac
 #from . import module name
-
+from .moKeys import *
+from . import moData
 # locally required for this module
 from gpiozero import OutputDevice
 import logging
 from time import sleep
-
-__key = "binaryOut"
-def key():
-    return __key;
-
-def topic():
-    return __key.encode() # encode as binary UTF8 bytes
-
 
 __relay0 = OutputDevice(5,active_high=True) # 0 is power outlet
 # 1-8 are relay board
@@ -45,9 +38,14 @@ __relays = [
 def init():
     logging.info("modac_initOutputDevices")
     allOff()
+    update()
     
 def update():
+    moData.update(keyForBinaryOut(), asArray())
     pass
+
+def count():
+    return len(__relays)
 
 def asArray():
     a = []
@@ -56,95 +54,46 @@ def asArray():
     return a
 
 def asDict():
-    return {__key():asArray()}
+    return {keyForBinaryOut():asArray()}
     
 def on(deviceId):
     # good place for an assert()
     if deviceId < 0 or deviceId > 8:
-        logging.error("outDevice_on Range error for device id {0}".format(deviceId))
+        logging.error("binaryOut_on Range error for device id {0}".format(deviceId))
         #raise Exception("Unknown OutputDeviceId" +str(deviceId))
         return
-    logging.debug("outDev ON "+str(deviceId))
+    logging.debug("binaryOut ON "+str(deviceId))
     this.__relays[deviceId].on()
+    update()
     
 def off(deviceId):
     if deviceId < 0 or deviceId > 8:
-        logging.error("outDevice_off Range error for device id {0}".format(deviceId))
+        logging.error("binaryOut_off Range error for device id {0}".format(deviceId))
         #raise Exception("Unknown OutputDeviceId" +str(deviceId))
         return
-    logging.debug("outDev OFF "+str(deviceId))
+    logging.debug("binaryOut OFF "+str(deviceId))
     this.__relays[deviceId].off()
+    update()
     
 def allOn():
-    logging.debug("outDev allOn ")
+    logging.debug("binaryOut allOn ")
     for i in range(0,len(__relays)):
         this.on(i)
 
 def allOff():
-    logging.debug("outDev allOff")
+    logging.debug("binaryOut allOff")
     for i in range(0,len(__relays)) : #range(0,8):
         this.off(i)
 
 def powerOutlet_on():
-    logging.debug("outDev powerOutlet On ")
+    logging.debug("binaryOut powerOutlet On ")
     this.on(0)
+    update()
     
 def powerOutlet_off():
-    logging.debug("outDev powerOutlet Off ")
+    logging.debug("binaryOut powerOutlet Off ")
     this.off(0)
+    update()
 
-def testAll():
-    sleepDelay = 0.5 # delay in seconds
-    logging.info("outDev outDevice_testAll delay= " +str(sleepDelay))
-    
-    logging.info("power Outlet on/off")
-    this.powerOutlet_on()
-    sleep(sleepDelay)
-    this.powerOutlet_off()
-    sleep(sleepDelay)
-    
-    logging.info("Step each on off w delay")
-    for i in range(0,len(__relays)):#in range(0,8):
-        this.on(i)
-        sleep(sleepDelay)
-        this.off(i)
-        
-    logging.info("All on then off w delay")
-    this.allOn()
-    sleep(sleepDelay)
-    this.allOff()
 
-    logging.info("***test catch out of bounds request")
-    try:
-        for i in range(-5,10):
-            print("try ", i)
-            this.on(i)
-    except IndexError:
-        logging.info("caught IndexError in outDevice_testAll()")
-
-    logging.info("last test = all On Off")
-    logging.info("All on then off w delay")
-    this.allOn()
-    sleep(sleepDelay)
-    this.allOff()
-    
-    logging.info("outDev outDevice_testAll complete")
-     
-
-if __name__ == "__main__":
-    print("Start Modac OutputDevices stand alone test")
-    
-    logFormatStr = "%(asctime)s [%(levelname)-5.5s] %(message)s"
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format=logFormatStr)
-    
-    logging.info("modac_OutputDevices.py self test")
-    num_relays = len(__relays)
-    logging.info("modac_outputDevices count is " + str( num_relays))
-    
-    try:
-        this.testAll()
-    except Exception as e:
-        print("MAIN Exception somewhere in outDevice_testAll. see log files")
-        logging.error("Exception happened in outDevice_testAll", exc_info=True)
-    this.allOff()
 

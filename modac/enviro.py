@@ -5,10 +5,15 @@
 # hopefully there isnt a conflict
 #import gpiozero
 # cute hack to use module namespace this.fIO this.value should work
+# moNetwork - pubsub etc networking
+    #import rest of modac
+ 
 import sys
 this = sys.modules[__name__]
 #import rest of modac
 #from . import someModule
+from .moKeys import *
+from . import moData
 
 # locally required for this module
 import logging, logging.handlers
@@ -19,24 +24,64 @@ import json
 import smbus2
 import bme280
 
-__key = "enviro"
-def key():
-    return __key;
-
-def topic():
-    return __key.encode() # encode as binary UTF8 bytes
-
-__modacBME280 = None
+# module global for BME280 device
+__eSensor = None
 
 def init():
     logging.info("modac_BME280.init")
-    this.__modacBME280 = moBME280()
-    assert not this.__modacBME280 == None
+    this.__eSensor = moBME280()
+    assert not this.__eSensor == None
     this.update()
 
 def update():
-    this.__modacBME280.read()
+    this.__eSensor.read()
+    moData.update(keyForTimeStamp(), timestampStr())
+    moData.update(keyForEnviro(), asDict())
 
+def asDict():
+    d = {keyForTimeStamp():timestampStr(),
+         keyForHumpidity():humidity(),
+         keyForTemperature():degC(),
+         keyForPressure():pressure()
+         }
+    return d
+
+def temperature():
+    if not isinstance(this.__eSensor.temperature, float):
+        logging.warn("bme280 temp is not a float")
+        return 0.0
+    return this.__eSensor.temperature
+
+def degC():
+    return temperature()
+
+def degF():
+    return degC()*1.8 + 32
+
+def humidity():
+    if not isinstance(this.__eSensor.humidity, float):
+        logging.warn("bme280 humidity is not a float")
+        return 0.0
+    return this.__eSensor.humidity
+
+def pressure():
+    if not isinstance(this.__eSensor.pressure, float):
+        logging.warn("bme280 pressure is not a float")
+        return 0.0
+    return this.__eSensor.pressure
+
+def timestamp():
+    return this.__eSensor.timestamp
+
+def timestampStr():
+    return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z")
+
+def timestampISOStr():
+    return timestamp().isoformat()
+
+def asJson():
+    s = json.dumps({keyForEnviro():asDict()})
+    return s
 
 class moBME280:
     """Morphoptic class to read BME280 Temp/Humidity/Pressure Sensor"""
@@ -64,47 +109,6 @@ class moBME280:
         string= self.timestamp.isoformat() + "{:.3f} %rH {:.3f}°C {:.3f} hPa".format(self.humidity, self.temperature, self.pressure)
         return string
 
-__modacBME280 = None
-
-def temperature():
-    if not isinstance(this.__modacBME280.temperature, float):
-        logging.warn("bme280 temp is not a float")
-        return 0.0
-    return this.__modacBME280.temperature
-
-def humidity():
-    if not isinstance(this.__modacBME280.humidity, float):
-        logging.warn("bme280 humidity is not a float")
-        return 0.0
-    return this.__modacBME280.humidity
-
-def pressure():
-    if not isinstance(this.__modacBME280.pressure, float):
-        logging.warn("bme280 pressure is not a float")
-        return 0.0
-    return this.__modacBME280.pressure
-
-def timestamp():
-    return this.__modacBME280.timestamp
-
-def timestampStr():
-    return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
-
-def timestampISOStr():
-    return timestamp().isoformat()
-
-def asDict():
-    d = {"timestamp":timestampISOStr(), "degC":temperature(), "rHumidity":humidity(), "hPa":pressure()}
-    return d
-
-def asJson():
-    s = json.dumps({key():asDict()})
-
-def degC():
-    return temperature()
-
-def degF():
-    return degC()*1.8 + 32
 
 def testBME280():
     logging.info("test BME temp, pressure, humidity sensor")
@@ -124,23 +128,3 @@ def testBME280():
         print("asJson ", asJson())
         #print("alt :", bme)
         sleep(1)
-
-if __name__ == "__main__":
-    print("MorpOptics BME280 Sensor class stand alone test")
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)#, format=logFormatStr)
-    logging.captureWarnings(True)
-    logging.info("Logging Initialized for MO BME280 main unitTest")
-    init()
-    update()
-    
-    #while True:
-    for i in range(0,6):
-        testBME280()
-#        update()
-#        hStr = 'Humidity: %0.3f %%rH '% humidity()
-#        tStr = 'Temp: %0.3f °C '% temperature()
-#        pStr = 'Pressure: %0.3f hPa' % pressure()
-#        print(timestamp(),": ",hStr, tStr, pStr)
-#        #print("alt :", bme)
-#        sleep(1)
-

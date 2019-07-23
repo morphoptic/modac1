@@ -23,6 +23,8 @@ import time
 from waveshareADAC import ADS1256
     
 #from . import moduleName
+from .moKeys import *
+from . import moData
 
 __ads1256 = None #ADS1256.ADS1256()
 __adsRaw = [0,0,0,0,0,0,0,0]
@@ -55,6 +57,7 @@ def init():
     logging.debug("ad24Bit init()")
     this.__ads1256 = ADS1256.ADS1256()
     this.__ads1256.ADS1256_init()
+    this.update()
     
 def update():
     logging.debug("ad24Bit update()")
@@ -63,7 +66,8 @@ def update():
     for i in range(len(raw)):
         this.__adsRaw[i] = raw[i]
         this.__ads0to5[i] = raw[i] * this.__adsRawToV
-   
+    moData.update(keyForAD24(), all0to5Array())
+
 def allRawArray():
     return this.__adsRaw
 
@@ -71,25 +75,5 @@ def all0to5Array():
     return this.__ads0to5
 
 def asDict():
-    return { __key : this.all0to5Array() }
+    return { keyForAD24(): this.all0to5Array() }
 
-def doTest():
-    data = []
-    for repeatCount in range(60):
-        this.update()
-        ADC_Value = this.all0to5Array()
-        print(this.allRawArray())
-        print(ADC_Value)
-        for i in range(len(ADC_Value)):
-            print ("%d %d ADC = %lf"%(repeatCount, i, ADC_Value[i]))
-        print("asDict", this.asDict())
-        
-if __name__ == "__main__":
-    print("MorpOptics 24Bit AD Sensor class stand alone test")
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)#, format=logFormatStr)
-    logging.captureWarnings(True)
-    logging.info("Logging Initialized for MO 24Bit AD  main unitTest")
-    init()
-    update()
-    doTest()
-    
