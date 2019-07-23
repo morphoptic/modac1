@@ -8,11 +8,10 @@ import sys
 import os
 import logging, logging.handlers
 import argparse
-import gpiozero
 import json
 
 # my stuff
-from modac import moKeys, moData, moHardware, moNetwork
+from modac import moKeys, moData, moNetwork
 
 loggerInit = False
 runTests = False #True
@@ -20,35 +19,21 @@ mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
     logging.info("modac_exit")
-    moHardware.allOff()
-    #gpioZero takes care of this: GPIO.cleanup()
     # anything else?
     exit()
 
-def modac_ServerEventLoop():
+def testSubscriberEventLoop():
     print("event Loop")
     print(moNetwork.subscribers)
     logging.info("Enter Event Loop")
-    for i in range(300):
+    for i in range(30):
         #update inputs & run filters on data
-        moHardware.update()
         log_data()
         # run any filters
         #test_json(inputData)
-        moNetwork.publish()
+        moNetwork.receive()
 #        moNetwork.receive()        
         sleep(mainLoopDelay)
-
-def test_json(inputData):
-    print("------------ write JSON File modacData.json --------")
-    with open("modacData.json",'w') as jsonFile:
-        json.dump(inputData, jsonFile, indent=4)
-        
-    print("------------ read JSON File modacData --------")
-    with open("modacData.json",'r') as jsonFile:
-        data = json.load(jsonFile)
-        print("Read: ", data)
-        print("asJson: ", json.dumps(data, indent=4))
 
 def log_data():
     moDict = moData.asDict()
@@ -57,8 +42,8 @@ def log_data():
     #print(moJson)
     logging.info(moJson)
     
-def modac_io_server():
-    logging.info("start modac_io_server()")
+def testSubscriber():
+    logging.info("start testSubscriber()")
     # modac_testLogging()
     # load config files
     modac_loadConfig()
@@ -67,14 +52,13 @@ def modac_io_server():
     # initialize data structures
     # initialize GPIO channels
     moData.init()
-    moHardware.init()
-    moNetwork.startPublisher()
+    moNetwork.startSubscriber()
     # run hardware tests
     # initialize message passing, network & threads
     try:
         #   run event loop
-        print("modata:",moData.rawDict())
-        modac_ServerEventLoop()
+        print("modata:",moData.asDict())
+        testSubscriberEventLoop()
     except Exception as e:
         print("Exception somewhere in modac_io_server event loop. see log files")
         logging.error("Exception happened", exc_info=True)
@@ -152,7 +136,7 @@ if __name__ == "__main__":
     setupLogging() # start logging (could use cmd line args config files)
     print("modac_nngPubSub testing nng publish-subscribe")
     try:
-        modac_io_server()
+        testSubscriber()
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
         logging.error("Exception happened", exc_info=True)

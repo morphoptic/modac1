@@ -10,7 +10,7 @@ this = sys.modules[__name__]
 from .moKeys import *
 
 # locally required for this module
-import datetime
+import datetime, json
 
 __moDataDictionary = {}
 
@@ -42,6 +42,9 @@ def asDict():
 #        }    
     return __moDataDictionary
 
+def asJson():
+    return json.dumps(asDict(), indent=4)
+                      
 def getValue(key):
     # will throw KeyError if key is not in dictionary
     return __moDataDictionary[key]
@@ -49,3 +52,8 @@ def getValue(key):
 def rawDict():
     return __moDataDictionary
 
+def updateAllData(d):
+    assert isinstance(d, dict)
+    for key, value in d.items():
+        update(key,value)
+    print("Updated: ", asJson())

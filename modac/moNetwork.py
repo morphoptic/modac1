@@ -27,6 +27,7 @@ def shutdownNet():
 # pub sub messages
 publisher = None
 subscribers = []
+topicDivider = '|'.encode('utf8')
 
 def init():
     startPubSub()
@@ -38,62 +39,65 @@ def startPubSub():
 def startPublisher():
     logging.debug("startPublisher")
     this.publisher = Pub0(listen=this.pubAddress)
-    
+
 def startSubscriber(keys=[keyForAllData()]):#topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
-    subtopics = []
-    for i in range(len(keys)):
-        subtopics.append(moTopicForKey(keys[i]))
-    subscriber = Sub0(dial=this.pubAddress, recv_timeout=timeout, topics=subtopics)
+#    subtopics = []
+#    for i in range(len(keys)):
+#        subtopics.append(topicForKey(keys[i]))
+    subscriber = Sub0(dial=this.pubAddress, recv_timeout=timeout, topics=keys)
     this.subscribers.append(subscriber)
     #logging.debug("startSubscriber: ", subscriber)
     return subscriber
-
-def sendTopic(topic, key, value):
-    tempStr = json.dumps({key:value})
+ 
+def sendData(key, value):
+    tempStr = json.dumps(value)
     #print("dataStr: ", tempStr)
-    msg = topic + tempStr.encode()
+    msg = key.encode('utf8') + topicDivider+tempStr.encode('utf8')
     this.publisher.send(msg)
     #print("pub: ", msg)
     logging.debug("sendTopic %s"%msg)
     
-def sendData(key, value):
-    topic = moKeyToTopic(key)
-    sendTopic(topic, key, value)
-    
 def sendKtype():
     sendData(keyForKType(), moData.kType.asArray())
     
-def parseKtype(msg):
-    print("parseKType: ", msg)
-
 def sendEnviro():
     sendData(keyForEnviro(), moData.enviro.asDict())
-    
-def parseEnviro(msg):
-    print("parseKType: ", msg)
 
 def sendAllData():
     sendData(keyForAllData(), moData.asDict())
-    
-def parseAllData(msg):
-    print("parseKType: ", msg)
-    
+
 def publish():
     #logging.debug("publish - only AllData for now")
 #    sendKtype()
 #    sendEnviro()
     sendAllData()
+
+def splitTopicBody(msg):
+    s = msg.decode('utf8')
+    split = s.split('|')
+    topic = split[0]
+    body = json.loads(split[1])
+    rv = (topic, body)
+    print("Decoded:", rv)
+    return rv
     
 def receive():
     for i in range(len(subscribers)):
         try:
             while(1): #stays here till timeout or receive
-                msg = this.subscribers[i].recv()
-                print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
-                logging.info("sub %d rcv: %s"%(i,msg.decode()))  # prints b'wolf...' since that is the matching message
+                msgRaw = this.subscribers[i].recv()
+                #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
+                logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
+                topic, body = splitTopicBody(msgRaw)
+                dispatch(topic,body)
         except Timeout:
             logging.debug("receive timeout on subsciber %d"%(i))
         except :
-            print("Some other exeption! on sub ", i)
+            logging.exception("Some other exeption! on sub%d "%(i))
             
+def dispatch(topic,body):
+    print("Dispatch: Topic:%s Obj:%s"%(topic,body))
+    if topic == keyForAllData():
+        moData.updateAllData(body)
+    # need to extract the Topic    
