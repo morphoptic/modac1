@@ -116,9 +116,10 @@ class DataWindow(Gtk.Window):
     
     def getData(self):
         # update from network
-        if not moNetwork.receive():
+        if not moNetwork.clientReceive():
             return False
-        # check timestamp ?
+        # network got something - hopefully dispatched  already so moData is updated
+        # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
         enviro = moData.getValue(keyForEnviro())
         temperature = enviro[keyForTemperature()]
@@ -254,8 +255,6 @@ def setupLogging():
 def modac_exit():
     logging.info("modac_exit")
     moNetwork.shutdownNet()
-    #gpioZero takes care of this: GPIO.cleanup()
-    # anything else?
     exit()
 
 if __name__ == "__main__":

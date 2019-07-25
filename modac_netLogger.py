@@ -21,8 +21,6 @@ mainLoopDelay = 2 # seconds for sleep at end of main loop
 def modac_exit():
     logging.info("modac_exit")
     moNetwork.shutdownNet()
-    #gpioZero takes care of this: GPIO.cleanup()
-    # anything else?
     exit()
 
 def modac_SubscriberEventLoop():

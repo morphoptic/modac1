@@ -20,6 +20,7 @@ mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
     logging.info("modac_exit")
+    shutdownNet()
     moHardware.allOff()
     #gpioZero takes care of this: GPIO.cleanup()
     # anything else?
@@ -27,7 +28,6 @@ def modac_exit():
 
 def modac_ServerEventLoop():
     print("event Loop")
-    print(moNetwork.subscribers)
     logging.info("Enter Event Loop")
     for i in range(300):
         #update inputs & run filters on data
@@ -36,6 +36,7 @@ def modac_ServerEventLoop():
         # run any filters
         #test_json(inputData)
         moNetwork.publish()
+        moNetwork.serverReceive()
 #        moNetwork.receive()        
         sleep(mainLoopDelay)
 
@@ -68,15 +69,18 @@ def modac_io_server():
     # initialize GPIO channels
     moData.init()
     moHardware.init()
-    moNetwork.startPublisher()
-    # run hardware tests
-    # initialize message passing, network & threads
+    
+    # we are The Server, theHub, theBroker
+    moNetwork.startServer()
+    
     try:
         #   run event loop
         print("modata:",moData.rawDict())
         modac_ServerEventLoop()
     except Exception as e:
         print("Exception somewhere in modac_io_server event loop. see log files")
+        print("caught something", sys.exc_info()[0])
+        traceback.print_exc()#sys.exc_info()[2].print_tb()
         logging.error("Exception happened", exc_info=True)
         logging.exception("Exception Happened")
     

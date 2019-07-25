@@ -19,52 +19,78 @@ from . import moData
 # locally required for this module
 from pynng import Pub0, Sub0, Timeout
 
-# convert this from raw ip to a zeroConf address
-zConfigName = "modac.local"
-pubAddress = 'tcp://127.0.0.1:31313'
+# ewwww some top level public variables (module globals)
+# guess they work sorta like Class variables, scope is this file
+# those with __ prefix are NOT exported to other modules when import moNetwork
 
-def shutdownNet():
-    pass
+# TODO: convert us from raw ip to a zeroConf address
+__zConfigName = "modac.local"
+__pubAddress = 'tcp://127.0.0.1:31313'
 
 # pub sub messages
-publisher = None
-subscribers = []
-topicDivider = '|'.encode('utf8')
+__Publisher = None
+__subscribers = [] # array of all subscribers, whether client or server's listener
+# semantic idea is looping thru Subscribers will dipatch() all messages currently received by sockets
+__topicDivider = '|'.encode('utf8')
 
-def init():
-    startPubSub()
-    
+def shutdownNet():
+    if not __Publisher == None:
+        __Publisher.close()
+    for s in __subscribers:
+        s.close()
+    pass
+
+def init(client=True):
+    assert False, "do not init() use startServer() or startClient()"
+    if client:
+        startClient()
+    else:
+        startServer()
+    pass
+
 def startPubSub():
-    startPublisher()
+    startServer()
     startSubscriber()
     
-def startPublisher():
-    logging.debug("startPublisher")
-    this.publisher = Pub0(listen=this.pubAddress)
+def startServer():
+    startPublsiher()
+    startCmdListener()
 
+def startCmdListener():
+    pass
+
+def startPublsiher():
+    logging.debug("start__Publisher")
+    this.__Publisher = Pub0(listen=this.__pubAddress)
+
+def startClient():
+    startSubscriber()
+    startCmdSender()
+    
+def startCmdSender():
+    pass
+
+# we really only have one topic at present. defaults should work until dispatch gets smarter
 def startSubscriber(keys=[keyForAllData()]):#topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
-#    subtopics = []
-#    for i in range(len(keys)):
-#        subtopics.append(topicForKey(keys[i]))
-    subscriber = Sub0(dial=this.pubAddress, recv_timeout=timeout, topics=keys)
-    this.subscribers.append(subscriber)
+    subscriber = Sub0(dial=this.__pubAddress, recv_timeout=timeout, topics=keys)
+    this.__subscribers.append(subscriber)
     #logging.debug("startSubscriber: ", subscriber)
     return subscriber
  
 def sendData(key, value):
     tempStr = json.dumps(value)
     #print("dataStr: ", tempStr)
-    msg = key.encode('utf8') + topicDivider+tempStr.encode('utf8')
-    this.publisher.send(msg)
+    msg = key.encode('utf8') + __topicDivider+tempStr.encode('utf8')
+    this.__Publisher.send(msg)
     #print("pub: ", msg)
     logging.debug("sendTopic %s"%msg)
     
-def sendKtype():
-    sendData(keyForKType(), moData.kType.asArray())
-    
-def sendEnviro():
-    sendData(keyForEnviro(), moData.enviro.asDict())
+#def sendKtype():
+#    sendData(keyForKType(), moData.kType.asArray())
+#    
+#def sendEnviro():
+#    sendData(keyForEnviro(), moData.enviro.asDict())
 
 def sendAllData():
     sendData(keyForAllData(), moData.asDict())
@@ -84,12 +110,13 @@ def splitTopicBody(msg):
     print("Decoded:", rv)
     return rv
     
-def receive():
+# client Recieve Loop, server will be different
+def clientReceive():
     msgReceived = False
-    for i in range(len(subscribers)):
+    for i in range(len(__subscribers)):
         try:
             while(1): #stays here till timeout or receive
-                msgRaw = this.subscribers[i].recv()
+                msgRaw = this.__subscribers[i].recv()
                 #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
                 logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 topic, body = splitTopicBody(msgRaw)
@@ -106,3 +133,7 @@ def dispatch(topic,body):
     if topic == keyForAllData():
         moData.updateAllData(body)
     # need to extract the Topic    
+
+def serverReceive():
+    #not sure yet what this might become
+    pass

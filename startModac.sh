@@ -1,3 +1,3 @@
 #!/bin/bash 
-python3 modac_io_server.py 
+python3 /home/pi/MODAC_Dev/modac_io_server.py 
 
