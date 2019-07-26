@@ -32,26 +32,6 @@ __ads0to5 = [0,0,0,0,0,0,0,0]
 __adsRawToV = (5.0/0x7fffff) # magic number to convert raw ADS1256 to 0-5Vdc
 
 __key = "ad24"
-__key_ad24Raw = "ad24Raw"
-__key_ad24v05 = "ad24v05"
-
-def key():
-    return __key;
-
-def topic():
-    return __key.encode() # encode as binary UTF8 bytes
-
-def keyRaw():
-    return __key_ad24Raw;
-
-def topicRaw():
-    return __key_ad24Raw.encode() # encode as binary UTF8 bytes
-
-def keyV05():
-    return __key_ad24v05;
-
-def topicVv05():
-    return __key_ad24v05.encode() # encode as binary UTF8 bytes
 
 def init():
     logging.debug("ad24Bit init()")

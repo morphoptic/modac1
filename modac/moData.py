@@ -58,3 +58,7 @@ def updateAllData(d):
         update(key,value)
     print("Updated: ", asJson())
     
+def binaryCmd(channel, onOff):
+    print("binaryCmd %d", channel)
+    print(onOff)
+    

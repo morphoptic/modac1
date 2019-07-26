@@ -7,7 +7,7 @@ def moKeyToTopic(key):
     return key.encode('utf8')
 
 def keyForAllData():
-    return "moData"
+    return "allData"
 def keyForTimeStamp():
     return "timestamp"
 def keyForEnviro():
@@ -18,6 +18,8 @@ def keyForKType():
     return "kType"
 def keyForAD24():
     return "ad24"
+def keyForAD16():
+    return "ad16"
 def keyForAD24Raw():
     return "ad24Raw"
 def keyForAD24v05():
@@ -28,5 +30,10 @@ def keyForTemperature():
     return "temperature"
 def keyForPressure():
     return "pressure"
+
+def keyForModacCmd():
+    return "modac"
+def keyForBinaryCmd():
+    return "binaryCmd"
 
 

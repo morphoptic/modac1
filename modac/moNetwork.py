@@ -26,16 +26,22 @@ from pynng import Pub0, Sub0, Timeout
 # TODO: convert us from raw ip to a zeroConf address
 __zConfigName = "modac.local"
 __pubAddress = 'tcp://127.0.0.1:31313'
+__cmdAddress = 'tcp://127.0.0.1:31313'
 
 # pub sub messages
 __Publisher = None
-__subscribers = [] # array of all subscribers, whether client or server's listener
-# semantic idea is looping thru Subscribers will dipatch() all messages currently received by sockets
-__topicDivider = '|'.encode('utf8')
+__CmdListener = None 
+__CmdSender = None
+#
+__subscribers = [] # array of all subscribers on PubSub in this process
 
 def shutdownNet():
     if not __Publisher == None:
         __Publisher.close()
+    if not __CmdListener == None:
+        __CmdListener.close()
+    if not __CmdSender == None:
+        __CmdSender.close()
     for s in __subscribers:
         s.close()
     pass
@@ -53,13 +59,10 @@ def startPubSub():
     startSubscriber()
     
 def startServer():
-    startPublsiher()
+    startPublisher()
     startCmdListener()
 
-def startCmdListener():
-    pass
-
-def startPublsiher():
+def startPublisher():
     logging.debug("start__Publisher")
     this.__Publisher = Pub0(listen=this.__pubAddress)
 
@@ -67,7 +70,12 @@ def startClient():
     startSubscriber()
     startCmdSender()
     
+def startCmdListener():
+    __CmdListener =  Pair1(listen=address, polyamorous=True, recv_timeout=100)
+    pass
+
 def startCmdSender():
+    __CmdSender =  Pair1(dial=address, polyamorous=True, recv_timeout=100)
     pass
 
 # we really only have one topic at present. defaults should work until dispatch gets smarter
@@ -77,15 +85,7 @@ def startSubscriber(keys=[keyForAllData()]):#topics=[moTopicForKey(keyForAllData
     this.__subscribers.append(subscriber)
     #logging.debug("startSubscriber: ", subscriber)
     return subscriber
- 
-def sendData(key, value):
-    tempStr = json.dumps(value)
-    #print("dataStr: ", tempStr)
-    msg = key.encode('utf8') + __topicDivider+tempStr.encode('utf8')
-    this.__Publisher.send(msg)
-    #print("pub: ", msg)
-    logging.debug("sendTopic %s"%msg)
-    
+
 #def sendKtype():
 #    sendData(keyForKType(), moData.kType.asArray())
 #    
@@ -101,6 +101,13 @@ def publish():
 #    sendEnviro()
     sendAllData()
 
+__topicDividerRaw = '|'
+__topicDivider = __topicDividerRaw.encode('utf8')
+
+def mergeTopicBody(key, value):
+    msg = key.encode('utf8') + __topicDivider + value.encode('utf8')
+    return msg
+    
 def splitTopicBody(msg):
     s = msg.decode('utf8')
     split = s.split('|')
@@ -109,7 +116,15 @@ def splitTopicBody(msg):
     rv = (topic, body)
     print("Decoded:", rv)
     return rv
-    
+
+def sendData(key, value):
+    tempStr = json.dumps(value)
+    #print("dataStr: ", tempStr)
+    msg = mergeTopicBody(key, value)
+    this.__Publisher.send(msg)
+    #print("pub: ", msg)
+    logging.debug("sendTopic %s"%msg)
+
 # client Recieve Loop, server will be different
 def clientReceive():
     msgReceived = False
@@ -120,7 +135,7 @@ def clientReceive():
                 #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
                 logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 topic, body = splitTopicBody(msgRaw)
-                dispatch(topic,body)
+                clientDispatch(topic,body)
                 msgReceived = True
         except Timeout:
             logging.debug("receive timeout on subsciber %d"%(i))
@@ -128,12 +143,78 @@ def clientReceive():
             logging.exception("Some other exeption! on sub%d "%(i))
     return msgReceived
             
-def dispatch(topic,body):
+def clientDispatch(topic,body):
     print("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
         moData.updateAllData(body)
-    # need to extract the Topic    
+    else:
+        logging.warning("Unknown Topic in ClientDispatch %s"%topic)
+    # handle other client messages   
 
 def serverReceive():
     #not sure yet what this might become
-    pass
+    if __CmdListener == None:
+        logger.error("attempt to serverReceive() from non-Server")
+        return False
+    msg = None
+    try:
+        rawMsg = __CmdListener.recv_msg()
+        #rawMsg is a pyNNG Message with gives info on sender
+        msgBytes = rawMsg.bytes
+        topic, body = splitTopicBody(msgBytes)
+        if not topic == keyForModacCmd():
+            logging.warning("CmdListener got non-modac command %s"%topic)
+            return False
+        # ok... body should hold modac encrypted command
+        body = modacDecrypt(body)
+        topic, body = splitTopicBody(msgRaw)
+        serverDispatch(topic,body)
+        return True
+    except Timeout:
+        logging.debug("serverReceive() receive timeout")
+        return False
+    except :
+        logging.error("serverReceive() caught exception %s"%sys.exc_info()[0])
+        traceback.print_exc()#sys.exc_info()[2].print_tb()
+        logging.exception("Some other exeption! on sub%d "%(i))
+        return False
+
+
+# security encoding of commands
+def modacEncode(text):
+    encodedText = text
+    return encodedText
+
+def modacDecode(crypto):
+    clearTxt = crypto
+    return clearTxt
+
+def sendCommand(cmd):
+    if __ClientSender == None:
+        logger.error("attempt to sendCommand from non-client")
+        return False
+    logger.info("send command: %s"%cmd)
+    #package up the envelope with topic
+    msg = keyForModacCmd() + __topicDividerRaw + modacEncode(cmd)
+    msg = msg.encode('utf8')
+    __ClientSender.send(msg)
+    return True
+
+def cmdBinary(binaryId, onOff):
+    body = keyForBinaryCmd()+ json.dumps((binaryId, onOff))
+    logging.debug("cmdBinary: %s"%body)
+    return sendCommand(body)
+
+def serverDispatch(topic,body):
+    print("serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    if topic == keyForBinaryCmd():
+        payload = json.loads(body)
+        print("serverDispatch payload")
+        print(payload)
+        moData.binaryCmd(payload[0],payload[1]) # channel, onOff
+    else:
+        logging.warning("Unknown Topic in ClientDispatch %s"%topic)
+    # handle other client messages   
+
+
+

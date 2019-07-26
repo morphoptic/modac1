@@ -34,7 +34,7 @@ def modac_SubscriberEventLoop():
         # run any filters
         #test_json(inputData)
 #        moNetwork.publish()
-        moNetwork.receive()        
+        moNetwork.clientReceive()        
         sleep(mainLoopDelay)
 
 def log_data():
