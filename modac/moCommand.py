@@ -8,4 +8,9 @@ import json
 
 #import rest of modac
 from .moKeys import *
-from . import moData
+from . import moData, moNetwork
+
+def sendBinaryOut(binOutIdx, onOff):
+    assert isinstance(binOutIdx, int)
+    assert isinstance(onOff, bool)
+    moNetwork.cmdBinary(binOutIdx, onOff)

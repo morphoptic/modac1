@@ -60,6 +60,6 @@ def updateAllData(d):
     print("Updated: ", asJson())
     
 def binaryCmd(channel, onOff):
-    print("binaryCmd %d", channel)
+    print("************binaryCmd %d", channel)
     print(onOff)
     
