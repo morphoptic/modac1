@@ -6,6 +6,7 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
+#print("ad16 module name ",__name__, this)
 
 #import rest of modac
 #from . import 
@@ -27,53 +28,108 @@ import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
 # Create the I2C bus
-__ad16_i2c = None 
+__ad16_i2c = None
+def get_i2c():
+    return __ad16_i2c
 
 # Create the ADC objects using the I2C bus and deviceAddresses
 # for each device enter its address in this array
 # default is one at 72
 __ad16devAddr = [72]
-__ad16dev = None
+__ad16dev = []
 
 # Define channels of single-ended inputs
 # each entry of array is a Dict that specifies
 #  * the device index (used for the __ad16dev arrays),
 #  * the channel on device,
 #  * slot for the Analog() object
-__ad16chan = [
-    { devIdx=0, devChan=ADS.P0, adsChan=None}
-    { devIdx=0, devChan=ADS.P1, adsChan=None}
-    { devIdx=0, devChan=ADS.P2, adsChan=None}
-    { devIdx=0, devChan=ADS.P3, adsChan=None}
+
+# chan Config is list of tuples, each giving idx of Device and ADS channel
+__ad16chanConfig = [
+    ( 0, ADS.P0),
+    ( 0, ADS.P1),
+    ( 0, ADS.P2),
+    ( 0, ADS.P3)
 ]
+__channels = []
+__values = []
+
+class moAD16Device:
+    address = -1
+    device = None
+    def __init__(self, address= 72):
+        self.address = address
+        #print("Init AD16Device at i2c address", address)
+        #print("ad16 module name ",__name__, this)
+        if this.get_i2c() == None:
+            logger.debug("AD16Device initializing busio I2C")
+            this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
+        self.device = ADS.ADS1115(this.get_i2c(),address=self.address)        
+
+class AD16Channel:
+    myDevice = None
+    deviceChannel = -1
+    analogIn = None
+    
+    def __init__(self, dev, devChan):
+        assert not dev == None
+        assert isinstance(dev, moAD16Device)
+        #print("InitAD16Channel dev ", dev)
+        #print("InitAD16Channel devChan ", devChan)
+        self.myDevice = dev.device
+        assert not self.myDevice == None
+        self.deviceChannel = devChan
+        self.analogIn = AnalogIn(ads=self.myDevice, positive_pin=self.deviceChannel)
+        #print("InitAD16Channel analogIn", self.analogIn)
+        #print("InitAD16Channel myDevice ", self.myDevice)
+        #print("Initialized device chan: ", self.deviceChannel)
+        #print("   gives value: ", self.value())
+
+    def value(self):
+        #print("enter ad16channel value()")
+        assert isinstance(self.analogIn,AnalogIn)
+        return self.analogIn.voltage    
 
 def init():
     # init the adafruit i2c bus
     this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
     # init each defined device
+    #print("  size: devAddress[]",len(this.__ad16devAddr))
     for idx in range(len(this.__ad16devAddr)):
-        dev = ADS.ADS1015(this.__ad16_i2c, address=this.__ad16devAddr[idx])
-        this.__ad16dev[i] = dev
+        this.__ad16dev.append(moAD16Device(address=this.__ad16devAddr[idx]))
+    #print("Initialized devices: ", this.__ad16dev)
     # init each channel
-    for idx in range(len(this.__ad16chan)):
-        chan = AnalogIn(this.__ad16chan[idx].devIdx, this.__ad16chan[idx].devChan)
-        this.__ad16chan[idx].adsChan = chan
-        
+    #loop thru config array (deviceIdx, chanId)
+    for idx in range(len(this.__ad16chanConfig)):
+        #print("create channel ",idx,this.__ad16chanConfig[idx])
+        t = this.__ad16chanConfig[idx]
+        deviceIdx = t[0]
+        device = this.__ad16dev[deviceIdx]
+        chanId = t[1]
+        channel = AD16Channel(device, chanId)
+        this.__channels.append(channel)
+        this.__values.append(0)
     this.update()
-    
+    #print("ad16 Initialized")
+    #print("__ad16devAddr ",__ad16dev)
+    #print("__ad16chanConfig ",__ad16chanConfig)
+    #print("__channels ",__channels)
+    #print("__values ",__values)
+
+     
 def update():
     logging.debug("ad16 update()")
+    #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
+    #print (this.__values)
     # currently crude get all 8 with same default configutatoin
-    raw = this.__ads1256.ADS1256_GetAll()
-    for i in range(len(raw)):
-        this.__adsRaw[i] = raw[i]
-        this.__ads0to5[i] = raw[i] * this.__adsRawToV
-    moData.update(keyForAD24(), all0to5Array())
+    for i in range(len(this.__channels)):
+        channel = this.__channels[i]
+        #print(i, "channel", channel)
+        this.__values[i] = channel.value()
+    moData.update(keyForAD16(), this.__values)
 
+def values():
+    #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
+    #print (this.__values)
+    return this.__values
 
-#
-#print("{:>5}\t{:>5}".format('raw', 'v'))
-#
-#while True:
-#    print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
-#    time.sleep(0.5)

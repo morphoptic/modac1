@@ -10,12 +10,16 @@ from adafruit_ads1x15.analog_in import AnalogIn
 
 # Create the I2C bus
 i2c = busio.I2C(board.SCL, board.SDA)
-
+print("i2c", i2c)
 # Create the ADC object using the I2C bus
 ads = ADS.ADS1115(i2c)
+print("ads",ads)
 
 # Create single-ended input on channel 0
 chan = AnalogIn(ads, ADS.P0)
+print("chan", chan)
+print(" value", chan.value)
+print(" volts", chan.voltage)
 
 # Create differential input between channel 0 and 1
 #chan = AnalogIn(ads, ADS.P0, ADS.P1)

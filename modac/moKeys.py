@@ -6,30 +6,43 @@ def moKeyToTopic(key):
     assert isinstance(key,str)
     return key.encode('utf8')
 
+# at this point we are really only using AllData and Cmd for net comms
+# but other keys are used for getting data from the moData active data repository
 def keyForAllData():
     return "allData"
+
+# these are data from Enviro Sensor (BMEchip)
 def keyForTimeStamp():
     return "timestamp"
 def keyForEnviro():
     return "enviro"
-def keyForBinaryOut():
-    return "binaryOut"
-def keyForKType():
-    return "kType"
-def keyForAD24():
-    return "ad24"
-def keyForAD16():
-    return "ad16"
-def keyForAD24Raw():
-    return "ad24Raw"
-def keyForAD24v05():
-    return "ad24v05"
 def keyForHumidity():
     return "humidity"
 def keyForTemperature():
     return "temperature"
 def keyForPressure():
     return "pressure"
+
+# array of Binary Outputs - relays etc 
+def keyForBinaryOut():
+    return "binaryOut"
+
+# Two types of AnalogDigital Converters, with minimal control provided
+# AD16 holds array of 16bit AD input channels  generally 0-5v measure
+def keyForAD16():
+    return "ad16"
+
+# AD24 holds array of 24bit input channels  generally 0-5v measure
+def keyForAD24():
+    return "ad24"
+def keyForAD24Raw():
+    return "ad24Raw"
+def keyForAD24v05():
+    return "ad24v05"
+
+# array of K Type Thermocouple channels DegC units
+def keyForKType():
+    return "kType"
 
 def keyForModacCmd():
     return "modac"

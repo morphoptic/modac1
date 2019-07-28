@@ -19,6 +19,7 @@ def init():
     update(keyForBinaryOut(),None)
     update(keyForEnviro(), None)
     update(keyForAD24(),None)
+    update(keyForAD16(), None)
     update(keyForKType(), None)
     print("Initialized moData",rawDict())
     

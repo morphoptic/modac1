@@ -17,7 +17,7 @@ import json
 from .moKeys import *
 from . import moData
 # locally required for this module
-from pynng import Pub0, Sub0, Timeout
+from pynng import Pub0, Sub0, Pair1, Timeout
 
 # ewwww some top level public variables (module globals)
 # guess they work sorta like Class variables, scope is this file
@@ -26,7 +26,7 @@ from pynng import Pub0, Sub0, Timeout
 # TODO: convert us from raw ip to a zeroConf address
 __zConfigName = "modac.local"
 __pubAddress = 'tcp://127.0.0.1:31313'
-__cmdAddress = 'tcp://127.0.0.1:31313'
+__cmdAddress = 'tcp://127.0.0.1:21212'
 
 # pub sub messages
 __Publisher = None
@@ -71,11 +71,11 @@ def startClient():
     startCmdSender()
     
 def startCmdListener():
-    __CmdListener =  Pair1(listen=address, polyamorous=True, recv_timeout=100)
+    __CmdListener =  Pair1(listen=__cmdAddress, polyamorous=True, recv_timeout=100)
     pass
 
 def startCmdSender():
-    __CmdSender =  Pair1(dial=address, polyamorous=True, recv_timeout=100)
+    __CmdSender =  Pair1(dial=__cmdAddress, polyamorous=True, recv_timeout=100)
     pass
 
 # we really only have one topic at present. defaults should work until dispatch gets smarter
@@ -120,7 +120,7 @@ def splitTopicBody(msg):
 def sendData(key, value):
     tempStr = json.dumps(value)
     #print("dataStr: ", tempStr)
-    msg = mergeTopicBody(key, value)
+    msg = mergeTopicBody(key, tempStr)
     this.__Publisher.send(msg)
     #print("pub: ", msg)
     logging.debug("sendTopic %s"%msg)
@@ -154,7 +154,7 @@ def clientDispatch(topic,body):
 def serverReceive():
     #not sure yet what this might become
     if __CmdListener == None:
-        logger.error("attempt to serverReceive() from non-Server")
+        logging.error("attempt to serverReceive() CmdListener not initialized")
         return False
     msg = None
     try:
