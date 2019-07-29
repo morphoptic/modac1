@@ -25,7 +25,8 @@ sudo pip3 install Rpi.bme280
 #sudo pip3 install Adafruit-SSD1306
 sudo pip3 install adafruit-circuitpython-ads1x15
 #
-# sudo pip3 install simple-crypt
+# for leica control over btl/gatttool
+sudo pip3 install pexpect
 #
 # getting GTK3 installed
 sudo apt install -y libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0

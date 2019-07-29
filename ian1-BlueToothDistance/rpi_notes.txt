@@ -31,3 +31,8 @@ sudo hciconfig hci0 up
 # Temp installation
 https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/installing-circuitpython-on-raspberry-pi
 sudo pip3 --default-timeout=1000 install adafruit-circuitpython-max31855
+
+
+.... JI 27July
+disto from Joe w/ hcitool lescan...
+   D3:9D:70:68:8B:F2 DISTO 84312758
