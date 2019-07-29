@@ -17,11 +17,18 @@ def testAll():
     sleep(sleepDelay)
     print("moDataDict:",moData.rawDict())
 
-    logging.info("Step each on off w delay")
+    logging.info("Test with on()/off")
     for i in range(0,binaryOutputs.count()):#in range(0,8):
         binaryOutputs.on(i)
         sleep(sleepDelay)
         binaryOutputs.off(i)
+    print("moDataDict:",moData.rawDict())
+        
+    logging.info("Test setOutput")
+    for i in range(0,binaryOutputs.count()):#in range(0,8):
+        binaryOutputs.setOutput(i,True)
+        sleep(sleepDelay)
+        binaryOutputs.setOutput(i,False)
     print("moDataDict:",moData.rawDict())
         
     logging.info("All on then off w delay")

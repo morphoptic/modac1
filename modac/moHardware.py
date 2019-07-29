@@ -45,4 +45,6 @@ def asDict():
 def allOff():
     binaryOutputs.allOff()
     
+def binaryCmd(channel,onoff):
+    binaryOutputs.setOutput(channel,onoff)
 

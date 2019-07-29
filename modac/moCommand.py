@@ -8,9 +8,11 @@ import json
 
 #import rest of modac
 from .moKeys import *
-from . import moData, moNetwork
+from . import moData, moNetwork, moClient
 
-def sendBinaryOut(binOutIdx, onOff):
+def cmdBinary(binOutIdx, onOff):
     assert isinstance(binOutIdx, int)
     assert isinstance(onOff, bool)
-    moNetwork.cmdBinary(binOutIdx, onOff)
+    body = (binOutIdx, onOff)
+    print("cmdBinary ",keyForBinaryCmd(),body)
+    moClient.sendCommand(keyForBinaryCmd(), body)

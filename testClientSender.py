@@ -10,7 +10,7 @@ import argparse
 import json
 
 # my stuff
-from modac import moData, moNetwork
+from modac import moData, moNetwork, moClient, moCommand
 
 loggerInit = False
 runTests = False #True
@@ -18,21 +18,21 @@ mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
     logging.info("modac_exit")
-    moNetwork.shutdownNet()
+    moClient.shutdownClient()
     exit()
 
-def testSubscriberSender_EventLoop():
+def testClientSender_EventLoop():
     binState = False
     binOutIdx = 0
-    print("testSubscriberSender_EventLoop ")
+    print("testClientSender_EventLoop ")
     logging.info("Enter Event Loop")
     for i in range(30): #currently only do a few while we get it running
-        logging.debug("testSubscriberSender_EventLoop - iter %d"%(i))
+        logging.debug("testClientSender_EventLoop - iter %d"%(i))
         #update inputs & run filters on data
         # run any filters
         #test_json(inputData)
 #        moNetwork.publish()
-        moNetwork.clientReceive()
+        moClient.clientReceive()
         if i%2 == 1:
             # even loops toggle BinaryOut 1 = outlet (makes click sound)
             print("Toggle binState: ",binState)
@@ -42,7 +42,7 @@ def testSubscriberSender_EventLoop():
             else:
                 # turn on
                 binState = True
-            moNetwork.cmdBinary(binOutIdx, binState)
+            moCommand.cmdBinary(binOutIdx, binState)
         sleep(mainLoopDelay)
 
 def log_data():
@@ -52,8 +52,8 @@ def log_data():
     print(moJson)
     logging.info(moJson)
     
-def testSubscriberSender():
-    logging.info("start testSubscriberSender()")
+def testClientSender():
+    logging.info("start testClientSender()")
     # modac_testLogging()
     # load config files
     modac_loadConfig()
@@ -62,12 +62,12 @@ def testSubscriberSender():
     # initialize data structures
     # initialize GPIO channels
     moData.init()
-    moNetwork.startClient()
+    moClient.startClient()
     # run hardware tests
     # initialize message passing, network & threads
     try:
         #   run event loop
-        testSubscriberSender_EventLoop()
+        testClientSender_EventLoop()
     except Exception as e:
         print("Exception somewhere in modac_netLogger event loop. see log files")
         logging.error("Exception happened", exc_info=True)
@@ -143,9 +143,9 @@ def setupLogging():
 if __name__ == "__main__":
     modac_argparse() # capture cmd line args to modac_args dictionary for others
     setupLogging() # start logging (could use cmd line args config files)
-    print("testSubscriberSender testing both pub/sub data and Pair1 cmd channels")
+    print("testClientSender testing both pub/sub data and Pair1 cmd channels")
     try:
-        testSubscriberSender()
+        testClientSender()
     except Exception as e:
         print("Exception somewhere in modac_netLogger. see log files")
         logging.error("Exception happened", exc_info=True)

@@ -12,7 +12,7 @@ import gpiozero
 import json
 
 # my stuff
-from modac import moKeys, moData, moHardware, moNetwork
+from modac import moKeys, moData, moHardware, moNetwork, moServer
 
 loggerInit = False
 runTests = False #True
@@ -22,7 +22,7 @@ def modac_exit():
     logging.info("modac_exit")
     moHardware.allOff()
     #gpioZero takes care of this: GPIO.cleanup()
-    moNetwork.shutdownNet()
+    moServer.shutdownServer()
     exit()
 
 def modac_ServerEventLoop():
@@ -34,8 +34,8 @@ def modac_ServerEventLoop():
         log_data()
         # run any filters
         #test_json(inputData)
-        moNetwork.publish()
-        moNetwork.serverReceive()
+        moServer.publish()
+        moServer.serverReceive()
         sleep(mainLoopDelay)
 
 def test_json(inputData):
@@ -69,7 +69,7 @@ def modac_io_server():
     moHardware.init()
     
     # we are The Server, theHub, theBroker
-    moNetwork.startServer()
+    moServer.startServer()
     
     try:
         #   run event loop

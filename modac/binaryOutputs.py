@@ -4,6 +4,7 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
+
 #import rest of modac
 #from . import module name
 from .moKeys import *
@@ -55,7 +56,7 @@ def asArray():
 
 def asDict():
     return {keyForBinaryOut():asArray()}
-    
+
 def on(deviceId):
     # good place for an assert()
     if deviceId < 0 or deviceId > 8:
@@ -74,7 +75,13 @@ def off(deviceId):
     logging.debug("binaryOut OFF "+str(deviceId))
     this.__relays[deviceId].off()
     update()
-    
+
+def setOutput(channel, onoff):
+    if onoff:
+        this.on(channel)
+    else:
+        this.off(channel)
+
 def allOn():
     logging.debug("binaryOut allOn ")
     for i in range(0,len(__relays)):
