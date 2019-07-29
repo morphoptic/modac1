@@ -21,6 +21,7 @@ def init():
     update(keyForAD24(),None)
     update(keyForAD16(), None)
     update(keyForKType(), None)
+    update(keyForLeicaDisto(), None)
     print("Initialized moData",rawDict())
     
     # modac_BLE_Laser.init()
@@ -58,8 +59,4 @@ def updateAllData(d):
     for key, value in d.items():
         update(key,value)
     print("Updated: ", asJson())
-    
-def binaryCmd(channel, onOff):
-    print("************binaryCmd %d", channel)
-    print(onOff)
     

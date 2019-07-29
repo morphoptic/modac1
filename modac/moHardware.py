@@ -8,7 +8,7 @@ import sys
 this = sys.modules[__name__]
 #import rest of modac
 from .moKeys import *
-from . import moData, enviro, ad24, ad16, kType, binaryOutputs
+from . import moData, enviro, ad24, ad16, kType, binaryOutputs, leicaDisto
 
 # locally required for this module
 
@@ -18,6 +18,7 @@ def init():
     ad24.init()
     ad16.init()
     kType.init()
+    leicaDisto.init()
     # modac_BLE_Laser.init()
     # force at least one update so moData is populated
     update()
@@ -29,9 +30,14 @@ def update():
     ad24.update()
     ad16.update()
     kType.update()
+    leicaDisto.update()
     # modac_BLE_Laser.update()
     #moData.update(keyForAllData(), asDict())
     pass
+
+def shutdown():
+    this.allOff()
+
 
 def asDict():
     moHW = {

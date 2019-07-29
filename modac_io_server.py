@@ -1,7 +1,8 @@
-# modac_io_server v0.3
-# replacing server2 from last git commit
-# working now on pub/sub server later on the cmd back channel
-# moNetwork is key, modac_netLogger is first client
+# modac_io_server testbed for MODAC hardware server
+# connects hardware to data and network
+# provides pyNNG pubSub publishing of data (see moNetwork)
+# provides pyNNG Pair1 command pairing with clients
+# note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
 import datetime
 from time import sleep
 import sys
@@ -10,6 +11,7 @@ import logging, logging.handlers
 import argparse
 import gpiozero
 import json
+import signal
 
 # my stuff
 from modac import moKeys, moData, moHardware, moNetwork, moServer
@@ -19,8 +21,8 @@ runTests = False #True
 mainLoopDelay = 2 # seconds for sleep at end of main loop
 
 def modac_exit():
-    logging.info("modac_exit")
-    moHardware.allOff()
+    logging.info("modac_exit shutting down")
+    moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     moServer.shutdownServer()
     exit()
@@ -152,7 +154,8 @@ def setupLogging():
 if __name__ == "__main__":
     modac_argparse() # capture cmd line args to modac_args dictionary for others
     setupLogging() # start logging (could use cmd line args config files)
-    print("modac_nngPubSub testing nng publish-subscribe")
+    print("modac_io_server testbed for MODAC hardware server")
+    signal.signal(signal.SIGINT, modac_exit)
     try:
         modac_io_server()
     except Exception as e:

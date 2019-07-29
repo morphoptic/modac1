@@ -44,6 +44,10 @@ def keyForAD24v05():
 def keyForKType():
     return "kType"
 
+# Leica Disto D1 distance sensor
+def keyForLeicaDisto():
+    return "leicaD1"
+
 def keyForModacCmd():
     return "modac"
 def keyForBinaryCmd():

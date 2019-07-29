@@ -57,7 +57,8 @@ if measure_dist:
     gatt.expect('Connection successful', timeout=5)
     time.sleep(1)
 
-    print('Leica connected')
+    print('Leica connected ')
+    print("gatt=",str(gatt))
 
     # Enable Indications
     # (Ian) Wish I knew what this did?
@@ -65,6 +66,7 @@ if measure_dist:
     gatt.sendline('char-write-cmd 0x000f 0200')
     gatt.sendline('char-write-cmd 0x0012 0200')
     time.sleep(1)
+    print("gatt=",str(gatt))
     
 # (Ian) Filename for now is just the date
 date_str = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")

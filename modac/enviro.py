@@ -1,12 +1,6 @@
-# moBME280 class wrapper over Adafruit BME280 I2C temp-humidity-pressure
-# err this does NOT use adafruit code, just hardware
+# MODAC enviro nment sensor
+# basically wrapper over BME280 I2C temp-humidity-pressure
 # i think it uses Rpi.bme280  https://github.com/rm-hull/bme280
-# adafruit library does not use gpioZero
-# hopefully there isnt a conflict
-#import gpiozero
-# cute hack to use module namespace this.fIO this.value should work
-# moNetwork - pubsub etc networking
-    #import rest of modac
  
 import sys
 this = sys.modules[__name__]
@@ -128,3 +122,8 @@ def testBME280():
         print("asJson ", asJson())
         #print("alt :", bme)
         sleep(1)
+
+if __name__ == "__main__":
+    print("modac.enviro has no self test")
+    exit(0)
+  

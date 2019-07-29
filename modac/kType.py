@@ -1,8 +1,4 @@
 # kType
-if __name__ == "__main__":
-    print("modac.kType has no self test")
-    exit(0)
-  
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
@@ -18,7 +14,7 @@ from thermocouples_reference import thermocouples
 
 __typeK = thermocouples['K']
 __kTypeIdx= [4,5,6] #indexs into AD24Bit array for k-type thermocouple
-# todo - convert this to channels ad24.a0() or something better
+# TODO - expand to AD16 as well
 
 def mVToC(mV,tempRef=0):
     return __typeK.inverse_CmV(mV, Tref=tempRef)
@@ -45,3 +41,8 @@ def asArray():
 
 def asDict():
     return {keyForKType(): asArray() }
+
+if __name__ == "__main__":
+    print("modac.kType has no self test")
+    exit(0)
+  
