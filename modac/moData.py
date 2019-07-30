@@ -6,6 +6,8 @@ if __name__ == "__main__":
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
+
+import logging, logging.handlers, traceback
 #import rest of modac
 from .moKeys import *
 
@@ -59,4 +61,57 @@ def updateAllData(d):
     for key, value in d.items():
         update(key,value)
     print("Updated: ", asJson())
+
+def logData():
+    logging.info(this.asJson())
     
+
+######  for CSV
+__namesOfColumns = None
+# do this manually or using names?
+# bit too complex for dictwriter, given many entries are complex
+def __appendArray(key,targetArray):
+    a = this.getValue(key)
+    targetArray + a
+    
+def asArray():
+    a = []
+    a.append(this.getValue(keyForTimeStamp()))
+    env = this.getValue(keyForEnviro())
+    a.append(env[keyForTemperature()])
+    a.append(env[keyForHumidity()])
+    a.append(env[keyForPressure()])
+    a.append(this.getValue(keyForLeicaDisto()))
+    
+    a += this.getValue(keyForAD24())
+    a += this.getValue(keyForAD16())
+    a += this.getValue(keyForKType())
+    a += this.getValue(keyForBinaryOut())
+    return a
+
+def __appendAName(key):
+    print("__appendAName key:", key)
+    cPrefix = key
+    a = this.getValue(key)
+    print("__appendAName a:", a)
+    assert isinstance(a, list)
+    for i in range(len(a)):
+        s = cPrefix+"_"+str(i)
+        this.__namesOfColumns.append(s)
+
+def arrayColNames():
+    if not this.__namesOfColumns == None:
+        return this.__namesOfColumns
+    this.__namesOfColumns = []
+    this.__namesOfColumns.append(keyForTimeStamp())
+    this.__namesOfColumns.append(keyForTemperature())
+    this.__namesOfColumns.append(keyForHumidity())
+    this.__namesOfColumns.append(keyForPressure())
+    this.__namesOfColumns.append(keyForLeicaDisto())
+    this.__namesOfColumns.append(keyForTemperature())
+    this.__appendAName(keyForAD24())
+    this.__appendAName(keyForAD16())
+    this.__appendAName(keyForKType())
+    this.__appendAName(keyForBinaryOut())
+  
+    return this.__namesOfColumns

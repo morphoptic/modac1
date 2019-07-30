@@ -7,14 +7,14 @@ import datetime
 from time import sleep
 import sys
 import os
-import logging, logging.handlers
+import logging, logging.handlers, traceback
 import argparse
 import gpiozero
 import json
 import signal
 
 # my stuff
-from modac import moKeys, moData, moHardware, moNetwork, moServer
+from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
 
 loggerInit = False
 runTests = False #True
@@ -25,6 +25,7 @@ def modac_exit():
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     moServer.shutdownServer()
+    moCSV.close()
     exit()
 
 def modac_ServerEventLoop():
@@ -33,31 +34,14 @@ def modac_ServerEventLoop():
     for i in range(300):
         #update inputs & run filters on data
         moHardware.update()
-        log_data()
+        moData.logData()
+        moCSV.addRow()
         # run any filters
         #test_json(inputData)
         moServer.publish()
         moServer.serverReceive()
         sleep(mainLoopDelay)
 
-def test_json(inputData):
-    print("------------ write JSON File modacData.json --------")
-    with open("modacData.json",'w') as jsonFile:
-        json.dump(inputData, jsonFile, indent=4)
-        
-    print("------------ read JSON File modacData --------")
-    with open("modacData.json",'r') as jsonFile:
-        data = json.load(jsonFile)
-        print("Read: ", data)
-        print("asJson: ", json.dumps(data, indent=4))
-
-def log_data():
-    moDict = moData.asDict()
-    #print("moData:",moDict)
-    moJson = json.dumps(moDict, indent=4)
-    #print(moJson)
-    logging.info(moJson)
-    
 def modac_io_server():
     logging.info("start modac_io_server()")
     # modac_testLogging()
@@ -69,6 +53,8 @@ def modac_io_server():
     # initialize GPIO channels
     moData.init()
     moHardware.init()
+    moCSV.init()
+
     
     # we are The Server, theHub, theBroker
     moServer.startServer()

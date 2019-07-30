@@ -4,7 +4,7 @@
 import sys
 this = sys.modules[__name__]
 # other system imports
-import logging, logging.handlers
+import logging, logging.handlers, traceback
 import json
 #from simplecrypt import encrypt, decrypt
 from binascii import hexlify, unhexlify
