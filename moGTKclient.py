@@ -25,7 +25,7 @@ from matplotlib.figure import Figure
 
 # modac
 from modac.moKeys import *
-from modac import moData, moNetwork
+from modac import moData, moNetwork, moClient, moCommand, moLogger
 
 columnNames = ['time','degC', '%rH', 'hPa']
 
@@ -64,11 +64,7 @@ class DataWindow(Gtk.Window):
         self.humidButton.connect("clicked", self.plotHumid)
         self.pressureButton.connect("clicked", self.plotPressure)
         self.printButton.connect("clicked", self.printList)
- 
-        # setup MODAC data/networking
-        moData.init()
-        moNetwork.startSubscriber()
-        
+         
         plot_width = self.plot_width = 100
         self.count=0
         self.times = [0]*plot_width
@@ -86,7 +82,6 @@ class DataWindow(Gtk.Window):
             column.set_clickable(True)
             column.connect("clicked", self.clickedColumn, i)
             self.treeview.append_column(column)
-            
         
         self.getData() # put one item in data
         
@@ -116,7 +111,7 @@ class DataWindow(Gtk.Window):
     
     def getData(self):
         # update from network
-        if not moNetwork.clientReceive():
+        if not moClient.clientReceive():
             return False
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
@@ -211,57 +206,23 @@ class DataWindow(Gtk.Window):
         self.plotColumn = idx
         self.updatePlot()
 
-loggerInit = False
-def setupLogging():
-    global loggerInit
-    print("setupLogging")
-    if loggerInit :
-        logging.warn("Duplicate call to setupLogging()")
-        return
-    maxLogSize = (1024 *1000)
-    # setup logger
-    now = datetime.datetime.now()
-    nowStr = now.strftime("%Y%m%d_%H%M%S")
-    logName = "moGTKClient"+nowStr+".log"
-    logFormatStr = "%(asctime)s [%(threadName)-12.12s] [%(name)s] [%(levelname)-5.5s] %(message)s"
-    # setup base level logging to stderr (console?)
-    # consider using logging.config.fileConfig()
-    # consider using log directory ./log
-    logDirName = os.path.join(os.getcwd(),"logs")
-    if os.path.exists(logDirName) == False:
-        os.mkdir(logDirName)
-        
-    logName = os.path.join(logDirName, logName)
-    print("print Logging to stderr and " + logName)
+
     
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format=logFormatStr)
-    
-    rootLogger = logging.getLogger()
-    
-    logFormatter = logging.Formatter(logFormatStr)
-    #consoleHandler = logging.StreamHandler()
-    #consoleHandler.setFormatter(logFormatter)
-    #rootLogger.addHandler(consoleHandler);
-    # chain rotating file handler so logs go to stderr as well as logName file
-    fileHandler = logging.handlers.RotatingFileHandler(logName, maxBytes=maxLogSize, backupCount=10)
-    fileHandler.setFormatter(logFormatter)
-    rootLogger.addHandler(fileHandler)
-    
-    logging.captureWarnings(True)
-    logging.info("Logging Initialized")
-    print("Logging Initialized? should have echo'd on line above")
-    loggerInit = True
-    
-def modac_exit():
-    logging.info("modac_exit")
-    moNetwork.shutdownNet()
+def modacExit():
+    logging.info("modacExit")
+    moClient.shutdownClient()
     exit()
+def modacInit():
+    # setup MODAC data/networking
+    moData.init()
+    moClient.startClient()
 
 if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
-    setupLogging() # start logging (could use cmd line args config files)
-    print("moGTKclient testing nng publish-subscribe")
+    moLogger.init("moGTKClient") # start logging (could use cmd line args config files)
+    print("moGTKclient gui showing Enviro panel only")
     try:
+        modacInit()
         manager = DataWindow()
         manager.show_all()
         Gtk.main()
@@ -271,5 +232,5 @@ if __name__ == "__main__":
         logging.exception("huh?")
     finally:
         print("end main of moGTKclient")
-    modac_exit()
+    modacExit()
 
