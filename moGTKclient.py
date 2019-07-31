@@ -27,6 +27,7 @@ from matplotlib.figure import Figure
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
 
+### kinda messy having global
 columnNames = ['time','degC', '%rH', 'hPa']
 
 class DataWindow(Gtk.Window):
@@ -43,6 +44,7 @@ class DataWindow(Gtk.Window):
         self.vbox = Gtk.VBox(homogeneous=False, spacing=8)
         self.add(self.vbox)
 
+        # setup Toolbar
         self.toolbar = Gtk.Toolbar()
         self.context = self.toolbar.get_style_context()
         self.context.add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
@@ -65,6 +67,7 @@ class DataWindow(Gtk.Window):
         self.pressureButton.connect("clicked", self.plotPressure)
         self.printButton.connect("clicked", self.printList)
          
+        ### setup Plot Data 
         plot_width = self.plot_width = 100
         self.count=0
         self.times = [0]*plot_width
@@ -72,6 +75,7 @@ class DataWindow(Gtk.Window):
         self.humid = [0]*plot_width
         self.press = [0]*plot_width
         
+        ### setup Table (aka listStore) in a ScrollWindow
         self.listStore = Gtk.ListStore(str,str,str,str)
         #self.listStore = Gtk.ListStore(str,float, float, float)
         self.treeview = Gtk.TreeView(model=self.listStore)
@@ -83,6 +87,7 @@ class DataWindow(Gtk.Window):
             column.connect("clicked", self.clickedColumn, i)
             self.treeview.append_column(column)
         
+        # get at least some data
         self.getData() # put one item in data
         
         sw = Gtk.ScrolledWindow()
@@ -93,7 +98,7 @@ class DataWindow(Gtk.Window):
         #self.treeview.connect('row-activated', self.clickRow)
         self.vbox.pack_start(sw, True, True, 0)
 
-        # Matplotlib stuff
+        ### Matplotlib stuff
         self.fig = Figure(figsize=(6, 4))
 
         self.canvas = FigureCanvas(self.fig)  # a Gtk.DrawingArea

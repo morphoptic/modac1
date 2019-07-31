@@ -18,6 +18,7 @@ __moDataDictionary = {}
 
 def init():
     # here we dont init hardware, only data collection
+    update(keyForTimeStamp(),None)
     update(keyForBinaryOut(),None)
     update(keyForEnviro(), None)
     update(keyForAD24(),None)
