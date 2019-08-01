@@ -92,7 +92,7 @@ class ktypePanel():
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
         ktypes = moData.getValue(keyForKType())
-        print("kTypes Update = ", ktypes)
+        #print("kTypes Update = ", ktypes)
  
         self.count = self.count+1
        
@@ -125,26 +125,28 @@ class ktypePanel():
         if self.plotColumn == 0:
             print("cant plot time vs time")
             return
-        print("Plot column ", self.plotColumn, len(self.col))
+        #print("Plot column ", self.plotColumn, len(self.col))
         colData = self.col[self.plotColumn-1]
-        print("ColData:", colData)
+        #print("ColData:", colData)
         mi = np.min(colData)
         ma = np.max(colData)
         self.ax.clear()
-        print("min max", mi, ma)
+        #print("min max", mi, ma)
         r = (ma-mi) *0.1
-        if r < 5:
-            r+=5
+#        if r < 5:
+#            r+=5
+        if r < ma*0.5:
+            r+=ma*0.5
         mi -= r
         ma += r
-        print("revised min max", mi, ma)
+        #print("revised min max", mi, ma)
         self.line, = self.ax.plot(self.times, colData )  # plot the first row
         self.ax.set_title(self.colNames[self.plotColumn])
         self.ax.set_ylim(mi,ma) # 10% under and over
         self.canvas.draw()
         
     def updatePlot(self):
-        print("updatePlot column", self.plotColumn, self.colNames[self.plotColumn])
+        #print("updatePlot column", self.plotColumn, self.colNames[self.plotColumn])
         self.plotOne()
         
     def printList(self,widget):

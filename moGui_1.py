@@ -22,7 +22,7 @@ from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
-from modacGUI import enviroPanel, ktypePanel
+from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -85,6 +85,11 @@ class ModacAppWindow(object):
         self.ktypePanel = ktypePanel.ktypePanel()
         self.notebook.append_page(self.ktypePanel.box, self.ktypePanel.label)
         
+        self.ad24Panel = ad24Panel.ad24Panel()
+        self.notebook.append_page(self.ad24Panel.box, self.ad24Panel.label)
+        
+        self.ad16Panel = ad16Panel.ad16Panel()
+        self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
         
         # Start timer
         timer_interval = 1
@@ -159,6 +164,8 @@ class ModacAppWindow(object):
     def updatePanels(self):
         self.enviroPanel.update()
         self.ktypePanel.update()
+        self.ad24Panel.update()
+        self.ad16Panel.update()
 
 def modacExit():
     logging.info("modacExit")
