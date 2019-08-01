@@ -68,7 +68,7 @@ def timestamp():
     return this.__eSensor.timestamp
 
 def timestampStr():
-    return timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z")
+    return timestamp().strftime("%Y-%m-%d %H:%M:%S%Z")
 
 def timestampISOStr():
     return timestamp().isoformat()

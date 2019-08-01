@@ -22,6 +22,7 @@ from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
+from modacGUI import enviroPanel
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -39,9 +40,10 @@ class ModacApp(Gtk.Application):
 
     def shutdown(self, *args):
         print("App Shutdown")
-        modacExit(self)
+        modacExit()
 
 class ModacAppWindow(object):
+    dataCount = 0
     def __init__(self, application):
         self.Application = application
         builder = None
@@ -73,36 +75,21 @@ class ModacAppWindow(object):
             print("ERROR no notebook")
 
         # populate sub panels
-        self.tab1Content = builder.get_object("Tab1Content")
-        if self.tab1Content == None:
-            print("no tab1Content")
-        if not isinstance(self.tab1Content, Gtk.ScrolledWindow):
-            print("tab1Content is NOT a scrolled window",self.tab1Content )
-        tab1ContentLabel = Gtk.Label('YO! Enviro Data Here')
-        tab1ContentLabel.show()
-        self.tab1Content.add_with_viewport(tab1ContentLabel)
-        print("tab1 setup")
+#        self.tab1Content = builder.get_object("Tab1Content")
+#        if self.tab1Content == None:
+#            print("no tab1Content")
+#        if not isinstance(self.tab1Content, Gtk.ScrolledWindow):
+#            print("tab1Content is NOT a scrolled window",self.tab1Content )
+#        tab1ContentLabel = Gtk.Label('YO! Enviro Data Here')
+#        tab1ContentLabel.show()
+#        self.tab1Content.add_with_viewport(tab1ContentLabel)
+#        print("tab1 setup")
+        self.notebook.remove_page(0)
+        #####
+        self.enviroPanel = enviroPanel.enviroPanel()
+        print("loaded enviroPanel", self.enviroPanel, self.enviroPanel.box)
+        self.notebook.append_page(self.enviroPanel.box, self.enviroPanel.label)
         
-        self.tab2Content = builder.get_object("Tab2Content")
-        if self.tab2Content == None:
-            print("no tab2Content")
-        if not isinstance(self.tab2Content, Gtk.ScrolledWindow):
-            print("tab2Content is NOT a scrolled window",self.tab2Content )
-        tab2ContentLabel = Gtk.Label('tab2 content')
-        tab2ContentLabel.show()
-        self.tab2Content.add_with_viewport(tab2ContentLabel)
-        print("tab2 setup")
-
-        self.tab3Content = builder.get_object("Tab3Content")
-        if self.tab3Content == None:
-            print("no tab3Content")
-        if not isinstance(self.tab3Content, Gtk.ScrolledWindow):
-            print("tab3Content is NOT a scrolled window",self.tab3Content )
-        tab3ContentLabel = Gtk.Label('tab3 content')
-        tab3ContentLabel.show()
-        self.tab3Content.add_with_viewport(tab3ContentLabel)
-        print("tab3 setup")
-
         # Start timer
         timer_interval = 1
         GObject.timeout_add_seconds(timer_interval, self.on_handle_timer)      
@@ -126,7 +113,7 @@ class ModacAppWindow(object):
         #return
         self.tab = notebook.get_nth_page(page_num)
         self.label = notebook.get_tab_label(self.tab).get_label()
-        self.message_id = self.statusbar.push(0, self.label)
+        #self.message_id = self.statusbar.push(0, self.label)
     
     def on_file_new_activate(self, menuitem, data=None):
         # debugging message
@@ -147,18 +134,21 @@ class ModacAppWindow(object):
 
     def on_handle_timer(self):
         # Update status bar
-        self.getData()
+        if not self.getData():
+            # no data received
+            return True
         timestamp = moData.getValue(keyForTimeStamp())
         if timestamp == None:
             timestamp = "no data yet"
         #text = "Random number = " + str(random.randint(1,101))
-        self.setStatus("Data Updated: "+timestamp)
+        self.setStatus("Data Updated: #%d at "%self.dataCount +timestamp)
+        self.updatePanels()
         return True 
 
     def setStatus(self, status):
         self.statusbar.pop(self.context_id)
         self.statusbar.push(self.context_id, status)           
-        
+    
     def getData(self):
         # update from network
         if not moClient.clientReceive():
@@ -166,12 +156,17 @@ class ModacAppWindow(object):
             return False
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
+        self.dataCount += 1
         moData.logData()
+        return True
+    
+    def updatePanels(self):
+        self.enviroPanel.update()
 
 def modacExit():
     logging.info("modacExit")
     moClient.shutdownClient()
-    sys.exit(0)
+    #sys.exit(0)
     
 def modacInit():
     # setup MODAC data/networking

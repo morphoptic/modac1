@@ -18,13 +18,20 @@ __moDataDictionary = {}
 
 def init():
     # here we dont init hardware, only data collection
-    update(keyForTimeStamp(),None)
-    update(keyForBinaryOut(),None)
-    update(keyForEnviro(), None)
-    update(keyForAD24(),None)
-    update(keyForAD16(), None)
-    update(keyForKType(), None)
-    update(keyForLeicaDisto(), None)
+    # initial data values required, empty arrays and filled in dict
+    d = {keyForTimeStamp():"No Data Yet",
+     keyForHumidity():0,
+     keyForTemperature():0,
+     keyForPressure():0
+     }
+
+    update(keyForTimeStamp(),"No Data Yet")
+    update(keyForBinaryOut(), [])
+    update(keyForEnviro(), d)
+    update(keyForAD24(), [])
+    update(keyForAD16(), [])
+    update(keyForKType(), [])
+    update(keyForLeicaDisto(), -1)
     print("Initialized moData",rawDict())
     
     # modac_BLE_Laser.init()
@@ -33,7 +40,7 @@ def init():
 def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(str, datetime.datetime):
-            value = value.strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
+            value = value.strftime("%Y-%m-%d %H:%M:%S%Z : ")
     __moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass
