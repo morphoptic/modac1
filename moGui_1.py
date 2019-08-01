@@ -1,5 +1,5 @@
 """
-moGTKclient: first experiment merging pyNNG network messaging with GTK for MODAC
+moGui_1: 2nd experiment with GTK for MODAC
 """
 
 import math
@@ -22,7 +22,7 @@ from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
-from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel,leicaPanel
+from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel,leicaPanel, binaryOutPanel
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -93,6 +93,9 @@ class ModacAppWindow(object):
         
         self.leicaPanel = leicaPanel.leicaPanel()
         self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
+        
+        self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
+        self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
         
         # Start timer
         timer_interval = 1
@@ -170,6 +173,7 @@ class ModacAppWindow(object):
         self.ad24Panel.update()
         self.ad16Panel.update()
         self.leicaPanel.update()
+        self.binaryOutPanel.update()
 
 def modacExit():
     logging.info("modacExit")

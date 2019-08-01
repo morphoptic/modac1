@@ -96,12 +96,15 @@ def modac_loadConfig():
     logging.info("modac_loadConfig")
     pass
 
-  
+def signalExit(*args):
+    print("signal exit! someone hit ctrl-C?")
+    modacExit()
+    
 if __name__ == "__main__":
     modac_argparse() # capture cmd line args to modac_args dictionary for others
     moLogger.init() # start logging (could use cmd line args config files)
     print("modac_io_server testbed for MODAC hardware server")
-    signal.signal(signal.SIGINT, modacExit)
+    signal.signal(signal.SIGINT, signalExit)
     try:
         modac_io_server()
     except Exception as e:

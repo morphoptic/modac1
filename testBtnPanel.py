@@ -63,9 +63,8 @@ class TestBtnPanelWindow(object):
         self.viewPort = self.builder.get_object("MainViewport")
         
         self.initPanel()
-        
-        self.viewPort.add(self.panel)
-        self.panel.show()
+    
+        self.viewPort.add(self.vbox)
 
         # Start timer
         timer_interval = 1
@@ -116,6 +115,7 @@ class TestBtnPanelWindow(object):
         self.dataCount += 1
         #moData.logData()
         states = moData.getValue(keyForBinaryOut())
+        self.summaryLabel.set_text(str(states))
         print("update BinOut lables:",states)
         for i in range(len(states)):
             self.updateLabel(i,states[i])
@@ -154,11 +154,14 @@ class TestBtnPanelWindow(object):
         
     def initPanel(self): # do all the connections here so it is easier to transfer
         print("initPanel")
+        self.summaryLabel = Gtk.Label("summary")
+        self.vbox = Gtk.VBox()
         
         self.panel = self.builder.get_object("Panel")
         self.relayBtns = []
         self.relayLabels = []
         states = moData.getValue(keyForBinaryOut())
+        self.summaryLabel.set_text(str(states))
         assert len(states) == moData.numBinaryOut()
         for i in range(moData.numBinaryOut()):
             state = states[i]
@@ -177,7 +180,11 @@ class TestBtnPanelWindow(object):
             self.relayLabels.append(label)
             self.updateLabel(i, state)
             pass
+        self.vbox.add(self.panel)
+        self.vbox.add(self.summaryLabel)
         self.panel.show()
+        self.summaryLabel.show()
+        self.vbox.show()
 
 ##################################
         
