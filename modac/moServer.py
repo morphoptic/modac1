@@ -22,8 +22,10 @@ __CmdListener = None
 def shutdownServer():
     if not this.__Publisher == None:
         this.__Publisher.close()
+        this.__Publisher = None
     if not this.__CmdListener == None:
         this.__CmdListener.close()
+        this.__CmdListener = None
     pass
 
 def startServer():

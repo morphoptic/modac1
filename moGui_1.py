@@ -22,7 +22,7 @@ from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
-from modacGUI import enviroPanel
+from modacGUI import enviroPanel, ktypePanel
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -75,20 +75,16 @@ class ModacAppWindow(object):
             print("ERROR no notebook")
 
         # populate sub panels
-#        self.tab1Content = builder.get_object("Tab1Content")
-#        if self.tab1Content == None:
-#            print("no tab1Content")
-#        if not isinstance(self.tab1Content, Gtk.ScrolledWindow):
-#            print("tab1Content is NOT a scrolled window",self.tab1Content )
-#        tab1ContentLabel = Gtk.Label('YO! Enviro Data Here')
-#        tab1ContentLabel.show()
-#        self.tab1Content.add_with_viewport(tab1ContentLabel)
-#        print("tab1 setup")
         self.notebook.remove_page(0)
+        
         #####
         self.enviroPanel = enviroPanel.enviroPanel()
         print("loaded enviroPanel", self.enviroPanel, self.enviroPanel.box)
         self.notebook.append_page(self.enviroPanel.box, self.enviroPanel.label)
+
+        self.ktypePanel = ktypePanel.ktypePanel()
+        self.notebook.append_page(self.ktypePanel.box, self.ktypePanel.label)
+        
         
         # Start timer
         timer_interval = 1
@@ -162,6 +158,7 @@ class ModacAppWindow(object):
     
     def updatePanels(self):
         self.enviroPanel.update()
+        self.ktypePanel.update()
 
 def modacExit():
     logging.info("modacExit")

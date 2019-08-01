@@ -24,8 +24,8 @@ def modacExit():
     logging.info("modacExit shutting down")
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
-    moServer.shutdownServer()
     moCSV.close()
+    moServer.shutdownServer()
     exit()
 
 def modac_ServerEventLoop():

@@ -16,6 +16,20 @@ import datetime, json
 
 __moDataDictionary = {}
 
+# number of sensors of each type
+# we need this early in Client startup
+# but wont have actual data until receive from Server
+# TODO: set this with config shared with server (original concept of Channels)
+def numKType():
+    return 3
+def numBinaryOut():
+    return 9
+def numAD24():
+    return 8
+def numAD16():
+    return 4
+ 
+
 def init():
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
@@ -26,13 +40,13 @@ def init():
      }
 
     update(keyForTimeStamp(),"No Data Yet")
-    update(keyForBinaryOut(), [])
+    update(keyForBinaryOut(), [0]*this.numBinaryOut())
     update(keyForEnviro(), d)
-    update(keyForAD24(), [])
-    update(keyForAD16(), [])
-    update(keyForKType(), [])
+    update(keyForAD24(), [0.0]*this.numAD24())
+    update(keyForAD16(), [0.0]*this.numAD16())
+    update(keyForKType(), [0.0]*this.numKType())
     update(keyForLeicaDisto(), -1)
-    print("Initialized moData",rawDict())
+    print("Initialized moData",asJson())
     
     # modac_BLE_Laser.init()
     pass
@@ -41,7 +55,7 @@ def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(str, datetime.datetime):
             value = value.strftime("%Y-%m-%d %H:%M:%S%Z : ")
-    __moDataDictionary[key] = value
+    this.__moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass
 
