@@ -37,7 +37,7 @@ class ktypePanel():
         self.times = [0]*self.plotWidth
         self.col = [ [0]*self.plotWidth ]*(n_col) 
         
-        self.colNames = ["time"]+["K"+str(i) for i in range(n_col) ]
+        self.columnNames = ["time"]+["K"+str(i) for i in range(n_col) ]
         ### setup Plot Data 
         
         ### setup Table (aka listStore) in a ScrollWindow
@@ -48,8 +48,8 @@ class ktypePanel():
         self.treeview = Gtk.TreeView(model=self.listStore)
         # so why do we need to do this if listStore has types of columns already?
         # doesnt this add a column to the store as well?
-        for i in range( len(self.colNames)) :
-            column = Gtk.TreeViewColumn(self.colNames[i], Gtk.CellRendererText(),text=i)
+        for i in range( len(self.columnNames)) :
+            column = Gtk.TreeViewColumn(self.columnNames[i], Gtk.CellRendererText(),text=i)
             column.set_min_width(100)
             column.set_alignment(0.5)
             column.set_clickable(True)
@@ -141,12 +141,12 @@ class ktypePanel():
         ma += r
         #print("revised min max", mi, ma)
         self.line, = self.ax.plot(self.times, colData )  # plot the first row
-        self.ax.set_title(self.colNames[self.plotColumn])
+        self.ax.set_title(self.columnNames[self.plotColumn])
         self.ax.set_ylim(mi,ma) # 10% under and over
         self.canvas.draw()
         
     def updatePlot(self):
-        #print("updatePlot column", self.plotColumn, self.colNames[self.plotColumn])
+        #print("updatePlot column", self.plotColumn, self.columnNames[self.plotColumn])
         self.plotOne()
         
     def printList(self,widget):
@@ -154,7 +154,7 @@ class ktypePanel():
             print(row[:])
     
     def clickedColumn(self, treeCol, idx):
-        print("clicked column ", idx, self.colNames[idx])
+        print("clicked column ", idx, self.columnNames[idx])
         if idx == 0:
             print("Cant plot time")
             return
