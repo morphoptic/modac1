@@ -19,5 +19,5 @@ def cmdBinary(binOutIdx, onOff):
     
 def cmdAllOff():
     body = () # no body
-    moClient.sendCommand(keyForAllOff(), body)    
+    moClient.sendCommand(keyForAllOffCmd(), body)    
 

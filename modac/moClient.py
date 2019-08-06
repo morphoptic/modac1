@@ -71,6 +71,7 @@ def clientDispatch(topic,body):
     # handle other client messages   
 
 def sendCommand(key, value):
+    print("moClient sendCommand key value", key, value)
     if this.__CmdSender == None:
         logging.error("attempt to sendCommand from non-client")
         return False

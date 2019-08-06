@@ -27,14 +27,12 @@ class binaryOutPanel():
         builder.connect_signals(self)
 
         # because i forgot to add one in Glade and its too painful to go back and edit
-        self.summaryLabel = Gtk.Label("summary")
         self.box = Gtk.VBox()
         
         self.panel = builder.get_object("Panel")
         self.relayBtns = []
         self.relayLabels = []
         states = moData.getValue(keyForBinaryOut())
-        self.summaryLabel.set_text(str(states))
         assert len(states) == moData.numBinaryOut()
         for i in range(moData.numBinaryOut()):
             state = states[i]
@@ -53,8 +51,16 @@ class binaryOutPanel():
             self.relayLabels.append(label)
             self.updateLabel(i, state)
             pass
-        
         self.box.add(self.panel)
+
+        self.allBtn = Gtk.Button("All OFF")
+        self.allBtn.show()
+        self.allBtn.connect("clicked", self.on_clicked_allOff)
+        # add 
+        self.box.add(self.allBtn)
+
+        self.summaryLabel = Gtk.Label("summary")
+        self.summaryLabel.set_text(str(states))
         self.box.add(self.summaryLabel)
         self.panel.show()
         self.summaryLabel.show()
@@ -81,6 +87,10 @@ class binaryOutPanel():
         moCommand.cmdBinary(idx, state)
         pass
     
+    def on_clicked_allOff(self, button):
+        print("clicked All Off")
+        moCommand.cmdAllOff()
+        
     def updateLabel(self, idx, state):
         label = self.relayLabels[idx]
         assert not label == None
@@ -102,4 +112,5 @@ class binaryOutPanel():
             nameState += "OFF  "
         print("nameState", nameState)
         btn.set_label(nameState)
+        
         
