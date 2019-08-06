@@ -18,8 +18,8 @@ from time import sleep
 # note GPIOZero is smart enough to turn all Off when app properly exits
 
 __relay0 = OutputDevice(5,active_high=True) # 0 is power outlet, active on True
-# 1-8 are relay board
-__relay1 = OutputDevice(21,active_high=False) @ active on False = low
+# 1-8 are relay board which uses active on low so use active_high=False
+__relay1 = OutputDevice(21,active_high=False)
 __relay2 = OutputDevice(20,active_high=False)
 __relay3 = OutputDevice(16,active_high=False)
 __relay4 = OutputDevice(12,active_high=False)

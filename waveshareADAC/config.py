@@ -41,6 +41,7 @@ DRDY_PIN        = 17
 
 # SPI device, bus = 0, device = 0
 SPI = spidev.SpiDev(0, 0)
+SPI.no_cs=True
 
 def digital_write(pin, value):
     GPIO.output(pin, value)

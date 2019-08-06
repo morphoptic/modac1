@@ -4,6 +4,7 @@ from time import sleep
 print("MODAC turn all relays off")
 sleepDelay = 0.01 # delay in seconds
 
+relay0 = OutputDevice(5,active_high=True)
 relay1 = OutputDevice(21,active_high=False)
 relay2 = OutputDevice(20,active_high=False)
 relay3 = OutputDevice(16,active_high=False)

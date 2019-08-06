@@ -17,7 +17,7 @@ relays = [relay1,relay2,relay3,relay4,relay5,relay6,relay7,relay8]
     
 for relay in relays:
     relay.off()
-    sleep(sleepDelay)
+    #sleep(sleepDelay)
     
 print ("End of relayModuleOff")
     
