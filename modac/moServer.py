@@ -89,12 +89,6 @@ def serverReceive():
         logging.exception("Some other exeption! on sub%d "%(i))
         return False
 
-
-def cmdBinary(binaryId, onOff):
-    #print("cmdBinary", binaryId, onOff)
-    body = (binaryId, onOff)
-    return this.sendCommand(keyforBinary((), body))
-
 def serverDispatch(topic,body):
     print("serverDispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForBinaryCmd():
@@ -102,10 +96,11 @@ def serverDispatch(topic,body):
         print("serverDispatch payload")
         print(payload)
         moHardware.binaryCmd(payload[0],payload[1]) # channel, onOff
+    elif topic == keyForAllOffCmd():
+        moHardware.allOffCmd()
     else:
         logging.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
-
 
 
 

@@ -91,7 +91,7 @@ class ModacAppWindow(object):
         self.ad16Panel = ad16Panel.ad16Panel()
         self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
         
-        self.leicaPanel = leicaPanel.leicaPanel()
+        self.leicaPanel = leicaPanel.LeicaPanel()
         self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
         
         self.binaryOutPanel = binaryOutPanel.binaryOutPanel()

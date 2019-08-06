@@ -1,4 +1,7 @@
 # testLeicaDisto
+"""
+Modac testLeicaDisto: unit test for Modac LeicaDisto device in Server
+"""
 import sys
 import logging
 from time import sleep
@@ -12,10 +15,13 @@ def testAll():
     print("moDataDict:",moData.rawDict())
     
     logging.info("startread Leica loop")
-    for i in range(0,10):#in range(0,8):
+    for i in range(0,60):#in range(0,8):
         print("loop %d:"%i)
         leicaDisto.update()
         print("moDataDict:",moData.rawDict())
+        if leicaDisto.distance() < 0:
+            print("Negative, stopping")
+            return
         sleep(sleepDelay)
 
     logging.info("test leicaDisto complete")

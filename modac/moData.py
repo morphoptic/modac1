@@ -38,14 +38,18 @@ def init():
      keyForTemperature():0,
      keyForPressure():0
      }
-
+    # initial values for hardware
+    # TODO: ideally it could ask each hardware module but Client wont have hardware
+    # so need alternative... perhaps a local function deviceInitValue()
+    # that would return the initial value,
+    # devices could use moData.deviceInitValue() to initialize internal values
     update(keyForTimeStamp(),"No Data Yet")
     update(keyForBinaryOut(), [0]*this.numBinaryOut())
     update(keyForEnviro(), d)
     update(keyForAD24(), [0.0]*this.numAD24())
     update(keyForAD16(), [0.0]*this.numAD16())
     update(keyForKType(), [0.0]*this.numKType())
-    update(keyForLeicaDisto(), -1)
+    update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
     print("Initialized moData",asJson())
     
     # modac_BLE_Laser.init()

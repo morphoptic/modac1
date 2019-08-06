@@ -39,18 +39,21 @@ def shutdown():
     this.allOff()
 
 
-def asDict():
-    moHW = {
-        keyForEnviro():enviro.asDict(),
-        keyForAD24():ad24.all0to5Array(),
-        keyForKType():kType.asArray(),
-        keyForBinaryOut():binaryOutputs.asArray()
-        }    
-    return moHW
+#def asDict():
+#    moHW = {
+#        keyForEnviro():enviro.asDict(),
+#        keyForAD24():ad24.all0to5Array(),
+#        keyForKType():kType.asArray(),
+#        keyForBinaryOut():binaryOutputs.asArray()
+#        }    
+#    return moHW
 
 def allOff():
     binaryOutputs.allOff()
     
 def binaryCmd(channel,onoff):
     binaryOutputs.setOutput(channel,onoff)
+
+def allOffCmd():
+    binaryOutputs.allOff()
 

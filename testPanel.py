@@ -1,5 +1,10 @@
 """
-Modac testBinaryOutPanel: unit test for Modac BinaryOutputs client GTK panel 
+Modac testPanel: unit test for Modac GTK panels
+if a panel module provides box, update() and class creation
+then this shell can quickly show it in a GTK Window
+put module in... from modacGUI import ...
+and then around line 94 set the self.panel
+TODO: make module/calls nameing consistent, perhaps use panel() instead of box?
 """
 
 import math
@@ -22,13 +27,17 @@ from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
-from modacGUI import binaryOutPanel
 
-class TestBinaryOutApp(Gtk.Application):
+from modacGUI import leicaPanel
+#from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel,leicaPanel, binaryOutPanel
+
+appId = "com.TestPanel"
+
+class TestPanelApp(Gtk.Application):
     # Main initialization routine
-    def __init__(self, application_id="com.TestBinaryOutPanel", flags=Gio.ApplicationFlags.FLAGS_NONE):
+    def __init__(self, application_id=appId, flags=Gio.ApplicationFlags.FLAGS_NONE):
         # application_id needs to be in proper form com.modac.app1
-        print("TestBinaryOutPanel: ", application_id)
+        print("Test appid: ", application_id)
         Gtk.Application.__init__(self, application_id=application_id, flags=flags)
         self.connect("activate", self.new_window)
         self.connect("shutdown", self.shutdown)
@@ -36,13 +45,13 @@ class TestBinaryOutApp(Gtk.Application):
         # TODO: is there some Gtk.Application methods needed for shutdown and other mgmt?
 
     def new_window(self, *args):
-        TestBinaryOutPanelWindow(self)
+        TestPanelWindow(self)
 
     def shutdown(self, *args):
         print("App Shutdown")
         modacExit()
 
-class TestBinaryOutPanelWindow(object):
+class TestPanelWindow(object):
     dataCount = 0
     def __init__(self, application):
         self.Application = application
@@ -62,7 +71,13 @@ class TestBinaryOutPanelWindow(object):
         
         self.viewport = builder.get_object("MainViewport")
         
-        self.panel = binaryOutPanel.binaryOutPanel()
+        # to change panel under test, simply load it here
+        self.panel = leicaPanel.LeicaPanel()
+        #self.panel = ad24Panel.ad24Panel()
+        #self.panel = ktypePanel.ktypePanel()
+        
+        
+        self.panel.box.show()
         self.viewport.add(self.panel.box)
         #release builder ?
         
@@ -121,7 +136,7 @@ if __name__ == "__main__":
     print("moGUI_1: modac from glade files")
     try:
         modacInit()
-        Application = TestBinaryOutApp("com.mioat.TestBinaryOutPanel", Gio.ApplicationFlags.FLAGS_NONE)
+        Application = TestPanelApp(appId, Gio.ApplicationFlags.FLAGS_NONE)
         Application.run()
     except Exception as e:
         print("Exception somewhere in dataWindow. see log files")

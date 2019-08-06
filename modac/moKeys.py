@@ -11,9 +11,11 @@ def moKeyToTopic(key):
 def keyForAllData():
     return "allData"
 
-# these are data from Enviro Sensor (BMEchip)
+# timestamp key used for all data, enviro and leicaDisto
 def keyForTimeStamp():
     return "timestamp"
+
+# these are data from Enviro Sensor (BMEchip)
 def keyForEnviro():
     return "enviro"
 def keyForHumidity():
@@ -47,10 +49,15 @@ def keyForKType():
 # Leica Disto D1 distance sensor
 def keyForLeicaDisto():
     return "leicaD1"
+def keyForDistance():
+    return "distance"
 
 def keyForModacCmd():
     return "modac"
 def keyForBinaryCmd():
     return "binaryCmd"
+def keyForAllOffCmd():
+    return "allOff"
+
 
 

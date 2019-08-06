@@ -24,7 +24,7 @@ from modac import moData, moLogger
 ### kinda messy having global
 # TODO: replace columnNames and plotWidth with Config values
 
-class leicaPanel():
+class LeicaPanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
     columnNames = ['time','dist']
 
@@ -88,8 +88,10 @@ class leicaPanel():
     def getData(self):
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
-        self.timestamp = moData.getValue(keyForTimeStamp())
-        data = moData.getValue(self.key)
+        lData = moData.getValue(self.key)
+        print("leicaPanel.getData = ", lData)
+        self.timestamp = lData[keyForTimeStamp()]
+        data = lData[keyForDistance()]
         print(self.key+" Update = ", data)
         
         self.count = self.count+1

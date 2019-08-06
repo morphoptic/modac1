@@ -1,5 +1,5 @@
 """
-Modac testBinaryOutPanel: unit test for Modac BinaryOutputs client GTK panel 
+Modac testLeicaPanel: unit test for Modac Leicaputs client GTK panel 
 """
 
 import math
@@ -22,13 +22,13 @@ from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
-from modacGUI import binaryOutPanel
+from modacGUI import leicaPanel
 
-class TestBinaryOutApp(Gtk.Application):
+class TestLeicaApp(Gtk.Application):
     # Main initialization routine
-    def __init__(self, application_id="com.TestBinaryOutPanel", flags=Gio.ApplicationFlags.FLAGS_NONE):
+    def __init__(self, application_id="com.TestleicaPanel", flags=Gio.ApplicationFlags.FLAGS_NONE):
         # application_id needs to be in proper form com.modac.app1
-        print("TestBinaryOutPanel: ", application_id)
+        print("TestLeicaPanel: ", application_id)
         Gtk.Application.__init__(self, application_id=application_id, flags=flags)
         self.connect("activate", self.new_window)
         self.connect("shutdown", self.shutdown)
@@ -36,13 +36,13 @@ class TestBinaryOutApp(Gtk.Application):
         # TODO: is there some Gtk.Application methods needed for shutdown and other mgmt?
 
     def new_window(self, *args):
-        TestBinaryOutPanelWindow(self)
+        TestLeicaPanelWindow(self)
 
     def shutdown(self, *args):
         print("App Shutdown")
         modacExit()
 
-class TestBinaryOutPanelWindow(object):
+class TestLeicaPanelWindow(object):
     dataCount = 0
     def __init__(self, application):
         self.Application = application
@@ -62,7 +62,8 @@ class TestBinaryOutPanelWindow(object):
         
         self.viewport = builder.get_object("MainViewport")
         
-        self.panel = binaryOutPanel.binaryOutPanel()
+        self.panel = leicaPanel.LeicaPanel()
+        self.panel.box.show()
         self.viewport.add(self.panel.box)
         #release builder ?
         
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     print("moGUI_1: modac from glade files")
     try:
         modacInit()
-        Application = TestBinaryOutApp("com.mioat.TestBinaryOutPanel", Gio.ApplicationFlags.FLAGS_NONE)
+        Application = TestLeicaApp("com.mioat.TestLeicaPanel", Gio.ApplicationFlags.FLAGS_NONE)
         Application.run()
     except Exception as e:
         print("Exception somewhere in dataWindow. see log files")

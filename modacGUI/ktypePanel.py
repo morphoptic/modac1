@@ -21,10 +21,6 @@ from matplotlib.figure import Figure
 from modac.moKeys import *
 from modac import moData, moLogger
 
-### kinda messy having global
-#__columnNames = []
-#__plotWidth = 100
-
 class ktypePanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
     def __init__(self):        

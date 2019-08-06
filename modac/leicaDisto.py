@@ -13,6 +13,7 @@ from . import moData
 import logging, logging.handlers
 import sys
 from time import sleep
+import datetime
 import json
 #
 import pexpect
@@ -34,6 +35,8 @@ def init(addrStr=this.__defaultAddrStr):
 
     # Run gatttool interactively.
     gatcmd = 'gatttool -b %s -t random -I' % this.__leicaAddressStr
+    this.__distMeters = -1
+    this.updateModata()
     try: 
         this.__gatt = pexpect.spawn(gatcmd)
         #print("gatt spawned")
@@ -83,8 +86,19 @@ def update():
         logging.warn("leicaDisto.update() EOF - process died " + str(this.__gatt))
         this.__distMeters = -1
         this.gatt = None
-    moData.update(keyForLeicaDisto(), this.distance())
+    this.updateModata()
+    #moData.update(keyForLeicaDisto(), this.distance())
     print("LeicaDisto.update = ", this.distance())
+    
+def updateModata():
+    d = {keyForTimeStamp(): this.timestampStr(), keyForDistance(): this.distance()}
+    print("update Leica Modata:", d)
+    moData.update(keyForLeicaDisto(), d)
+    
+def timestampStr():
+    this.timestamp = datetime.datetime.now()
+    print("timestamp:", this.timestamp)
+    return this.timestamp.strftime("%Y-%m-%d %H:%M:%S%Z")
 
 def distance():
     if this.__distMeters < 0:
