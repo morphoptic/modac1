@@ -12,10 +12,12 @@ class modacGPIO:
         self.pin = pin
         print("Create GPIO for pin ", self.pin)
 
+print
+csvFilename = "MODAC_GPIO.csv"
 mgpioList = []
 gpioList = []
 #read first from CSV
-csvReader = csv.DictReader(open("MODAC_GPIO.csv"))
+csvReader = csv.DictReader(open(csvFilename))
 for row in csvReader:
     gpioList.append(row)
     print("CSV Row: ", row)
