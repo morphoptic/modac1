@@ -21,14 +21,19 @@ async def startLeica(nursery):
     pass
 
 async def updateLeica(nursery):
+    leicaLoopCount =0
+    print("UpdateLeica = begin forever loop")
     while True:
+        leicalLoopCount += 1
+        print("Leica Loop %d"%leicaLoopCount)
         leicaDisto.update()
         await trio.sleep(1)
         if not leicaDisto.isRunning():
             break
+    print("end updateLeica")
     pass
 
-async def printMoData():
+def printMoData():
     print("leicaData:",moData.getValue(keyForLeicaDisto()))
     pass
 
@@ -37,9 +42,10 @@ async def asyncServerLoop():
     logging.info("asyncServerLoop  loopdelay= " +str(sleepDelay))
     #print("moDataDict:",moData.rawDict())
     
-    logging.info("startread Leica loop")
+    logging.info("start Server loop")
+    await trio.sleep(sleepDelay)
     for i in range(numberTestIterations):
-        print("loop %d:"%i)
+        print("Server loop %d:"%i)
         printMoData()
         if not leicaDisto.isRunning():
             logging.error("Leica not running, end process")
@@ -57,7 +63,7 @@ async def testAll():
     async with trio.open_nursery() as n:
         moData.init()
         print("tell nursery to start leica soon")
-        n.start_soon(leicaDisto.initAsync, n)
+        n.start_soon(leicaDisto.initAsync, None,n)
         
         # wait for it
         for s in range(10):
@@ -65,6 +71,8 @@ async def testAll():
         
         print("now start asyncServerLoop soon")
         n.start_soon(asyncServerLoop)
+        print("nursery running")
+    print("testAll, after nursery block")
              
 if __name__ == "__main__":
     print("Start Modac testLeicaDisto stand alone test")
