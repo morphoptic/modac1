@@ -6,25 +6,29 @@ import sys
 import logging
 from time import sleep
 from modac import leicaDisto, moData
+from modac.moKeys import *
 
+numberTestIterations = 1200
 def testAll():
     moData.init()
     leicaDisto.init()
-    sleepDelay = 2 # delay in seconds
-    logging.info("leicaDisto delay= " +str(sleepDelay))
-    print("moDataDict:",moData.rawDict())
+    sleepDelay = 0.5 # delay in seconds
+    logging.info("test leicaDisto  loopdelay= " +str(sleepDelay))
+    #print("moDataDict:",moData.rawDict())
     
     logging.info("startread Leica loop")
-    for i in range(0,60):#in range(0,8):
+    for i in range(numberTestIterations):
         print("loop %d:"%i)
         leicaDisto.update()
-        print("moDataDict:",moData.rawDict())
-        if leicaDisto.distance() < 0:
-            print("Negative, stopping")
+        print("leicaData:",moData.getValue(keyForLeicaDisto()))
+        if not leicaDisto.isRunning():
+            logging.error("Leica not running")
+            leicaDisto.shutdown()
             return
         sleep(sleepDelay)
 
     logging.info("test leicaDisto complete")
+    leicaDisto.shutdown()
      
 if __name__ == "__main__":
     print("Start Modac testLeicaDisto stand alone test")

@@ -50,7 +50,7 @@ def init():
     update(keyForAD16(), [0.0]*this.numAD16())
     update(keyForKType(), [0.0]*this.numKType())
     update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
-    print("Initialized moData",asJson())
+    logging.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass

@@ -37,6 +37,7 @@ def update():
 
 def shutdown():
     this.allOff()
+    leicaDisto.shutdown()
 
 
 #def asDict():
