@@ -21,3 +21,6 @@ def cmdAllOff():
     body = () # no body
     moClient.sendCommand(keyForAllOffCmd(), body)    
 
+def cmdResetLeica():
+    body = ()
+    moClient.sendCommand(keyForResetLeica(), body)

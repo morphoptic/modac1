@@ -54,6 +54,10 @@ async def initAsync(addrStr, nursery):
     if nursery == None:
         logging.error("leica initAsync no nursery")
         return
+    if this.isRunning() :
+        logging.error("leicaDistro attempt to initAsync but already running")
+        logging.error(str(this.__gatt))
+        return
     this.__leicaAddressStr = addrStr
     this.__distMeters = -1
     this.updateModata() # stuff some data in there
@@ -191,8 +195,8 @@ def distance():
     return this.__distMeters
 
 def shutdown():
-    logging.info("Shutdown Leica Disto, total Timeouts:"+str(this.__leicaTimeoutsThisSession))
-    logging.info("   leica restarts this session"+str(this.__leicaRestartsThisSession))
+    logging.info("Shutdown Leica Disto, total Timeouts: "+str(this.__leicaTimeoutsThisSession))
+    logging.info("   leica restarts this sessio n"+str(this.__leicaRestartsThisSession))
     if not this.__gatt == None:
         this.__gatt.close()
         this.__gatt = None

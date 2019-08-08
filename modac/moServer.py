@@ -23,24 +23,18 @@ def shutdownServer():
     if not this.__Publisher == None:
         this.__Publisher.close()
         this.__Publisher = None
-    if not this.__CmdListener == None:
-        this.__CmdListener.close()
-        this.__CmdListener = None
-    pass
+    __killCmdListener = True
 
-def startServer():
+async def startServer(nursery):
+    # publisher is synchronous for now
     startPublisher()
-    startCmdListener()
+    # spawn off async cmd listener
+    nursery.start_soon(startCmdListener, nursery)
 
 def startPublisher():
     logging.debug("start_Publisher")
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
-
-def startCmdListener():
-    this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(), polyamorous=True, recv_timeout=moNetwork.rcvTimeout())
-    print("Cmd Listener: ",this.__CmdListener)
-    pass
-
+    
 def publish():
     #logging.debug("publish - only AllData for now")
     publishData(keyForAllData(), moData.asDict())
@@ -53,14 +47,32 @@ def publishData(key, value):
     #print("pub: ", msg)
     logging.debug("sendTopic %s"%msg)
 
-def serverReceive():
+async def startCmdListener(nursery):
+    this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
+                                polyamorous=True,
+                                recv_timeout=moNetwork.rcvTimeout())
+    print("Cmd Listener: ",this.__CmdListener)
+    nursery.start_soon(cmdListenLoop)
+
+__killCmdListener = False
+async def cmdListenLoop():
+    # async forever loop
+    # sorta semiphore to signal we are shutting down 
+    while not this.__killCmdListener:
+        await this.serverReceive()
+    if not this.__CmdListener == None:
+        this.__CmdListener.close()
+        this.__CmdListener = None
+
+async def serverReceive():
     #not sure yet what this might become
     if this.__CmdListener == None:
         logging.error("attempt to serverReceive() CmdListener not initialized")
         return False
     msg = None
     try:
-        msgObj = this.__CmdListener.recv_msg()
+        msgObj = await this.__CmdListener.arecv_msg()
+        # async read will block here
         #msgObj is a pyNNG Message with gives info on sender
         # body of msg is byteArray version of string keyforModacCommand()|cmd
         # where cmd is an encrypted Topic/body pairing
@@ -68,11 +80,13 @@ def serverReceive():
         # by the time it gets back here as topic/body
         # it should be a string key and Object body (converted from json text)
         #print("Server Receive msgObj", msgObj)
-        msgBytes = msgObj.bytes
-        #print("Server Receive msgBytes", msgBytes)
-        msgStr = msgBytes.decode('utf8')
+        source_addr = str(msgObj.pipe.remote_address)
+        # do we need to verify the source address?
+        msgStr = msgObj.bytes.decode('utf8')
         #print("Server Receive msgStr",msgStr)
         topic, body = moNetwork.decryptCommand(msgStr)
+        logging.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
+        
         print("Cmd topic,body:", topic,body)
         if topic == "error":
             logging.warning("CmdListener got non-modac command %s"%topic)
@@ -81,12 +95,13 @@ def serverReceive():
         serverDispatch(topic,body)
         return True
     except Timeout:
-        logging.debug("serverReceive() receive timeout")
+        # be quiet about it
+        #logging.debug("serverReceive() receive timeout")
         return False
     except :
         logging.error("serverReceive() caught exception %s"%sys.exc_info()[0])
         traceback.print_exc()#sys.exc_info()[2].print_tb()
-        logging.exception("Some other exeption! on sub%d "%(i))
+        #logging.exception("Some other exeption! on sub%d "%(i))
         return False
 
 def serverDispatch(topic,body):
@@ -98,6 +113,8 @@ def serverDispatch(topic,body):
         moHardware.binaryCmd(payload[0],payload[1]) # channel, onOff
     elif topic == keyForAllOffCmd():
         moHardware.allOffCmd()
+    elif topic == keyForResetLeica():
+        moHardware.resetLeicaCmd()
     else:
         logging.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

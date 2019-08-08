@@ -58,6 +58,8 @@ def keyForBinaryCmd():
     return "binaryCmd"
 def keyForAllOffCmd():
     return "allOff"
+def keyForResetLeica():
+    return "leicaReset"
 
 
 

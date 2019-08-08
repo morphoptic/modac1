@@ -8,21 +8,23 @@ import sys
 this = sys.modules[__name__]
 #import rest of modac
 from .moKeys import *
-from . import moData, enviro, ad24, ad16, kType, binaryOutputs, leicaDisto
+from . import moData, enviro, ad24, ad16, kType, binaryOutputs
+from modac import leicaDistoAsync as leicaDisto
 
 # locally required for this module
+import trio
 
-def init():
+__nursery = None
+async def init(nursery):
+    this.__nursery = nursery
     enviro.init()
     binaryOutputs.init()
     ad24.init()
     ad16.init()
     kType.init()
-    leicaDisto.init()
-    # modac_BLE_Laser.init()
+    await leicaDisto.initAsync(None, nursery)
     # force at least one update so moData is populated
     update()
-    pass
 
 def update():
     enviro.update()
@@ -30,24 +32,14 @@ def update():
     ad24.update()
     ad16.update()
     kType.update()
-    leicaDisto.update()
-    # modac_BLE_Laser.update()
-    #moData.update(keyForAllData(), asDict())
-    pass
+    if not leicaDisto.isRunning():
+        #leicaDisto.update() # leica updates happen in other thread
+        # but if it is dead, try again
+        resetLeicaCmd()
 
 def shutdown():
     this.allOff()
     leicaDisto.shutdown()
-
-
-#def asDict():
-#    moHW = {
-#        keyForEnviro():enviro.asDict(),
-#        keyForAD24():ad24.all0to5Array(),
-#        keyForKType():kType.asArray(),
-#        keyForBinaryOut():binaryOutputs.asArray()
-#        }    
-#    return moHW
 
 def allOff():
     binaryOutputs.allOff()
@@ -58,3 +50,11 @@ def binaryCmd(channel,onoff):
 def allOffCmd():
     binaryOutputs.allOff()
 
+def resetLeicaCmd():
+    if this.__nursery == None:
+        return
+    # dont block like in init(), do it async
+    this.__nursery.start_soon(leicaDisto.initAsync, None, this.__nursery)
+ 
+ 
+ 

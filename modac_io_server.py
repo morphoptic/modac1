@@ -4,7 +4,6 @@
 # provides pyNNG Pair1 command pairing with clients
 # note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
 import datetime
-from time import sleep
 import sys
 import os
 import logging, logging.handlers, traceback
@@ -12,6 +11,8 @@ import argparse
 import gpiozero
 import json
 import signal
+
+import trio #adding async
 
 # my stuff
 from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moLogger
@@ -28,22 +29,22 @@ def modacExit():
     moServer.shutdownServer()
     exit()
 
-def modac_ServerEventLoop():
+async def modac_ReadPubishLoop():
     print("event Loop")
-    logging.info("Enter Event Loop")
-    for i in range(300):
+    logging.info("Enter Publish Loop")
+    #for i in range(300):
+    while True: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         moHardware.update()
-        moData.logData()
+        # any logging?
+        #moData.logData()
         moCSV.addRow()
-        # run any filters
-        #test_json(inputData)
+        # publish data
         moServer.publish()
-        moServer.serverReceive()
-        sleep(mainLoopDelay)
+        await trio.sleep(mainLoopDelay)
 
-def modac_io_server():
-    logging.info("start modac_io_server()")
+async def modac_asyncServer():
+    logging.info("start modac_asyncServer()")
     # modac_testLogging()
     # load config files
     modac_loadConfig()
@@ -51,24 +52,28 @@ def modac_io_server():
     modac_argDispatch()
     # initialize data structures
     # initialize GPIO channels
-    moData.init()
-    moHardware.init()
-    moCSV.init()
-
+    async with trio.open_nursery() as nursery:
+        moData.init()
+        
+        await moHardware.init(nursery)
+        moCSV.init()
+        
+        # we are The Server, theHub, theBroker
+        # async so it can spawn CmdListener
+        await moServer.startServer(nursery)
     
-    # we are The Server, theHub, theBroker
-    moServer.startServer()
-    
-    try:
-        #   run event loop
-        print("modata:",moData.rawDict())
-        modac_ServerEventLoop()
-    except Exception as e:
-        print("Exception somewhere in modac_io_server event loop. see log files")
-        print("caught something", sys.exc_info()[0])
-        traceback.print_exc()#sys.exc_info()[2].print_tb()
-        logging.error("Exception happened", exc_info=True)
-        logging.exception("Exception Happened")
+        try:
+            #   run event loop
+            #print("modata:",moData.rawDict())
+            await modac_ReadPubishLoop()
+        except:
+            # TODO need to handle Ctl-C on server better
+            # trio has ways to catch it, then we need to properly shutdown spawns
+            print("Exception somewhere in modac_io_server event loop. see log files")
+            print("caught something", sys.exc_info()[0])
+            traceback.print_exc()#sys.exc_info()[2].print_tb()
+            logging.error("Exception happened", exc_info=True)
+            logging.exception("Exception Happened")
     
     modacExit()
 
@@ -106,7 +111,7 @@ if __name__ == "__main__":
     print("modac_io_server testbed for MODAC hardware server")
     signal.signal(signal.SIGINT, signalExit)
     try:
-        modac_io_server()
+        trio.run(modac_asyncServer)
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
         logging.error("Exception happened", exc_info=True)

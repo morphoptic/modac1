@@ -64,12 +64,6 @@ def update(key,value):
     pass
 
 def asDict():
-#    moData = {
-#        keyForEnviro():enviro.asDict(),
-#        keyForAD24:ad24.all0to5Array(),
-#        keyForKType:kType.asArray(),
-#        keyForBinaryOutKey.key():binaryOutputs.asArray()
-#        }    
     return __moDataDictionary
 
 def asJson():
@@ -82,11 +76,13 @@ def getValue(key):
 def rawDict():
     return __moDataDictionary
 
+# use provided dictionary to update values in moData dictionary
+# validity of keys is left to update function (if at all)
 def updateAllData(d):
     assert isinstance(d, dict)
     for key, value in d.items():
         update(key,value)
-    print("Updated: ", asJson())
+    #print("Updated: ", asJson())
 
 def logData():
     logging.info(this.asJson())
