@@ -14,6 +14,11 @@ import logging, logging.handlers, traceback
 __csvFile = None
 __csvWriter = None
 
+def isOpen():
+    if this.__csvWriter == None:
+        return False
+    return True
+
 def init(filename="modac.csv"):
     this.__csvFile = open(filename, "w")
     this.__csvWriter = csv.writer(this.__csvFile)
@@ -28,8 +33,9 @@ def close():
     this.__csvFile.close()
 
 def addRow():
-    row = moData.asArray()
-    #print("logRow:",row)
-    this.__csvWriter.writerow(row)
-    this.__csvFile.flush()
+    if this.isOpen():
+        row = moData.asArray()
+        #print("logRow:",row)
+        this.__csvWriter.writerow(row)
+        this.__csvFile.flush()
 

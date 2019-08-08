@@ -148,7 +148,7 @@ class ad24Panel():
             print(row[:])
     
     def clickedColumn(self, treeCol, idx):
-        print("clicked column ", idx, self.columnNames[idx])
+        #print("clicked column ", idx, self.columnNames[idx])
         if idx == 0:
             print("Cant plot time")
             return

@@ -19,7 +19,7 @@ from modac import moCommand
 
 class binaryOutPanel():
     def __init__(self):        
-        print("initPanel")
+        #print("initPanel")
         self.label = Gtk.Label("BinaryOut Ctrl")
 
         self.dataCount = 0
@@ -45,7 +45,7 @@ class binaryOutPanel():
             self.updateBtn(i, state)
 
             labelName = "label"+str(i)
-            print("labelName", labelName)
+            #print("labelName", labelName)
             label = builder.get_object(labelName)
             assert not label == None
             self.relayLabels.append(label)
@@ -76,19 +76,19 @@ class binaryOutPanel():
         #moData.logData()
         states = moData.getValue(keyForBinaryOut())
         self.summaryLabel.set_text(str(states))
-        print("update BinOut lables:",states)
+        #print("update BinOut lables:",states)
         for i in range(len(states)):
             self.updateLabel(i,states[i])
     
     def on_toggled_button(self, button, idx):
         state = button.get_active()
-        print("toggled button idx state",idx, state)
+        #print("toggled button idx state",idx, state)
         self.updateBtn(idx,state)
         moCommand.cmdBinary(idx, state)
         pass
     
     def on_clicked_allOff(self, button):
-        print("clicked All Off")
+        #print("clicked All Off")
         moCommand.cmdAllOff()
         
     def updateLabel(self, idx, state):
@@ -99,7 +99,7 @@ class binaryOutPanel():
             nameState += "ON  "
         else:
             nameState += "OFF  "
-        print("nameState", nameState)
+        #print("nameState", nameState)
         label.set_text(nameState)
     
     def updateBtn(self,idx,state):
@@ -110,7 +110,7 @@ class binaryOutPanel():
             nameState += "ON  "
         else:
             nameState += "OFF  "
-        print("nameState", nameState)
+        #print("nameState", nameState)
         btn.set_label(nameState)
         
         

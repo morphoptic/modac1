@@ -103,7 +103,9 @@ def asArray():
     a.append(env[keyForTemperature()])
     a.append(env[keyForHumidity()])
     a.append(env[keyForPressure()])
-    a.append(this.getValue(keyForLeicaDisto()))
+    
+    leica = this.getValue(keyForLeicaDisto())
+    a.append(leica[keyForDistance()])
     
     a += this.getValue(keyForAD24())
     a += this.getValue(keyForAD16())
@@ -129,8 +131,7 @@ def arrayColNames():
     this.__namesOfColumns.append(keyForTemperature())
     this.__namesOfColumns.append(keyForHumidity())
     this.__namesOfColumns.append(keyForPressure())
-    this.__namesOfColumns.append(keyForLeicaDisto())
-    this.__namesOfColumns.append(keyForTemperature())
+    this.__namesOfColumns.append(keyForDistance())
     this.__appendAName(keyForAD24())
     this.__appendAName(keyForAD16())
     this.__appendAName(keyForKType())

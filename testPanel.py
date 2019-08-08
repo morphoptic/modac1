@@ -28,7 +28,7 @@ from gi.repository import GObject as Gobj
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moLogger
 
-from modacGUI import binaryOutPanel
+from modacGUI import tempDistPanel
 #from modacGUI import enviroPanel, ktypePanel, ad24Panel,
 # ad16Panel,leicaPanel, binaryOutPanel
 
@@ -73,7 +73,7 @@ class TestPanelWindow(object):
         self.viewport = builder.get_object("MainViewport")
         
         # to change panel under test, simply load it here
-        self.panel = binaryOutPanel.binaryOutPanel() #leicaPanel.LeicaPanel()
+        self.panel = tempDistPanel.tempDistPanel() # Panel to be tested
         #self.panel = ad24Panel.ad24Panel()
         #self.panel = ktypePanel.ktypePanel()
         

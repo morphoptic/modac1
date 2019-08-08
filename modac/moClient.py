@@ -41,16 +41,16 @@ def startSubscriber(keys=[keyForAllData()]):#topics=[moTopicForKey(keyForAllData
     return subscriber
 
 
-# client Recieve Loop, server will be different
+# client Recieve called from main or gtk loop 
 # servers may also be doing a Pair1 sendCmd in their loop
 def clientReceive():
     msgReceived = False
     for i in range(len(this.__subscribers)):
         try:
-            while(1): #stays here till timeout or receive
+            while not msgReceived: #stays here till timeout or receive
                 msgRaw = this.__subscribers[i].recv()
                 #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
-                logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
+                #logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 #print("clientReceive msgRaw", msgRaw)
                 msg = msgRaw.decode('utf8')
                 topic, body = moNetwork.splitTopicStr(msg)

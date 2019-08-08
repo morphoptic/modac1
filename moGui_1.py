@@ -18,11 +18,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 from gi.repository import GObject, Gio, Gdk, Gtk
-from gi.repository import GObject as Gobj
 
 from modac.moKeys import *
-from modac import moData, moNetwork, moClient, moCommand, moLogger
-from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel,leicaPanel, binaryOutPanel
+from modac import moData, moNetwork, moClient, moCommand, moLogger, moCSV
+from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
+from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -44,6 +44,7 @@ class ModacApp(Gtk.Application):
 
 class ModacAppWindow(object):
     dataCount = 0
+    last_open_dir = "~"
     def __init__(self, application):
         self.Application = application
         builder = None
@@ -97,6 +98,11 @@ class ModacAppWindow(object):
         self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
         self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
         
+        self.tempDistPanel= tempDistPanel.tempDistPanel()
+        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
+        
+        #  add here and then in updatePanels
+        
         # Start timer
         timer_interval = 1
         GObject.timeout_add_seconds(timer_interval, self.on_handle_timer)      
@@ -109,6 +115,7 @@ class ModacAppWindow(object):
     
     def on_winMain_destroy(self, widget, data=None):
         print("on_winMain_destory")
+        self.shutdown()
         #modacExit()
         #Gtk.main_quit()
 
@@ -120,25 +127,54 @@ class ModacAppWindow(object):
         #return
         self.tab = notebook.get_nth_page(page_num)
         self.label = notebook.get_tab_label(self.tab).get_label()
+        print("should be panel ", self.label)
         #self.message_id = self.statusbar.push(0, self.label)
     
-    def on_file_new_activate(self, menuitem, data=None):
+    def on_startCSV_activate(self, menuitem, data=None):
+        if moCSV.isOpen():
+            moCSV.close()
+            # TODO maybe we should ask to close
+            
         # debugging message
-        print('File New selected')
+        print('on_startCSV_activate')
+        dialog=Gtk.FileChooserDialog(
+            title="Select CSV File",
+            action=Gtk.FileChooserAction.SAVE,
+            buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        dialog.set_current_name("modac.csv")
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        dialog.set_current_folder(self.last_open_dir)
+        filter_csv = Gtk.FileFilter()
+        filter_csv.set_name("CSV Files")
+        filter_csv.add_pattern("*.csv")
+        dialog.add_filter(filter_csv)
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            filename = dialog.get_filename()
+            self.last_open_dir = dialog.get_current_folder()
+            print("*********Selected CSV file: ",filename)
+            moCSV.init(filename)
+        # enable stop?
+        dialog.destroy()      
+    
+    def on_stopCSV_activate(self, menuitem, data=None):
+        # debugging message
+        print('on_stopCSV_activate')
+        moCSV.close()
+        # disable stop, enable start
         
-    def on_file_open_activate(self, menuitem, data=None):
+    def on_quit_activate(self, menuitem, data=None):
         # debugging message
-        print('File OPEN selected')
+        print('File Quit selected')
+        self.winMain.destroy()      
         
     def on_activate_AboutMenuItem(self, menuitem, data=None):
         print("Help-About selected")
         self.response = self.aboutdialog.run()
         self.aboutdialog.hide()
         
-    def on_file_quit_activate(self, widget, data=None):
-        print("on_file_quit")
-        self.winMain.destroy()      
-
     def on_handle_timer(self):
         # Update status bar
         if not self.getData():
@@ -164,19 +200,23 @@ class ModacAppWindow(object):
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.dataCount += 1
-        moData.logData()
+        #moData.logData()
         return True
     
     def updatePanels(self):
+        moCSV.addRow()
         self.enviroPanel.update()
         self.ktypePanel.update()
         self.ad24Panel.update()
         self.ad16Panel.update()
         self.leicaPanel.update()
         self.binaryOutPanel.update()
+        self.tempDistPanel.update()
 
 def modacExit():
     logging.info("modacExit")
+    if moCSV.isOpen():
+        moCSV.close()
     moClient.shutdownClient()
     #sys.exit(0)
     
