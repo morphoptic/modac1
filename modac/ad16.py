@@ -6,13 +6,11 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-#print("ad16 module name ",__name__, this)
-
-#import rest of modac
-#from . import 
-# locally required for this module
 
 import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import sys
 from time import sleep
 import time
@@ -118,7 +116,7 @@ def init():
 
      
 def update():
-    logging.debug("ad16 update()")
+    log.debug("ad16 update()")
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
     #print (this.__values)
     # currently crude get all 8 with same default configutatoin

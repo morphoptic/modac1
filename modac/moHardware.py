@@ -6,7 +6,10 @@ if __name__ == "__main__":
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-#import rest of modac
+import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 from .moKeys import *
 from . import moData, enviro, ad24, ad16, kType, binaryOutputs
 from modac import leicaDistoAsync as leicaDisto

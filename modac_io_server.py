@@ -14,15 +14,21 @@ import signal
 
 import trio #adding async
 
-# my stuff
-from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moLogger
+from modac import moLogger
+if __name__ == "__main__":
+    moLogger.init()
+    
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
-loggerInit = False
+# my stuff
+from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
+
 runTests = False #True
-mainLoopDelay = 2 # seconds for sleep at end of main loop
+publishRate = 2 # seconds for sleep at end of main loop
 
 def modacExit():
-    logging.info("modacExit shutting down")
+    log.info("modacExit shutting down")
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
@@ -31,7 +37,7 @@ def modacExit():
 
 async def modac_ReadPubishLoop():
     print("event Loop")
-    logging.info("Enter Publish Loop")
+    log.info("Enter Publish Loop")
     #for i in range(300):
     while True: # hopefully CtrlC will kill it
         #update inputs & run filters on data
@@ -41,17 +47,12 @@ async def modac_ReadPubishLoop():
         moCSV.addRow()
         # publish data
         moServer.publish()
-        await trio.sleep(mainLoopDelay)
+        await trio.sleep(publishRate)
 
 async def modac_asyncServer():
-    logging.info("start modac_asyncServer()")
-    # modac_testLogging()
-    # load config files
+    log.info("start modac_asyncServer()")
     modac_loadConfig()
-    # argparse ? use to override config files
-    modac_argDispatch()
-    # initialize data structures
-    # initialize GPIO channels
+
     async with trio.open_nursery() as nursery:
         moData.init()
         
@@ -72,8 +73,8 @@ async def modac_asyncServer():
             print("Exception somewhere in modac_io_server event loop. see log files")
             print("caught something", sys.exc_info()[0])
             traceback.print_exc()#sys.exc_info()[2].print_tb()
-            logging.error("Exception happened", exc_info=True)
-            logging.exception("Exception Happened")
+            log.error("Exception happened", exc_info=True)
+            log.exception("Exception Happened")
     
     modacExit()
 
@@ -81,24 +82,8 @@ async def modac_asyncServer():
 # parsing happens early to grab cmd line into argparse data model
 # dispatching converts the parse tree into modac data/confi settings
 
-__modac_argparse = argparse.ArgumentParser()
-__modac_args = None
-  
-def modac_argparse():
-    """ parse command line arguments into global __modac_args """
-    #logging.info("modac_argparse")
-    # add command line arg definitions here
-    # then call the parser to shift them into modac_args for later routines.
-    __modac_args = __modac_argparse.parse_args()
-
-def modac_argDispatch():
-    logging.info("modac_argDispatch")
-    # assumes config files & structures are loaded
-    # dispatches actions requested by
-    pass
-
 def modac_loadConfig():
-    logging.info("modac_loadConfig")
+    log.info("modac_loadConfig")
     pass
 
 def signalExit(*args):
@@ -106,7 +91,7 @@ def signalExit(*args):
     modacExit()
     
 if __name__ == "__main__":
-    modac_argparse() # capture cmd line args to modac_args dictionary for others
+    #modac_argparse() # capture cmd line args to modac_args dictionary for others
     moLogger.init() # start logging (could use cmd line args config files)
     print("modac_io_server testbed for MODAC hardware server")
     signal.signal(signal.SIGINT, signalExit)
@@ -114,8 +99,8 @@ if __name__ == "__main__":
         trio.run(modac_asyncServer)
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
-        logging.error("Exception happened", exc_info=True)
-        logging.exception("huh?")
+        log.error("Exception happened", exc_info=True)
+        log.exception("huh?")
     finally:
         print("end main")
     modacExit()

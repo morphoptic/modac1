@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -112,8 +114,8 @@ class LeicaPanel():
                 it = self.listStore.iter_nth_child(None,self.plotWidth)
                 self.listStore.remove(it)
         except :
-            print(self.key+"got an exception removing from listStore")
-            logging.error(self.key+" Exception happened", exc_info=True)
+            #print(self.key+"got an exception removing from listStore")
+            log.error(self.key+" Exception happened", exc_info=True)
             pass
         
         return True
@@ -121,7 +123,7 @@ class LeicaPanel():
         
     def plotOne(self): #, treeview, path, view_column):
         if self.plotColumn == 0:
-            print("cant plot time vs time")
+            log.error("cant plot time vs time")
             return
         #print(self.key+" Plot column ", self.plotColumn)
         colData = self.distance

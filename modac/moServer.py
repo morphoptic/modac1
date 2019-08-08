@@ -5,6 +5,9 @@ import sys
 this = sys.modules[__name__]
 # other system imports
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import json
 #from simplecrypt import encrypt, decrypt
 from binascii import hexlify, unhexlify
@@ -32,11 +35,11 @@ async def startServer(nursery):
     nursery.start_soon(startCmdListener, nursery)
 
 def startPublisher():
-    logging.debug("start_Publisher")
+    log.debug("start_Publisher")
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
     
 def publish():
-    #logging.debug("publish - only AllData for now")
+    #log.debug("publish - only AllData for now")
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
@@ -45,7 +48,7 @@ def publishData(key, value):
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
     #print("pub: ", msg)
-    logging.debug("sendTopic %s"%msg)
+    log.debug("sendTopic %s"%msg)
 
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
@@ -67,7 +70,7 @@ async def cmdListenLoop():
 async def serverReceive():
     #not sure yet what this might become
     if this.__CmdListener == None:
-        logging.error("attempt to serverReceive() CmdListener not initialized")
+        log.error("attempt to serverReceive() CmdListener not initialized")
         return False
     msg = None
     try:
@@ -85,23 +88,23 @@ async def serverReceive():
         msgStr = msgObj.bytes.decode('utf8')
         #print("Server Receive msgStr",msgStr)
         topic, body = moNetwork.decryptCommand(msgStr)
-        logging.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
+        log.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
         
         print("Cmd topic,body:", topic,body)
         if topic == "error":
-            logging.warning("CmdListener got non-modac command %s"%topic)
+            log.warning("CmdListener got non-modac command %s"%topic)
             return False
         # ok... body should hold modac encrypted command
         serverDispatch(topic,body)
         return True
     except Timeout:
         # be quiet about it
-        #logging.debug("serverReceive() receive timeout")
+        #log.debug("serverReceive() receive timeout")
         return False
     except :
-        logging.error("serverReceive() caught exception %s"%sys.exc_info()[0])
+        log.error("serverReceive() caught exception %s"%sys.exc_info()[0])
         traceback.print_exc()#sys.exc_info()[2].print_tb()
-        #logging.exception("Some other exeption! on sub%d "%(i))
+        #log.exception("Some other exeption! on sub%d "%(i))
         return False
 
 def serverDispatch(topic,body):
@@ -116,7 +119,7 @@ def serverDispatch(topic,body):
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
     else:
-        logging.warning("Unknown Topic in ClientDispatch %s"%topic)
+        log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
 
 

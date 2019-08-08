@@ -6,8 +6,10 @@ if __name__ == "__main__":
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 #import rest of modac
 from .moKeys import *
 
@@ -50,7 +52,7 @@ def init():
     update(keyForAD16(), [0.0]*this.numAD16())
     update(keyForKType(), [0.0]*this.numKType())
     update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
-    logging.info("moData.init = "+asJson())
+    log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass
@@ -85,7 +87,7 @@ def updateAllData(d):
     #print("Updated: ", asJson())
 
 def logData():
-    logging.info(this.asJson())
+    log.info(this.asJson())
     
 
 ######  for CSV

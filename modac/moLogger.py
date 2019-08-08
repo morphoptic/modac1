@@ -9,7 +9,7 @@ this = sys.modules[__name__]
 import datetime
 import sys
 import os
-import logging, logging.handlers
+import logging, logging.handlers, traceback
 
 __loggerInit = False
 def init(name="modac"):

@@ -4,6 +4,10 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
+import logging
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 
 #import rest of modac
 #from . import module name
@@ -11,7 +15,6 @@ from .moKeys import *
 from . import moData
 # locally required for this module
 from gpiozero import OutputDevice
-import logging
 from time import sleep
 
 # gpiozero OutputDevices with Binary Values
@@ -40,7 +43,7 @@ __relays = [
         ]
 
 def init():
-    logging.info("modac_initOutputDevices")
+    log.info("modac_initOutputDevices")
     allOff()
     update()
     
@@ -63,19 +66,19 @@ def asDict():
 def on(deviceId):
     # good place for an assert()
     if deviceId < 0 or deviceId > 8:
-        logging.error("binaryOut_on Range error for device id {0}".format(deviceId))
+        log.error("binaryOut_on Range error for device id {0}".format(deviceId))
         #raise Exception("Unknown OutputDeviceId" +str(deviceId))
         return
-    logging.debug("binaryOut ON "+str(deviceId))
+    log.debug("binaryOut ON "+str(deviceId))
     this.__relays[deviceId].on()
     update()
     
 def off(deviceId):
     if deviceId < 0 or deviceId > 8:
-        logging.error("binaryOut_off Range error for device id {0}".format(deviceId))
+        log.error("binaryOut_off Range error for device id {0}".format(deviceId))
         #raise Exception("Unknown OutputDeviceId" +str(deviceId))
         return
-    logging.debug("binaryOut OFF "+str(deviceId))
+    log.debug("binaryOut OFF "+str(deviceId))
     this.__relays[deviceId].off()
     update()
 
@@ -86,22 +89,22 @@ def setOutput(channel, onoff):
         this.off(channel)
 
 def allOn():
-    logging.debug("binaryOut allOn ")
+    log.debug("binaryOut allOn ")
     for i in range(0,len(__relays)):
         this.on(i)
 
 def allOff():
-    logging.debug("binaryOut allOff")
+    log.debug("binaryOut allOff")
     for i in range(0,len(__relays)) : #range(0,8):
         this.off(i)
 
 def powerOutlet_on():
-    logging.debug("binaryOut powerOutlet On ")
+    log.debug("binaryOut powerOutlet On ")
     this.on(0)
     update()
     
 def powerOutlet_off():
-    logging.debug("binaryOut powerOutlet Off ")
+    log.debug("binaryOut powerOutlet Off ")
     this.off(0)
     update()
 

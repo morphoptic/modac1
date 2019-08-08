@@ -3,13 +3,15 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-#import rest of modac
+import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 from .moKeys import *
 from . import moData
 
 # locally required for this module
 import datetime, csv
-import logging, logging.handlers, traceback
 
 __csvFile = None
 __csvWriter = None

@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -112,7 +114,7 @@ class ad16Panel():
                 self.listStore.remove(it)
         except :
             print("got an exception removing from listStore")
-            logging.error("Exception happened", exc_info=True)
+            log.error("Exception happened", exc_info=True)
             pass
         
         return True

@@ -3,7 +3,10 @@
 import sys
 this = sys.modules[__name__]
 # other system imports
-import logging, logging.handlers
+import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import json
 
 #import rest of modac
@@ -14,7 +17,7 @@ def cmdBinary(binOutIdx, onOff):
     assert isinstance(binOutIdx, int)
     assert isinstance(onOff, bool)
     body = (binOutIdx, onOff)
-    print("cmdBinary ",keyForBinaryCmd(),body)
+    log.debug("cmdBinary "+keyForBinaryCmd()+" " +str(body))
     moClient.sendCommand(keyForBinaryCmd(), body)
     
 def cmdAllOff():

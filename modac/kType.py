@@ -2,13 +2,16 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
+import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 #import rest of modac
 from .moKeys import *
 from . import moData
 # should revise this so it gets direct from moData rather than having knowledge of other device api?
 from . import ad24, enviro
 # locally required for this module
-import logging, logging.handlers
 
 from thermocouples_reference import thermocouples
 

@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')

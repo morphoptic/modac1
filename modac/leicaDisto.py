@@ -4,13 +4,14 @@
 
 import sys
 this = sys.modules[__name__]
-#import rest of modac
-#from . import someModule
+import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 from .moKeys import *
 from . import moData
 
 # locally required for this module
-import logging, logging.handlers
 import sys
 from time import sleep
 import datetime
@@ -47,16 +48,16 @@ def __startGattool():
         this.__gatt.sendline('char-write-cmd 0x000f 0200')
         this.__gatt.sendline('char-write-cmd 0x0012 0200')
 
-        logging.info("leicaDisto Connection Successful")
+        log.info("leicaDisto Connection Successful")
     except pexpect.TIMEOUT:
-        logging.warn("leicaDisto.init() timeout "+ str(this.__gatt))
+        log.warn("leicaDisto.init() timeout "+ str(this.__gatt))
         print("Did Leica turn Off? need to turn leica back on")
         # TODO retry after N seconds
         this.__leicaTimeoutsThisSession += 1
         this.__distMeters=-1
         this.__gatt = None
     except pexpect.EOF:
-        logging.warn("leicaDisto.init EOF - process died " + str(this.__gatt))
+        log.warn("leicaDisto.init EOF - process died " + str(this.__gatt))
         this.__distMeters = -1
         this.__gatt = None
     #print("leicaDisto.init after Try: "+ str(this.__gatt))
@@ -68,7 +69,7 @@ def __startGattool():
     print("gattool init end")#, this.__gatt)
 
 def init(addrStr=this.__defaultAddrStr):
-    logging.info("leicaDisto.init")
+    log.info("leicaDisto.init")
     this.__leicaAddressStr = addrStr
     assert not this.__leicaAddressStr == None
 
@@ -86,7 +87,7 @@ def update():
     # error handling
     #print("disto.update() entered")
     if this.__gatt == None:
-        logging.debug("No gattTool for Leica")
+        log.debug("No gattTool for Leica")
         # no process, update with -1 and return quietly
         #this.__distMeters = -1
         #moData.update(keyForLeicaDisto(), this.distance())
@@ -114,18 +115,18 @@ def update():
         this.updateModata()
         this.__timeoutCount = 0
     except pexpect.TIMEOUT:
-        logging.warn("leicaDisto.update() timeout ")#+ str(this.__gatt))
+        log.warn("leicaDisto.update() timeout ")#+ str(this.__gatt))
         #noTimeout = False
         this.__leicaTimeoutsThisSession += 1
         this.__timeoutCount +=1
         if this.__timeoutCount > 3:
-            logging.error("Leica timeout count exceeded, closing device")
+            log.error("Leica timeout count exceeded, closing device")
             this.__timeoutCount = 0
             this.__gatt.close()
             this.__gatt = None
             sleep(0.5)
     except pexpect.EOF:
-        logging.error("leicaDisto.update() EOF - process died " + str(this.__gatt))
+        log.error("leicaDisto.update() EOF - process died " + str(this.__gatt))
         # TODO: restart gatt Process... async
         this.__gatt = None
         gotEOF = true
@@ -152,7 +153,7 @@ def timestampStr():
 
 def distance():
 #    if this.__distMeters < 0:
-#        logging.warn("LeicaDisto is negative")
+#        log.warn("LeicaDisto is negative")
     return this.__distMeters
 
 def shutdown():

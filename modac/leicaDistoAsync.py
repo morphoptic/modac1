@@ -9,13 +9,14 @@
 
 import sys
 this = sys.modules[__name__]
-#import rest of modac
-#from . import someModule
+import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 from .moKeys import *
 from . import moData
 
 # locally required for this module
-import logging, logging.handlers
 import sys
 #from time import sleep
 import datetime
@@ -48,15 +49,15 @@ def update():
     pass
 
 async def initAsync(addrStr, nursery):
-    logging.debug("leicaDisto.initAsync begin")
+    log.debug("leicaDisto.initAsync begin")
     if addrStr == "default" or addrStr == None:
         addrStr=this.__defaultAddrStr
     if nursery == None:
-        logging.error("leica initAsync no nursery")
+        log.error("leica initAsync no nursery")
         return
     if this.isRunning() :
-        logging.error("leicaDistro attempt to initAsync but already running")
-        logging.error(str(this.__gatt))
+        log.error("leicaDistro attempt to initAsync but already running")
+        log.error(str(this.__gatt))
         return
     this.__leicaAddressStr = addrStr
     this.__distMeters = -1
@@ -68,10 +69,10 @@ async def initAsync(addrStr, nursery):
     
     # if it started, run update loop
     if this.isRunning():
-        logging.debug("Leica GattTool started, spawn update task")
+        log.debug("Leica GattTool started, spawn update task")
         nursery.start_soon(this.__updateLeicaLoop,nursery)
     else:
-        logging.error("Leica init failed to start gattool")
+        log.error("Leica init failed to start gattool")
 
 async def __startGattool():
     this.__timeoutCount = 0
@@ -92,50 +93,50 @@ async def __startGattool():
         this.__gatt.sendline('char-write-cmd 0x000b 0200')
         this.__gatt.sendline('char-write-cmd 0x000f 0200')
         this.__gatt.sendline('char-write-cmd 0x0012 0200')
-        logging.info("leicaDisto Connection Successful")
+        log.info("leicaDisto Connection Successful")
     except pexpect.TIMEOUT:
-        logging.warn("leicaDisto.init() timeout "+ str(this.__gatt))
+        log.warn("leicaDisto.init() timeout "+ str(this.__gatt))
         print("Did Leica turn Off? need to turn leica back on")
         # TODO retry after N seconds
         this.__leicaTimeoutsThisSession += 1
         this.__distMeters=-1
         this.__gatt = None
     except pexpect.EOF:
-        logging.warn("leicaDisto.init EOF - process died " + str(this.__gatt))
+        log.warn("leicaDisto.init EOF - process died " + str(this.__gatt))
         this.__distMeters = -1
         this.__gatt = None
     #print("leicaDisto.init after Try: "+ str(this.__gatt))
     if this.__gatt == None:
         print("Failed to start Gatttool")
     else:
-        logging.info("gttTool seems to have started, give couple sec")
+        log.info("gttTool seems to have started, give couple sec")
         await trio.sleep(2) # was 3 give it time to settle?
     this.__spawning = False
     #print("gattool spawned init end", this.__gatt)
 
 async def __attemptSpawn(nursery):
-    logging.debug("Leica __attemptSpawn")
+    log.debug("Leica __attemptSpawn")
     nursery.start_soon(this.__startGattool)
     this.__spawning = True
     while this.__spawning:
         await trio.sleep(1)
-    logging.debug(" after spawning running = "+ str(isRunning()))
+    log.debug(" after spawning running = "+ str(isRunning()))
 
 async def __updateLeicaLoop(nursery):
-    logging.debug("Leica update task spawned")
+    log.debug("Leica update task spawned")
     while True:
         await this.__update(nursery)
         if not this.isRunning():
             break
         await trio.sleep(1)
-    logging.debug("Leica update task ending")
+    log.debug("Leica update task ending")
         
 async def __update(nursery):
     # send command to Leica, parse results
     # error handling
     #print("leica.__update() entered")
     if not this.isRunning():
-        logging.debug("No gattTool for Leica, attempt restart")
+        log.debug("No gattTool for Leica, attempt restart")
         this.__attemptSpawn(nursery)
         #if still not running
         if not this.isRunning(): return
@@ -161,18 +162,18 @@ async def __update(nursery):
         this.updateModata()
         this.__timeoutCount = 0
     except pexpect.TIMEOUT:
-        logging.warn("leicaDisto.update() timeout ")#+ str(this.__gatt))
+        log.warn("leicaDisto.update() timeout ")#+ str(this.__gatt))
         #noTimeout = False
         this.__leicaTimeoutsThisSession += 1
         this.__timeoutCount +=1
         if this.__timeoutCount > 3:
-            logging.error("Leica timeout count exceeded, closing device")
+            log.error("Leica timeout count exceeded, closing device")
             this.__timeoutCount = 0
             this.__gatt.close()
             this.__gatt = None
             await trio.sleep(0.5)
     except pexpect.EOF:
-        logging.error("leicaDisto.update() EOF - process died " + str(this.__gatt))
+        log.error("leicaDisto.update() EOF - process died " + str(this.__gatt))
         # TODO: restart gatt Process... async
         this.__gatt = None
         gotEOF = true
@@ -191,12 +192,12 @@ def timestampStr():
 
 def distance():
 #    if this.__distMeters < 0:
-#        logging.warn("LeicaDisto is negative")
+#        log.warn("LeicaDisto is negative")
     return this.__distMeters
 
 def shutdown():
-    logging.info("Shutdown Leica Disto, total Timeouts: "+str(this.__leicaTimeoutsThisSession))
-    logging.info("   leica restarts this sessio n"+str(this.__leicaRestartsThisSession))
+    log.info("Shutdown Leica Disto, total Timeouts: "+str(this.__leicaTimeoutsThisSession))
+    log.info("   leica restarts this sessio n"+str(this.__leicaRestartsThisSession))
     if not this.__gatt == None:
         this.__gatt.close()
         this.__gatt = None

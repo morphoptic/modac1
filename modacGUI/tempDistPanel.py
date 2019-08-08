@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -28,15 +30,15 @@ class tempDistPanel():
         self.label = Gtk.Label("Temp/Distance")
 
         n_col = moData.numKType() + 1 # + one for dist
-        print("NumCol: ", n_col)
+        #print("NumCol: ", n_col)
         # initialized array of data of plotWidth
         self.count=0
         self.times = [0]*self.plotWidth
         self.col = [ [0]*self.plotWidth ]*(n_col)
-        print("len self.col ", len(self.col))
+        #print("len self.col ", len(self.col))
         
         self.columnNames = ["time"]+["K"+str(i) for i in range(moData.numKType()) ] +["Dist"]
-        print("Columns:", self.columnNames)
+        #print("Columns:", self.columnNames)
         ### setup Plot Data 
         
         ### setup Table (aka listStore) in a ScrollWindow
@@ -93,7 +95,7 @@ class tempDistPanel():
         ktypes = moData.getValue(keyForKType())
         #print("kTypes Update = ", ktypes)
         lData = moData.getValue(keyForLeicaDisto())
-        print("leicaPanel.getData = ", lData)
+        #print("leicaPanel.getData = ", lData)
         #self.timestamp = lData[keyForTimeStamp()]
         distance = lData[keyForDistance()]
 
@@ -113,7 +115,7 @@ class tempDistPanel():
             row.append(str(v))
         
         distCol = len(ktypes)
-        print("distCol = ", distCol)
+        #print("distCol = ", distCol)
         self.col[distCol].append(distance)
         self.col[distCol] = self.col[distCol][-self.plotWidth:]
         row.append(str(distance))
@@ -126,8 +128,8 @@ class tempDistPanel():
                 it = self.listStore.iter_nth_child(None,self.plotWidth)
                 self.listStore.remove(it)
         except :
-            print("got an exception removing from listStore")
-            logging.error("Exception happened", exc_info=True)
+            log.error("got an exception removing from listStore")
+            log.error("Exception happened", exc_info=True)
             pass
         
         return True
@@ -135,7 +137,7 @@ class tempDistPanel():
     def plotOne(self): #, treeview, path, view_column):
         #self.line.set_ydata(self.press)
         if self.plotColumn == 0:
-            print("cant plot time vs time")
+            log.error("cant plot time vs time")
             return
         #print("Plot column ", self.plotColumn, len(self.col))
         colData = self.col[self.plotColumn-1]
@@ -166,9 +168,9 @@ class tempDistPanel():
             print(row[:])
     
     def clickedColumn(self, treeCol, idx):
-        print("clicked column ", idx, self.columnNames[idx])
+        #print("clicked column ", idx, self.columnNames[idx])
         if idx == 0:
-            print("Cant plot time")
+            log.error("Cant plot time")
             return
         self.plotColumn = idx
         self.updatePlot()

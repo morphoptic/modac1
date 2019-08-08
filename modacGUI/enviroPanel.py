@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -93,7 +95,7 @@ class enviroPanel():
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
         enviro = moData.getValue(keyForEnviro())
-        print("enviro Update = ", enviro)
+        log.debug("enviro Update = "+str( enviro))
         temperature = enviro[keyForTemperature()]
         humidity = enviro[keyForHumidity()]
         pressure = enviro[keyForPressure()]
@@ -124,7 +126,7 @@ class enviroPanel():
                 self.listStore.remove(it)
         except :
             print("got an exception removing from listStore")
-            logging.error("Exception happened", exc_info=True)
+            log.error("Exception happened", exc_info=True)
             pass
         
         #it = self.listStore.append([timeStr,self.bme.temperature, self.bme.humidity, self.bme.pressure])
@@ -170,7 +172,7 @@ class enviroPanel():
         self.canvas.draw()
         
     def updatePlot(self):
-        print("updatePlot column", self.plotColumn)
+        #print("updatePlot column", self.plotColumn)
         if self.plotColumn == 1:
             self.plotTemp()
         elif self.plotColumn == 2:
