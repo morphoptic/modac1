@@ -62,6 +62,7 @@ def keyForResetLeica():
     return "leicaReset"
 
 # kiln state
+def keyForRunKilnCmd(): "runKiln"
 def keyForKilnState(): return "kilnState"
 def keyForRuntime(): return 'runtime'
 def keyForTarget(): return 'target'

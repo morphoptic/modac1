@@ -31,6 +31,13 @@ def numAD24():
 def numAD16():
     return 4
 
+__nursery = None
+def setNursery(nursery=None):
+    log.debug("setNursery %r"%(nursery))
+    this.__nursery = nursery
+def getNursery():
+    return this.__nursery
+
 def init():
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
@@ -125,6 +132,7 @@ def __appendAName(key):
         this.__namesOfColumns.append(s)
 
 def arrayColNames():
+    log.debug("modData.arrayColNames - for moCSV")
     if not this.__namesOfColumns == None:
         return this.__namesOfColumns
     this.__namesOfColumns = []
@@ -137,5 +145,5 @@ def arrayColNames():
     this.__appendAName(keyForAD16())
     this.__appendAName(keyForKType())
     this.__appendAName(keyForBinaryOut())
-  
+    log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns

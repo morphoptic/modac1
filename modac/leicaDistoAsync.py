@@ -137,7 +137,7 @@ async def __update(nursery):
     #print("leica.__update() entered")
     if not this.isRunning():
         log.debug("No gattTool for Leica, attempt restart")
-        this.__attemptSpawn(nursery)
+        await this.__attemptSpawn(nursery)
         #if still not running
         if not this.isRunning(): return
     noTimeout = True
@@ -197,7 +197,7 @@ def distance():
 
 def shutdown():
     log.info("Shutdown Leica Disto, total Timeouts: "+str(this.__leicaTimeoutsThisSession))
-    log.info("   leica restarts this sessio n"+str(this.__leicaRestartsThisSession))
+    log.info("   leica restarts this session"+str(this.__leicaRestartsThisSession))
     if not this.__gatt == None:
         this.__gatt.close()
         this.__gatt = None

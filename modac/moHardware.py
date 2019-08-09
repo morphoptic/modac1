@@ -28,6 +28,7 @@ async def init(nursery):
     await leicaDisto.initAsync(None, nursery)
     # force at least one update so moData is populated
     update()
+    log.debug("moData initialized")
 
 def update():
     enviro.update()

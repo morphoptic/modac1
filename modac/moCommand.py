@@ -27,3 +27,8 @@ def cmdAllOff():
 def cmdResetLeica():
     body = ()
     moClient.sendCommand(keyForResetLeica(), body)
+
+def cmdRunKiln(filename=None):
+    body = (filename)
+    moClient.sendCommand(keyForRunKilnCmd(), body)
+    

@@ -23,6 +23,7 @@ log.setLevel(logging.DEBUG)
 
 # my stuff
 from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
+from kilnControl import kiln
 
 runTests = False #True
 publishRate = 2 # seconds for sleep at end of main loop
@@ -49,6 +50,10 @@ async def modac_ReadPubishLoop():
         moServer.publish()
         await trio.sleep(publishRate)
 
+async def waitThenRunSchedule():
+        await trio.sleep(30)
+        kiln.loadAndRun("kilnControl/testSchedule.csv")
+
 async def modac_asyncServer():
     log.info("start modac_asyncServer()")
     modac_loadConfig()
@@ -56,7 +61,7 @@ async def modac_asyncServer():
     async with trio.open_nursery() as nursery:
         moData.init()
         # save the nursey in moData for other modules
-        moData.nursery = nursery
+        moData.setNursery(nursery)
         
         await moHardware.init(nursery)
         moCSV.init()
@@ -65,6 +70,7 @@ async def modac_asyncServer():
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
         await kiln.startKiln(nursery)
+        await kiln.spawnSchedule(30)
 
         try:
             #   run event loop

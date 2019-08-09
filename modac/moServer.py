@@ -15,6 +15,8 @@ from binascii import hexlify, unhexlify
 #import rest of modac
 from .moKeys import *
 from . import moData, moNetwork, moHardware
+from kilnControl import kiln
+
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
 
@@ -74,6 +76,7 @@ async def serverReceive():
     #not sure yet what this might become
     if this.__CmdListener == None:
         log.error("attempt to serverReceive() CmdListener not initialized")
+        this.__killCmdListener = True
         return False
     msg = None
     try:
@@ -96,18 +99,19 @@ async def serverReceive():
         print("Cmd topic,body:", topic,body)
         if topic == "error":
             log.warning("CmdListener got non-modac command %s"%topic)
-            return False
+            return True
         # ok... body should hold modac encrypted command
         serverDispatch(topic,body)
         return True
     except Timeout:
         # be quiet about it
         #log.debug("serverReceive() receive timeout")
-        return False
+        return True
     except :
         log.error("serverReceive() caught exception %s"%sys.exc_info()[0])
         traceback.print_exc()#sys.exc_info()[2].print_tb()
         #log.exception("Some other exeption! on sub%d "%(i))
+        this.__killCmdListener = True
         return False
 
 def serverDispatch(topic,body):
@@ -121,6 +125,12 @@ def serverDispatch(topic,body):
         moHardware.allOffCmd()
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
+    elif topic == keyForRunKilnCmd():
+        # where do we have the kiln stashed?
+        if kiln.kiln == None:
+            log.error("No Kiln to run!")
+        else:
+            kiln.kiln.loadAndRun(body)
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

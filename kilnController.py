@@ -17,7 +17,7 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-import logging, logging.handlers, traceback
+import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -32,7 +32,7 @@ import trio
 from modac import moLogger, moData
 moLogger.init()
 
-from kilnControl import kiln, schedule
+from kilnControl import kiln
 print(" continue with kilnController")
 
 def signalExit(*args):
@@ -42,13 +42,17 @@ def signalExit(*args):
 async def simulateKiln():
     print("simulate kiln")
     async with trio.open_nursery() as nursery:
-        this.kiln = kiln.Kiln(simulate=True)
-        nursery.start_soon(this.kiln.runKiln)
-
-        this.schedule = schedule.Schedule("kilnControl/testSchedule.csv")
-        print(this.schedule.timeTargetTempArray)
-        this.kiln.run_schedule(this.schedule)
-    
+        moData.setNursery(nursery)
+        await kiln.startKiln(nursery)
+        print("after spawn kiln")
+        await kiln.spawnSchedule(5)
+        print("after spawnSchedule, sleep for while")
+        await trio.sleep(90)
+        kiln.endKiln()
+        #kiln.loadAndRun()#"kilnControl/testSchedule.csv")
+        print("simulateKiln awaiting nursery")
+    print("end of simulateKiln")
+        
 # main for testing
 if __name__ == "__main__":
     #log.error("kiln.kiln has no self test")

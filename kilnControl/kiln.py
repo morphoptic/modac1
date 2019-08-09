@@ -52,14 +52,42 @@ pid_kd = 217  # Derivative
 
 kiln = None
 async def startKiln(nursery):
-    this.kiln = kiln.Kiln(simulate=True)
-    nursery.start_soon(this.kiln.runKiln)
+    log.debug("startKiln soon")
+    this.kiln = Kiln()#simulate=True)
+    #nursery.start_soon(this.kiln.runKiln)
 
 def endKiln():
     if this.kiln == None:
+        log.debug("endKiln, no kiln")
         return
-    this.kiln.terminate()
+    this.kiln.abort_run()
+    this.kiln = None
     
+async def loadAndRun(delayTime= 5,filename="kilnControl/testSchedule.csv"):
+    await trio.sleep(delayTime)
+    if this.kiln == None:
+        log.error("loadAndRun, no kiln")
+        return
+    if this.kiln.runLoopStarted == False:
+        # no thread running,
+        this.kiln.runnable = True
+        log.debug("Kiln not running, start it")
+        moData.getNursery().start_soon(this.kiln.runKiln)
+        await trio.sleep(3)    
+    this.schedule = schedule.Schedule(filename)
+    print("Loaded Schedule",this.schedule.timeTargetTempArray)
+    this.kiln.run_schedule(this.schedule)
+    
+async def spawnSchedule(time = 5):
+    nursery=moData.getNursery()
+    if nursery == None:
+        log.error("spawnSchedule, no nursery")
+        return
+#    await trio.sleep(time)
+    print("woke and try nurser startsoon %r"%(nursery))
+    nursery.start_soon(this.loadAndRun, time) #,"kilnControl/testSchedule.csv")
+    print("spawned Schedule")
+        
 def getTemperature():
     ''' retrieve thermocouple values degC, avg the ones we want '''
     ktypes = moData.getValue(keyForKType())
@@ -81,10 +109,13 @@ class Kiln:
         self.simulate = True
         self.time_step = time_step
         self.reset()
+        self.runLoopStarted = False
         self.runnable = True
+        log.debug("Kiln initialized")
 
     def reset(self):
         self.schedule = None
+        self.currTemp = 0
         self.start_time = 0
         self.runtime = 0
         self.totaltime = 0
@@ -92,9 +123,12 @@ class Kiln:
         self.state = Kiln.STATE_IDLE
         self.set_heat(False)
         self.pid = pidController.PIDController(ki=pid_ki, kd=pid_kd, kp=pid_kp)
+        log.debug("Kiln reset")
+        self.publishStatus()
 
     def run_schedule(self, schedule, startat=0):
         log.info("Running schedule %s" % schedule.name)
+        self.runnable = True
         self.schedule = schedule
         self.totaltime = schedule.get_duration()
         self.start_time = datetime.datetime.now()
@@ -104,66 +138,75 @@ class Kiln:
 
     def abort_run(self):
         self.reset()
-
-    def terminate(self):
         self.runnable = False
+        log.info("abort_run")
+        
+    def publishStatus(self):
+        log.info("%r"%self.get_state())
+        moServer.publishData(keyForKilnState(), self.get_state())
+        #moData.update(keyForKilnState(), self.get_state())
+        print("\nPublished status\n")
+        
+    def kilnStep(self,temperature_count, last_temp, pid):
+        if self.state == Kiln.STATE_IDLE:
+            return
+        runtimeDelta = (datetime.datetime.now() - self.start_time).total_seconds()
+        if self.startat > 0:
+            self.runtime = self.startat + runtimeDelta;
+        else:
+            self.runtime = runtimeDelta
+
+        self.currTemp = this.getTemperature()
+        # lookup the target temperature at current time
+        self.target = self.schedule.get_target_temperature(self.runtime)
+        pid = self.pid.compute(self.target,  self.currTemp)
+
+        # FIX - this whole thing should be replaced with
+        # a warning low and warning high below and above
+        # set value.  If either of these are exceeded,
+        # warn in the interface. DO NOT RESET.
+
+        # if we are WAY TOO HOT, shut down
+        if(self.currTemp >= emergency_shutoff_temp):
+            log.info("emergency!!! temperature too high, shutting down")
+            self.abort_run()
+            
+        #Capture the last temperature value.
+        last_temp = self.currTemp 
+        
+        self.set_heat(pid)
+        
+        #log, publish and put in data blackboard
+        self.publishStatus()
+        
+        if self.runtime >= self.totaltime:
+            log.info("schedule ended, runKiln going idle")
+            self.abort_run()
         
     async def runKiln(self):
+        print("runKiln starting", self.get_state())
+        self.runLoopStarted = True
         log.debug("runKiln")
         temperature_count = 0
         last_temp = 0
         pid = 0
+        self.runnable = True
+        await trio.sleep(0.5)
         while self.runnable:
             if self.state == Kiln.STATE_IDLE:
-                #print("idle")
+                print("kiln loop idle")
                 await trio.sleep(3)
             else:
-                runtimeDelta = (datetime.datetime.now() - self.start_time).total_seconds()
-                if self.startat > 0:
-                    self.runtime = self.startat + runtimeDelta;
-                else:
-                    self.runtime = runtimeDelta
-
-                self.currTemp = this.getTemperature()
-                # lookup the target temperature at current time
-                self.target = self.schedule.get_target_temperature(self.runtime)
-                pid = self.pid.compute(self.target,  self.currTemp)
-
-                # FIX - this whole thing should be replaced with
-                # a warning low and warning high below and above
-                # set value.  If either of these are exceeded,
-                # warn in the interface. DO NOT RESET.
-
-                # if we are WAY TOO HOT, shut down
-                if(self.currTemp >= emergency_shutoff_temp):
-                    log.info("emergency!!! temperature too high, shutting down")
-                    self.reset()
-                    
-                #Capture the last temperature value.
-                last_temp = self.currTemp 
-                
-                self.set_heat(pid)
-                
-                #log, publish and put in data blackboard
-                log.info("%r"%self.get_state())
-                moServer.publishData(keyForKilnState(), self.get_state())
-                moData.update(keyForKilnState(), self.get_state())
-                
-                if self.runtime >= self.totaltime:
-                    log.info("schedule ended, runKiln going idle")
-                    self.reset()
-                    #self.terminate()
-
-            # amount of time to sleep with the heater off
-            # for example if pid = .6 and time step is 1, sleep for .4s
-            if pid > 0:
-                self.sleepThisStep = self.time_step * (1 - pid)
-            else:
-                self.sleepThisStep = self.time_step
-            print("bottom of forever loop")
+                self.kilnStep(temperature_count, last_temp, pid)
+            self.sleepThisStep = self.time_step
+            self.publishStatus()
+            print("bottom of forever loop sleep for",self.sleepThisStep)
             # post kilnState
             await trio.sleep(self.sleepThisStep)
         #out of while runnable
+        self.reset()
+        self.runLoopStarted = False
+        self.publishStatus()
         log.debug("exit runKiln thread")
 
     def set_heat(self, value):
