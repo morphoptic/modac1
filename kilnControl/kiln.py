@@ -25,12 +25,7 @@ import time
 import random
 import datetime
 
-#import rest of modac
-#from modac.moKeys import *
-#from modac import moData, moHardware
-
 import trio
-print("loading kiln")
 
 from . import schedule, pidController, TempSensor
 
@@ -55,6 +50,16 @@ pid_kp = 25  # Proportional
 pid_ki = 1088  # Integration
 pid_kd = 217  # Derivative 
 
+kiln = None
+async def startKiln(nursery):
+    this.kiln = kiln.Kiln(simulate=True)
+    nursery.start_soon(this.kiln.runKiln)
+
+def endKiln():
+    if this.kiln == None:
+        return
+    this.kiln.terminate()
+    
 def getTemperature():
     ''' retrieve thermocouple values degC, avg the ones we want '''
     ktypes = moData.getValue(keyForKType())
@@ -72,6 +77,7 @@ class Kiln:
     STATE_RUNNING = "RUNNING"
 
     def __init__(self, simulate=False, time_step=kiln_timeStep):#, nursery=None):
+        # simulation was removed for modac, need it for good testing
         self.simulate = True
         self.time_step = time_step
         self.reset()

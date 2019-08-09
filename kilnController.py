@@ -32,7 +32,7 @@ import trio
 from modac import moLogger, moData
 moLogger.init()
 
-from kilnControl import kiln, schedule, pidController, TempSensor
+from kilnControl import kiln, schedule
 print(" continue with kilnController")
 
 def signalExit(*args):
@@ -42,10 +42,11 @@ def signalExit(*args):
 async def simulateKiln():
     print("simulate kiln")
     async with trio.open_nursery() as nursery:
-        this.schedule = schedule.Schedule("kilnControl/testSchedule.csv")
-        print(this.schedule.timeTargetTempArray)
         this.kiln = kiln.Kiln(simulate=True)
         nursery.start_soon(this.kiln.runKiln)
+
+        this.schedule = schedule.Schedule("kilnControl/testSchedule.csv")
+        print(this.schedule.timeTargetTempArray)
         this.kiln.run_schedule(this.schedule)
     
 # main for testing

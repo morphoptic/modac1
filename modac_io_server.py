@@ -55,6 +55,8 @@ async def modac_asyncServer():
 
     async with trio.open_nursery() as nursery:
         moData.init()
+        # save the nursey in moData for other modules
+        moData.nursery = nursery
         
         await moHardware.init(nursery)
         moCSV.init()
@@ -62,7 +64,8 @@ async def modac_asyncServer():
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
-    
+        await kiln.startKiln(nursery)
+
         try:
             #   run event loop
             #print("modata:",moData.rawDict())
