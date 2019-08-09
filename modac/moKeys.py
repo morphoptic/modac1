@@ -61,5 +61,13 @@ def keyForAllOffCmd():
 def keyForResetLeica():
     return "leicaReset"
 
+# kiln state
+def keyForKilnState(): return "kilnState"
+def keyForRuntime(): return 'runtime'
+def keyForTarget(): return 'target'
+def keyForState(): return 'state'
+def keyForHeat(): return 'heat'
+def keyForTotalTime():return 'totaltime'
+
 
 

@@ -44,20 +44,18 @@ def shutdown():
     this.allOff()
     leicaDisto.shutdown()
 
+# TODO should not have two of these!
 def allOff():
-    binaryOutputs.allOff()
-    
-def binaryCmd(channel,onoff):
-    binaryOutputs.setOutput(channel,onoff)
-
+    binaryOutputs.allOff()    
 def allOffCmd():
     binaryOutputs.allOff()
+
+def binaryCmd(channel,onoff):
+    log.info("Binary cmd chan %d onOff %r"%(channel,onoff))
+    binaryOutputs.setOutput(channel,onoff)
 
 def resetLeicaCmd():
     if this.__nursery == None:
         return
     # dont block like in init(), do it async
     this.__nursery.start_soon(leicaDisto.initAsync, None, this.__nursery)
- 
- 
- 

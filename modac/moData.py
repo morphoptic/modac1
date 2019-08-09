@@ -30,7 +30,6 @@ def numAD24():
     return 8
 def numAD16():
     return 4
- 
 
 def init():
     # here we dont init hardware, only data collection

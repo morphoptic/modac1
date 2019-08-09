@@ -43,6 +43,9 @@ def publish():
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
+    if this.__Publisher == None:
+        log.debug("publisher offline "+key)
+        return
     #print("dataStr: ", tempStr)
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
@@ -108,11 +111,11 @@ async def serverReceive():
         return False
 
 def serverDispatch(topic,body):
-    print("serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    log.info("serverDispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForBinaryCmd():
         payload = body # json.loads(body)
-        print("serverDispatch payload")
-        print(payload)
+        #print("serverDispatch payload")
+        #print(payload)
         moHardware.binaryCmd(payload[0],payload[1]) # channel, onOff
     elif topic == keyForAllOffCmd():
         moHardware.allOffCmd()
