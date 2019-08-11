@@ -43,7 +43,7 @@ async def simulateKiln():
     print("simulate kiln")
     async with trio.open_nursery() as nursery:
         moData.setNursery(nursery)
-        await kiln.startKiln(nursery)
+        kiln.startKiln()
         print("after spawn kiln")
         await kiln.spawnSchedule(5)
         print("after spawnSchedule, sleep for while")

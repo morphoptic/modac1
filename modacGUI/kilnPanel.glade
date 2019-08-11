@@ -12,7 +12,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <signal name="activate" handler="on_StartSchedule_activate" swapped="no"/>
+        <signal name="clicked" handler="on_StartSchedule_clicked" swapped="no"/>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -26,7 +26,7 @@
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <signal name="activate" handler="on_AbortSchedule_activate" swapped="no"/>
+        <signal name="clicked" handler="on_AbortSchedule_clicked" swapped="no"/>
       </object>
       <packing>
         <property name="expand">False</property>

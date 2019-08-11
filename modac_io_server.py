@@ -31,10 +31,12 @@ publishRate = 2 # seconds for sleep at end of main loop
 def modacExit():
     log.info("modacExit shutting down")
     moHardware.shutdown()  # turns off any hardware
+    kiln.endKiln()
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
     moServer.shutdownServer()
-    exit()
+    log.info("closed everything i think")
+    exit(0)
 
 async def modac_ReadPubishLoop():
     print("event Loop")
@@ -49,10 +51,6 @@ async def modac_ReadPubishLoop():
         # publish data
         moServer.publish()
         await trio.sleep(publishRate)
-
-async def waitThenRunSchedule():
-        await trio.sleep(30)
-        kiln.loadAndRun("kilnControl/testSchedule.csv")
 
 async def modac_asyncServer():
     log.info("start modac_asyncServer()")
@@ -69,13 +67,15 @@ async def modac_asyncServer():
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
-        await kiln.startKiln(nursery)
-        await kiln.spawnSchedule(30)
+        kiln.startKiln()
+        #await kiln.spawnSchedule(30)
 
         try:
             #   run event loop
             #print("modata:",moData.rawDict())
             await modac_ReadPubishLoop()
+#        except trio.Cancelled:
+#           log.warning("Trio propagated Cancelled to main")
         except:
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns

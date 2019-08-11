@@ -27,7 +27,8 @@ import datetime
 
 import trio
 
-from . import schedule, pidController, TempSensor
+from . import pidController
+from . import schedule as kilnSchedule
 
 from modac import moData, moHardware, moServer
 from modac.moKeys import *
@@ -51,7 +52,7 @@ pid_ki = 1088  # Integration
 pid_kd = 217  # Derivative 
 
 kiln = None
-async def startKiln(nursery):
+def startKiln():
     log.debug("startKiln soon")
     this.kiln = Kiln()#simulate=True)
     #nursery.start_soon(this.kiln.runKiln)
@@ -64,6 +65,7 @@ def endKiln():
     this.kiln = None
     
 async def loadAndRun(delayTime= 5,filename="kilnControl/testSchedule.csv"):
+    print("\n\nKiln load and run starting, delayTime=",delayTime, filename)
     await trio.sleep(delayTime)
     if this.kiln == None:
         log.error("loadAndRun, no kiln")
@@ -74,9 +76,10 @@ async def loadAndRun(delayTime= 5,filename="kilnControl/testSchedule.csv"):
         log.debug("Kiln not running, start it")
         moData.getNursery().start_soon(this.kiln.runKiln)
         await trio.sleep(3)    
-    this.schedule = schedule.Schedule(filename)
+    this.schedule = kilnSchedule.Schedule(filename)
     print("Loaded Schedule",this.schedule.timeTargetTempArray)
     this.kiln.run_schedule(this.schedule)
+    print("schedule should be running")
     
 async def spawnSchedule(time = 5):
     nursery=moData.getNursery()
@@ -90,11 +93,14 @@ async def spawnSchedule(time = 5):
         
 def getTemperature():
     ''' retrieve thermocouple values degC, avg the ones we want '''
-    ktypes = moData.getValue(keyForKType())
-    sum = 0
-    for idx in kiln_ktypes:
-        sum += ktypes[idx]
-    avg = sum/len(ktypes)
+    kTemps = moData.getValue(keyForKType())
+    log.debug("kTemps = "+str(kTemps))
+    log.debug("klin uses "+str(this.kiln_ktypes))
+    sum = 0.0
+    for idx in this.kiln_ktypes:
+        sum += kTemps[idx]
+    avg = sum/len(this.kiln_ktypes)
+    log.debug("Kiln temp = %d"%(avg))
     return avg
 
 class Kiln:
@@ -140,12 +146,13 @@ class Kiln:
         self.reset()
         self.runnable = False
         log.info("abort_run")
+        self.publishStatus()
         
     def publishStatus(self):
         log.info("%r"%self.get_state())
         moServer.publishData(keyForKilnState(), self.get_state())
         #moData.update(keyForKilnState(), self.get_state())
-        print("\nPublished status\n")
+        #print("\nPublished status\n")
         
     def kilnStep(self,temperature_count, last_temp, pid):
         if self.state == Kiln.STATE_IDLE:
@@ -235,9 +242,11 @@ class Kiln:
         }
         return state
     
-    def set_state(state):
+    def set_state(self,state):
+        print("kiln set_state: ", state)
+        
         self.runtime = state[keyForRuntime()]
-        self.temperature = state[keyForTemperature()]
+        self.currTemp = state[keyForTemperature()]
         self.target = state[keyForTarget()]
         self.state = state[keyForState()]
         self.heat = state[keyForHeat()]

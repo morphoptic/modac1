@@ -71,13 +71,15 @@ def clientDispatch(topic,body):
     if topic == keyForAllData():
         moData.updateAllData(body)
     elif topic == keyForKilnState():
-        if not kiln.kiln == None:
-            kiln.kiln.setState(body)
+        if kiln.kiln == None:
+            kiln.startKiln()
+        kiln.kiln.set_state(body)
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
 
 def sendCommand(key, value):
+    print("moClient sendCommand key value ", key, value)
     log.debug("moClient sendCommand key value "+ key+" " +str( value))
     if this.__CmdSender == None:
         log.error("attempt to sendCommand from non-client")

@@ -125,12 +125,22 @@ def serverDispatch(topic,body):
         moHardware.allOffCmd()
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
+    elif topic == keyForKilnAbortCmd():
+        if kiln.kiln == None:
+            return
+        log.info("Recieve kilnAbord Command")
+        kiln.kiln.abort_run()
     elif topic == keyForRunKilnCmd():
         # where do we have the kiln stashed?
         if kiln.kiln == None:
             log.error("No Kiln to run!")
         else:
-            kiln.kiln.loadAndRun(body)
+            print("\n\nload and run kiln, body == ", body)
+            if body == []:
+                moData.getNursery().start_soon(kiln.loadAndRun)
+            else:
+                # need to unpack body?
+                moData.getNursery().start_soon(kiln.loadAndRun,body)
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

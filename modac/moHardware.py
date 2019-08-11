@@ -44,6 +44,7 @@ def update():
 def shutdown():
     this.allOff()
     leicaDisto.shutdown()
+    log.debug("shutdown hardware")
 
 # TODO should not have two of these!
 def allOff():

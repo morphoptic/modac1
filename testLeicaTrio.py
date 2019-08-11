@@ -44,11 +44,13 @@ def printMoData():
     print("leicaData:",moData.getValue(keyForLeicaDisto()))
     pass
 
-async def asyncServerLoop():
+numberTestIterations = 1200
+maxRestarts = 10
+async def asyncServerLoop(nursery):
     sleepDelay = 2 # delay in seconds
     logging.info("asyncServerLoop  loopdelay= " +str(sleepDelay))
     #print("moDataDict:",moData.rawDict())
-    
+    restartCount = 0
     logging.info("start Server loop")
     await trio.sleep(sleepDelay)
     for i in range(numberTestIterations):
@@ -57,13 +59,18 @@ async def asyncServerLoop():
         if not leicaDisto.isRunning():
             logging.error("Leica not running, end process")
             #leicaDisto.shutdown()
-            break
+            restartCount += 1
+            if restartCount > maxRestarts:
+                break
+            # restart service
+            nursery.start_soon(leicaDisto.initAsync, None,nursery)
+            # wait for it
+            for s in range(10):
+                await trio.sleep(1)
         await trio.sleep(sleepDelay)
 
     logging.info("test leicaDisto complete")
     leicaDisto.shutdown()
-
-numberTestIterations = 1200
 
 async def testAll():
     print("testAll")
@@ -77,7 +84,7 @@ async def testAll():
             await trio.sleep(1)
         
         print("now start asyncServerLoop soon")
-        n.start_soon(asyncServerLoop)
+        n.start_soon(asyncServerLoop, n)
         print("nursery running")
     print("testAll, after nursery block")
              

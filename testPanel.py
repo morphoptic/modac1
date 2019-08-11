@@ -7,22 +7,12 @@ and then around line 94 set the self.panel
 TODO: make module/calls nameing consistent, perhaps use panel() instead of box?
 """
 
-import math
-from time import sleep
-import time
-import datetime
-import random
-import numpy as np
-import sys
-import os
 import logging, logging.handlers
-import argparse
-import json
 
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
-from gi.repository import GObject, Gio, Gdk, Gtk
+from gi.repository import GObject, Gio, Gtk
 from gi.repository import GObject as Gobj
 
 from modac import moLogger
@@ -33,7 +23,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 from modac.moKeys import *
-from modac import moData, moNetwork, moClient, moCommand
+from modac import moData, moClient
 
 #from modacGUI import tempDistPanel
 from modacGUI import kilnPanel

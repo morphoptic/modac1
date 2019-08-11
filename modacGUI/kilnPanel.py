@@ -18,9 +18,17 @@ from gi.repository import GObject as Gobj
 from modac.moKeys import *
 from modac import moData, moLogger
 from modac import moCommand
+import kilnControl
 from kilnControl import kiln
 
 class kilnPanel():
+    def getKilnStatus(self):
+        if kiln.kiln == None:
+            kiln.startKiln()
+            print("should have created kiln there")
+        self.kilnStatus = kiln.kiln.get_state()
+        print("KilnStatus", self.kilnStatus)
+        
     def __init__(self):        
         #print("initPanel")
         self.label = Gtk.Label("Kiln Ctrl")
@@ -33,8 +41,13 @@ class kilnPanel():
         self.box = Gtk.VBox()
         
         self.panel = builder.get_object("Panel")
-        self.statusLabels = []
+        self.labels = {}
+        self.getKilnStatus()
+        for key,value in self.kilnStatus.items():
+            self.labels[key] = builder.get_object(key)
+        print (self.labels)
 
+        self.update()
         self.box.add(self.panel)
 
         self.panel.show()
@@ -44,15 +57,22 @@ class kilnPanel():
         self.getData()
         
     def getData(self):
-        if kiln == None:
-            return
-        kilnStaus = kiln.getStatus()
+        self.getKilnStatus()
+        for key,value in self.kilnStatus.items():
+            l = self.labels[key]
+            if not l == None:
+                t = key +": "+ str(value)
+                l.set_text(t)
         
-        
-    def on_StartSchedule_activate(self, button):
+    def on_StartSchedule_clicked(self, button):
         # start kiln schedule
-        pass
-    def on_AbortSchedule_activate(self, button):
-        pass
-    
+        log.debug("StartSchedule")
+        moCommand.cmdRunKiln()
+        
+    def on_AbortSchedule_clicked(self, button):
+        log.debug("AbortSchedule")
+        moCommand.cmdAbortKiln()
+
+
+
         
