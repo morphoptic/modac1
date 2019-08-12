@@ -83,24 +83,32 @@ import signal
 import trio
 from enum import Enum
 
+######
+# some module globals that might get Config overrides
 # this is BLE MAC address, specific to unit. It needs to be in config file
 __defaultAddrStr = "D3:9D:70:68:8B:F2"
 __leicaAddressStr = None
 
 __leicaRestartsThisSession = 0
 __leicaTimeoutsThisSession = 0
-maxGattTimeoutTilClose = math.max
-maxGattRestartsTilDead = math.max
+
+maxGattTimeoutTilClose = sys.maxsize
+maxGattRestartsTilDead = sys.maxsize
+
+__distMeters = -1
+TimeBetweenMeasurements = 5
+######
 
 # dunder makes it private to this module?
 class GattState(Enum):
-    Closed = 0
-    Error = -1
+    '''States of the GattProcess internal to LeicaDisto Module'''
+    Closed = 0 # before start and when done w no error
+    Error = -1 # done and error occured
+    Starting = 1 # between closed and open
     Open = 1
-class GattClosed(RuntimeError):
-    pass
 
 class LeicaState(Enum):
+    '''States for the LeicaDisto module'''
     Closed = 0
     Error = -1
     Offline = 1
@@ -108,7 +116,6 @@ class LeicaState(Enum):
     Looping = 3
 
 leica_state = LeicaState.Closed
-__spawning = True
 
 class gattProcess:
     '''spawns and runs the gatttool pexpect conversation'''
@@ -135,7 +142,7 @@ class gattProcess:
             this.__leicaAddressStr = address
         pass
     
-    async def start(self):
+    async def open(self):
         '''setup pexpect interprocess conversation and configure Disto
         thows exceptions
         its async so must await start()
@@ -144,10 +151,12 @@ class gattProcess:
             self.close()
             self.state = GattState.Error
             return
+        state = this.GattState.Starting
         # Run gatttool interactively.
         __leicaRestartsThisSession += 1
         gatcmd = 'gatttool -b %s -t random -I' % this.__leicaAddressStr
         try: 
+            await trio.sleep(0) # checkpoint,
             self.gatt = pexpect.spawn(gatcmd) #timeout=30 by default
             # if spawn fails?
             #print("gatt spawned")
@@ -161,8 +170,6 @@ class gattProcess:
             self.gatt.sendline('char-write-cmd 0x000b 0200')
             self.gatt.sendline('char-write-cmd 0x000f 0200')
             self.gatt.sendline('char-write-cmd 0x0012 0200')
-            self.state= GattState.Open
-            log.info("leicaDisto Connection Successful")
         except pexpect.TIMEOUT:
             log.warn("GattProcess start timeout gatt:"+ str(self.gatt) + " Closing")
             log.error("Did Leica turn Off? need to turn leica back on")
@@ -180,6 +187,11 @@ class gattProcess:
             log.warn("Trio Canceled. close up forever")
             self.close()
             self.state = GattState.Error
+            this.state = LeicaState.error
+        else:
+            log.info("leicaDisto Connection Successful")
+            self.state= GattState.Open
+        await trio.sleep(0) # checkpoint,
         pass
 
     def close(self):
@@ -187,14 +199,15 @@ class gattProcess:
         log.info("gatt process closed")
         if not self.gatt == None:
             # still out there? kill it
-            self.gatt.sendintr() # SIGINT CtrlC to gatttool
+            self.gatt.sendintr() # SIGINT CtrlC to gatttool, might block a bit
         del self.gatt # release/destroy object
         self.gatt = None # forget about it
         self.state = GattState.Closed
         if this.__leicaRestartsThisSession >= maxGattRestartsTilDead:
             self.state = GattState.Error
+            this.state = LeicaState.Error
 
-    def measure(self):
+    async def measure(self):
         '''sends query cmds/parses output, returns (distance, timestamp)
         thows exceptions
         state Open or Error'''
@@ -203,9 +216,14 @@ class gattProcess:
             self.state = GattState.Error
             return
         try:
+            #need to add some trio pauses
+            await trio.sleep(0) # checkpoint,
             self.gatt.sendline('char-write-cmd 0x0014 67')
+            await trio.sleep(0) # checkpoint,
             self.gatt.expect('handle = 0x000e value: ', timeout=0.5)
+            await trio.sleep(0) # checkpoint,
             self.gatt.expect('Indication')
+            await trio.sleep(0) # checkpoint,
             
             # parse the before buffer
             value = self.gatt.before 
@@ -244,130 +262,75 @@ class gattProcess:
             log.warn("Trio Cancelled. what to do? what to do?")
             self.close()
             self.state = GattState.Error
+            this.state = LeicaState.error
 ## end of gattProcess Class
------------------------------
-and that is as far as I write tonight
-
-# gatt is pexpect spawned process w comm pipe
-__gatt= None
-__distMeters = -1
-__leicaTimeoutsThisSession = 0
-__leicaRestartsThisSession = 0
-__gattSpawnTimeout = 5
-__spawning = False
-__shutdown = False
 
 # these two are here to keep moHardware pattern of init() and update()
 # however really need to use the async versions now
 def init(addrStr=this.__defaultAddrStr):
     log.error("leicaPanel requires use of initAsync with nursery")
+    this.state = LeicaState.Offline
     pass
+
 def update():
     # empty routine to keep moHardware pattern
     log.error("leicaDisto should not use update(), use AsyncLoop")
     pass
 
-async def initAsync(addrStr, nursery):
-    '''initAsnc sets up the address, initialize globals (incl moData)
-        then uses await __attemptSpawn()
-        and if successfully running, start_soon(__updateLeicaLoop)
-    '''
-    log.debug("leicaDisto.initAsync begin")
-    if nursery == None:
-        log.error("leica initAsync no nursery")
-        return
-    if addrStr == "default" or addrStr == None:
-        addrStr=this.__defaultAddrStr
-    if this.isRunning() :
-        log.error("leicaDistro attempt to initAsync but already running")
-        log.error(str(self.__gatt))
-        return
-    this.__leicaAddressStr = addrStr
-    this.__distMeters = -1
-    this.updateModata() # stuff some data in there
-    this.__timeoutCount = 0
+async def runLoop():
+    ''' async task method nursery.start_soon(leicaDistoAsync.runloop())
+    Double loop that keeps Leica alive and measuring until told to stop
+        Outter loop creates a gattProcess, starts it, and if successful
+        enter innerloop of measure/post/sleep until error or stop signal
+        after innerloop, release gattProcess and continue outter loop '''
+    #
+    log.debug("starting runLoop")
+    # 
+    while this.leicaCanRun():
+        try:
+            __leicaRestartsThisSession +=1
+            gattProc = gattProcess() #init object
+            await gattProc.open() # spawn process, wake Leica
+            this.state = LeicaState.Online
+            while gattProc.state == GattState.Open:
+                this.state = LeicaState.Looping
+                try:
+                    await gattProc.measure()
+                    this.distance = gattProc.distanceMeters
+                    this.timestamp = datetime.datetime.now()
+                    # update Modata
+                    this.timestampStr = this.timestamp.strftime("%Y-%m-%d %H:%M:%S%Z")
+                    d = {keyForTimeStamp(): this.timestampStr(), keyForDistance(): this.distance()}
+                    #print("update Leica Modata:", d)
+                    moData.update(keyForLeicaDisto(), d)
+                except trio.Cancelled:
+                    gattProc.close()
+                    this.state = LeicaState.Offline
+                await trio.sleep(TimeBetweenMeasurements)
+            # end measure forever loop, 
+            this.state = LeicaState.Offline
+            if gattProc.state == GattState.Error:
+                # drop out of while LeicaCanRun loop
+                this.state = LeicaState.Error
+            gattProc.close()
+            del gattProc
+            gattProc = None
+        except trio.Cancelled:
+            this.state = LeicaState.Error
+            pass
+    #after while
+    # cleanup and terminate
     
-    #try spawning
-    await this.__attemptSpawn(nursery)    
+def leicaCanRun():
+    if this.state == LeicaState.Error:
+        return False
+    # other reasons to stop?
+    return True
     
-    # if it started, run update loop
-    if this.isRunning():
-        log.debug("Leica GattTool started, spawn update task")
-        nursery.start_soon(this.__updateLeicaLoop,nursery)
-    else:
-        log.error("Leica init failed to start gattool")
-
-async def __attemptSpawn(nursery):
-    if this.__shutdown:
-        log.warn("shutdown requested, no more spawning")
-        return
-    log.debug("Leica __attemptSpawn")
-    nursery.start_soon(this.__startGattool)
-    this.__spawning = True
-    while this.__spawning:
-        await trio.sleep(1)
-        if this.__shutdown:
-            break
-    log.debug(" after spawning running = "+ str(isRunning()))
-
-async def __updateLeicaLoop(nursery):
-    log.debug("Leica update task spawned")
-    while True:
-        await this.__update(nursery)
-        if not this.isRunning():
-            break
-        if this.__shutdown:
-            return
-        await trio.sleep(1)
-    log.debug("Leica update task ending")
-        
-async def __update(nursery):
-    # send command to Leica, parse results
-    # error handling
-    if this.__shutdown:
-        return
-    #print("leica.__update() entered")
-    if not this.isRunning():
-        log.debug("No gattTool for Leica, attempt restart")
-        await this.__attemptSpawn(nursery)
-        #if still not running
-        if not this.isRunning():
-            return
-    if this.__shutdown:
-        return
-    noTimeout = True
-    gotEOF = False
-gatt measure()
-
-    #print("LeicaDisto.update = ", this.distance())
-    
-def updateModata():
-    d = {keyForTimeStamp(): this.timestampStr(), keyForDistance(): this.distance()}
-    #print("update Leica Modata:", d)
-    moData.update(keyForLeicaDisto(), d)
-    
-def timestampStr():
-    this.timestamp = datetime.datetime.now()
-    #print("timestamp:", this.timestamp)
-    return this.timestamp.strftime("%Y-%m-%d %H:%M:%S%Z")
-
-def distance():
-#    if this.__distMeters < 0:
-#        log.warn("LeicaDisto is negative")
-    return this.__distMeters
-
 def shutdown():
     log.info("Shutdown Leica Disto, total Timeouts: "+str(this.__leicaTimeoutsThisSession))
     log.info("   leica restarts this session"+str(this.__leicaRestartsThisSession))
-    this.__shutdown = True
-    if not self.__gatt == None:
-        self.__gatt.close()
-        self.__gatt = None
-
-def isRunning():
-    if self.__gatt == None:
-        return False
-    return True
+    this.state = LeicaState.Error
 
 if __name__ == "__main__":
     print("modac.leicaDisto has no self test")
