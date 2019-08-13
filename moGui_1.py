@@ -31,6 +31,7 @@ from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
 from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
 from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
+from modacGUI import kilnPanel
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -99,7 +100,7 @@ class ModacAppWindow(object):
         self.ad16Panel = ad16Panel.ad16Panel()
         self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
         
-        self.leicaPanel = leicaPanel.LeicaPanel()
+        self.leicaPanel = leicaPanel.leicaPanel()
         self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
         
         self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
@@ -108,6 +109,9 @@ class ModacAppWindow(object):
         self.tempDistPanel= tempDistPanel.tempDistPanel()
         self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
         
+        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
+        self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
+
         #  add here and then in updatePanels
         
         # Start timer

@@ -108,5 +108,9 @@ def powerOutlet_off():
     this.off(0)
     update()
 
+def shutdown():
+    this.allOff()
+    this.__relays = []
+
 
 

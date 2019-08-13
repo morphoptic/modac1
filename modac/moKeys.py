@@ -10,10 +10,14 @@ def moKeyToTopic(key):
 # but other keys are used for getting data from the moData active data repository
 def keyForAllData():
     return "allData"
+def keyForShutdown():
+    return "shutdown"
 
 # timestamp key used for all data, enviro and leicaDisto
 def keyForTimeStamp():
     return "timestamp"
+def keyForStatus():
+    return "status"
 
 # these are data from Enviro Sensor (BMEchip)
 def keyForEnviro():
@@ -64,12 +68,11 @@ def keyForResetLeica():
 # kiln state
 def keyForRunKilnCmd(): return "runKiln"
 def keyForKilnAbortCmd(): return "abortKiln"
+
 def keyForKilnState(): return "kilnState"
 def keyForRuntime(): return 'runtime'
 def keyForTarget(): return 'target'
 def keyForState(): return 'state'
 def keyForHeat(): return 'heat'
 def keyForTotalTime():return 'totaltime'
-
-
 

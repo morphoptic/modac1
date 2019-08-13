@@ -34,23 +34,32 @@ def modacExit():
     kiln.endKiln()
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
+    moData.shutdown()
     moServer.shutdownServer()
     log.info("closed everything i think")
-    exit(0)
+    #exit(0)
 
 async def modac_ReadPubishLoop():
-    print("event Loop")
-    log.info("Enter Publish Loop")
+    #print("event Loop")
+    log.info("\n\nEnter Modac ReadPublish Loop")
     #for i in range(300):
     while True: # hopefully CtrlC will kill it
         #update inputs & run filters on data
+        log.debug("top forever read-publish loop")
         moHardware.update()
         # any logging?
         #moData.logData()
         moCSV.addRow()
         # publish data
         moServer.publish()
-        await trio.sleep(publishRate)
+        log.debug("bottom forever read-publish loop")
+        try:
+            await trio.sleep(publishRate)
+        except trio.Cancelled:
+            log.warn("Trio Cancelled caught in ReadPublish Loop")
+            break
+    # after Forever
+    log.info("somehow we exited the ReadPublish Forever Loop")
 
 async def modac_asyncServer():
     log.info("start modac_asyncServer()")
@@ -74,17 +83,18 @@ async def modac_asyncServer():
             #   run event loop
             #print("modata:",moData.rawDict())
             await modac_ReadPubishLoop()
-#        except trio.Cancelled:
-#           log.warning("Trio propagated Cancelled to main")
+        except trio.Cancelled:
+           log.warning("Trio propagated Cancelled to main, time to die")
         except:
+            log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
             print("Exception somewhere in modac_io_server event loop. see log files")
             print("caught something", sys.exc_info()[0])
             traceback.print_exc()#sys.exc_info()[2].print_tb()
-            log.error("Exception happened", exc_info=True)
-            log.exception("Exception Happened")
-    
+    moData.setNursery(None)
+    log.debug("nusery try died");
+    log.error("Exception happened", exc_info=True)
     modacExit()
 
 # if we decide to use cmd line args, its 2 step process parsing and dispatch
@@ -97,6 +107,13 @@ def modac_loadConfig():
 
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
+    log.error("signal exit! someone hit ctrl-C?")
+    with moData.getNursery() as nursery:
+        if nursery == None:
+            log.info("signal exit, no nursery")
+        else:
+            print("nursery still contains ", nursery.child_tasks)
+            
     modacExit()
     
 if __name__ == "__main__":
@@ -109,7 +126,6 @@ if __name__ == "__main__":
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
         log.error("Exception happened", exc_info=True)
-        log.exception("huh?")
     finally:
         print("end main")
     modacExit()

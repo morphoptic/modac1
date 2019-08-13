@@ -16,6 +16,12 @@ from .moKeys import *
 # locally required for this module
 import datetime, json
 
+from enum import Enum
+class moDataStatus(Enum):
+    Initialized = 0
+    Shutdown = -1
+    Running = 1
+
 __moDataDictionary = {}
 
 # number of sensors of each type
@@ -38,6 +44,9 @@ def setNursery(nursery=None):
 def getNursery():
     return this.__nursery
 
+def shutdown():
+    __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
+
 def init():
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
@@ -51,6 +60,7 @@ def init():
     # so need alternative... perhaps a local function deviceInitValue()
     # that would return the initial value,
     # devices could use moData.deviceInitValue() to initialize internal values
+    update(keyForStatus(),moDataStatus.Initialized.name)
     update(keyForTimeStamp(),"No Data Yet")
     update(keyForBinaryOut(), [0]*this.numBinaryOut())
     update(keyForEnviro(), d)

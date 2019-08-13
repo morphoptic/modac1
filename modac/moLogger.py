@@ -22,7 +22,7 @@ def init(name="modac"):
     now = datetime.datetime.now()
     nowStr = now.strftime("%Y%m%d_%H%M%S")
     logName = name+nowStr+".log"
-    logFormatStr = "%(asctime)s [%(threadName)-12.12s] [%(name)s] [%(levelname)-5.5s] %(message)s"
+    logFormatStr = "%(asctime)s [%(threadName)-12.12s] [%(name)s %(funcName)s %(lineno)d] [%(levelname)-5.5s] %(message)s"
     # setup base level logging to stderr (console?)
     # consider using logging.config.fileConfig()
     # consider using log directory ./log

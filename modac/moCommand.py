@@ -37,3 +37,6 @@ def cmdRunKiln(filename=None):
     
 def cmdAbortKiln():
     moClient.sendCommand(keyForKilnAbortCmd(),())
+    
+def cmdResetLeica():
+    moClient.sendCommand(keyForResetLeica(),())

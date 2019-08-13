@@ -25,10 +25,12 @@ __Publisher = None
 __CmdListener = None 
 
 def shutdownServer():
+    __killCmdListener = True
     if not this.__Publisher == None:
+        this.publish() # one last time
+        this.publishData(keyForShutdown(), keyForShutdown())
         this.__Publisher.close()
         this.__Publisher = None
-    __killCmdListener = True
 
 async def startServer(nursery):
     # publisher is synchronous for now
@@ -67,7 +69,11 @@ async def cmdListenLoop():
     # async forever loop
     # sorta semiphore to signal we are shutting down 
     while not this.__killCmdListener:
-        await this.serverReceive()
+        try:
+            await this.serverReceive()
+        except trio.Cancelled:
+            log.error("cmdListenLoop caught trioCancelled, exiting")
+            break
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None
@@ -75,7 +81,7 @@ async def cmdListenLoop():
 async def serverReceive():
     #not sure yet what this might become
     if this.__CmdListener == None:
-        log.error("attempt to serverReceive() CmdListener not initialized")
+        log.error("aserverReceive() but CmdListener not initialized")
         this.__killCmdListener = True
         return False
     msg = None
@@ -140,7 +146,10 @@ def serverDispatch(topic,body):
                 moData.getNursery().start_soon(kiln.loadAndRun)
             else:
                 # need to unpack body?
+                log.info("kiln cmd rcv with body: "+str(body))
                 moData.getNursery().start_soon(kiln.loadAndRun,body)
+    elif topic == keyForResetLeica():
+        leicaDistoAsync.reset()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

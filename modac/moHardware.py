@@ -25,7 +25,8 @@ async def init(nursery):
     ad24.init()
     ad16.init()
     kType.init()
-    await leicaDisto.initAsync(None, nursery)
+    leicaDisto.init()
+    nursery.start_soon(leicaDisto.runLoop)
     # force at least one update so moData is populated
     update()
     log.debug("moData initialized")
@@ -36,13 +37,18 @@ def update():
     ad24.update()
     ad16.update()
     kType.update()
-    if not leicaDisto.isRunning():
-        #leicaDisto.update() # leica updates happen in other thread
-        # but if it is dead, try again
-        resetLeicaCmd()
+    leicaDisto.update()
+#    if not leicaDisto.isRunning():
+#        #leicaDisto.update() # leica updates happen in other thread
+#        # but if it is dead, try again
+#        resetLeicaCmd()
 
 def shutdown():
     this.allOff()
+    enviro.shutdown()
+    ad24.shutdown()
+    ad16.shutdown()
+    binaryOutputs.shutdown()
     leicaDisto.shutdown()
     log.debug("shutdown hardware")
 
@@ -60,4 +66,7 @@ def resetLeicaCmd():
     if this.__nursery == None:
         return
     # dont block like in init(), do it async
-    this.__nursery.start_soon(leicaDisto.initAsync, None, this.__nursery)
+    if leicaDisto.isRunning():
+        leicaDisto.close()
+    leicaDisto.reset()
+    this.__nursery.start_soon(leicaDisto.runLoop)

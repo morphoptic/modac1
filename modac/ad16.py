@@ -58,7 +58,12 @@ class moAD16Device:
     def __init__(self, address= 72):
         self.address = address
         #print("Init AD16Device at i2c address", address)
-        #print("ad16 module name ",__name__, this)
+        # playing with dunder scope
+#        print("ad16 module name ",__name__, this)
+#        #print("this.values ", this.__values)
+#        print(dir(this))
+#        print(dir(self))
+        
         if this.get_i2c() == None:
             logger.debug("AD16Device initializing busio I2C")
             this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
@@ -131,3 +136,11 @@ def values():
     #print (this.__values)
     return this.__values
 
+def shutdown():
+    #hmm release all the channels?
+    this.__ad16dev = []
+    this.__channels = []
+    this.__values = []    
+
+
+    

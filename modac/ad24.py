@@ -45,6 +45,9 @@ def init():
 def update():
     log.debug("ad24Bit update()")
     # currently crude get all 8 with same default configutatoin
+    if this.__ads1256 == None:
+        log.error("No device present, maybe shutdown")
+        return
     raw = this.__ads1256.ADS1256_GetAll()
     for i in range(len(raw)):
         this.__adsRaw[i] = raw[i]
@@ -59,4 +62,7 @@ def all0to5Array():
 
 def asDict():
     return { keyForAD24(): this.all0to5Array() }
+
+def shutdown():
+    this.__ads1256 = None
 

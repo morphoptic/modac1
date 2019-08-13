@@ -30,6 +30,9 @@ def init():
     this.update()
 
 def update():
+    if this.__eSensor == None:
+        log.error(" no sensor ")
+        return
     this.__eSensor.read()
     moData.update(keyForTimeStamp(), timestampStr())
     moData.update(keyForEnviro(), asDict())
@@ -105,6 +108,8 @@ class moBME280:
         string= self.timestamp.isoformat() + "{:.3f} %rH {:.3f}°C {:.3f} hPa".format(self.humidity, self.temperature, self.pressure)
         return string
 
+def shutdown():
+    this.__eSensor = None
 
 def testBME280():
     log.info("test BME temp, pressure, humidity sensor")

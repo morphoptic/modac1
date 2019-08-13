@@ -22,11 +22,12 @@ from matplotlib.figure import Figure
 
 from modac.moKeys import *
 from modac import moData, moLogger
+from modac import moCommand
 
 ### kinda messy having global
 # TODO: replace columnNames and plotWidth with Config values
 
-class LeicaPanel():
+class leicaPanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
     columnNames = ['time','dist']
 
@@ -34,6 +35,14 @@ class LeicaPanel():
         self.key = keyForLeicaDisto()
         self.box = Gtk.VBox(homogeneous=False, spacing=8)
         self.label = Gtk.Label("Leica Dist")
+        
+        self.resetBtn = Gtk.Button("Reset Leica")
+        self.resetBtn.set_property("width-request",200)
+        self.resetBtn.set_property("height-request",25)
+        self.resetBtn.show()
+        self.resetBtn.connect("clicked", self.on_clicked_resetBtn)
+        # add 
+        self.box.pack_start(self.resetBtn, False,False,0)
     
         ### setup Plot Data 
         self.count=0
@@ -155,3 +164,8 @@ class LeicaPanel():
     def update(self):
         self.getData()
         self.updatePlot()
+
+    def on_clicked_resetBtn(self, button):
+        moCommand.cmdResetLeica()
+        pass
+    

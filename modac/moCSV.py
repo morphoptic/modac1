@@ -33,6 +33,8 @@ def close():
     if this.__csvFile == None:
         return
     this.__csvFile.close()
+    del this.__csvFile
+    this.__csvFile = None
 
 def addRow():
     if this.isOpen():
