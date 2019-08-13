@@ -44,4 +44,15 @@ sudo apt-get -y install glade
 #sudo pip3 install pyqtgraph
 #
 sudo pip3 install thermocouples_reference scipy
+#
+#sudo python3 -m pip install -U trio
+sudo pip3 install pexpect
+sudo pip3 install trio
+sudo pip3 install pylint
+sudo pip3 install pynng
+sudo pip3 install pytest
+#
+sudo apt-get install dosfstools
+sudo apt-get install hfsutils hfsprogs hfsutils
+
 
