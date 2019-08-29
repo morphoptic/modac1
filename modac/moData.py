@@ -6,13 +6,21 @@ if __name__ == "__main__":
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 #import rest of modac
 from .moKeys import *
 
 # locally required for this module
 import datetime, json
+
+from enum import Enum
+class moDataStatus(Enum):
+    Initialized = 0
+    Shutdown = -1
+    Running = 1
 
 __moDataDictionary = {}
 
@@ -21,14 +29,23 @@ __moDataDictionary = {}
 # but wont have actual data until receive from Server
 # TODO: set this with config shared with server (original concept of Channels)
 def numKType():
-    return 3
+    return 4
 def numBinaryOut():
     return 9
 def numAD24():
     return 8
 def numAD16():
     return 4
- 
+
+__nursery = None
+def setNursery(nursery=None):
+    log.debug("setNursery %r"%(nursery))
+    this.__nursery = nursery
+def getNursery():
+    return this.__nursery
+
+def shutdown():
+    __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
 
 def init():
     # here we dont init hardware, only data collection
@@ -38,15 +55,20 @@ def init():
      keyForTemperature():0,
      keyForPressure():0
      }
-
+    # initial values for hardware
+    # TODO: ideally it could ask each hardware module but Client wont have hardware
+    # so need alternative... perhaps a local function deviceInitValue()
+    # that would return the initial value,
+    # devices could use moData.deviceInitValue() to initialize internal values
+    update(keyForStatus(),moDataStatus.Initialized.name)
     update(keyForTimeStamp(),"No Data Yet")
     update(keyForBinaryOut(), [0]*this.numBinaryOut())
     update(keyForEnviro(), d)
     update(keyForAD24(), [0.0]*this.numAD24())
     update(keyForAD16(), [0.0]*this.numAD16())
     update(keyForKType(), [0.0]*this.numKType())
-    update(keyForLeicaDisto(), -1)
-    print("Initialized moData",asJson())
+    update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
+    log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass
@@ -60,12 +82,6 @@ def update(key,value):
     pass
 
 def asDict():
-#    moData = {
-#        keyForEnviro():enviro.asDict(),
-#        keyForAD24:ad24.all0to5Array(),
-#        keyForKType:kType.asArray(),
-#        keyForBinaryOutKey.key():binaryOutputs.asArray()
-#        }    
     return __moDataDictionary
 
 def asJson():
@@ -78,14 +94,16 @@ def getValue(key):
 def rawDict():
     return __moDataDictionary
 
+# use provided dictionary to update values in moData dictionary
+# validity of keys is left to update function (if at all)
 def updateAllData(d):
     assert isinstance(d, dict)
     for key, value in d.items():
         update(key,value)
-    print("Updated: ", asJson())
+    #print("Updated: ", asJson())
 
 def logData():
-    logging.info(this.asJson())
+    log.info(this.asJson())
     
 
 ######  for CSV
@@ -103,7 +121,9 @@ def asArray():
     a.append(env[keyForTemperature()])
     a.append(env[keyForHumidity()])
     a.append(env[keyForPressure()])
-    a.append(this.getValue(keyForLeicaDisto()))
+    
+    leica = this.getValue(keyForLeicaDisto())
+    a.append(leica[keyForDistance()])
     
     a += this.getValue(keyForAD24())
     a += this.getValue(keyForAD16())
@@ -122,6 +142,7 @@ def __appendAName(key):
         this.__namesOfColumns.append(s)
 
 def arrayColNames():
+    log.debug("modData.arrayColNames - for moCSV")
     if not this.__namesOfColumns == None:
         return this.__namesOfColumns
     this.__namesOfColumns = []
@@ -129,11 +150,10 @@ def arrayColNames():
     this.__namesOfColumns.append(keyForTemperature())
     this.__namesOfColumns.append(keyForHumidity())
     this.__namesOfColumns.append(keyForPressure())
-    this.__namesOfColumns.append(keyForLeicaDisto())
-    this.__namesOfColumns.append(keyForTemperature())
+    this.__namesOfColumns.append(keyForDistance())
     this.__appendAName(keyForAD24())
     this.__appendAName(keyForAD16())
     this.__appendAName(keyForKType())
     this.__appendAName(keyForBinaryOut())
-  
+    log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns

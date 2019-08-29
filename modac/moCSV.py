@@ -3,16 +3,23 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-#import rest of modac
+import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 from .moKeys import *
 from . import moData
 
 # locally required for this module
 import datetime, csv
-import logging, logging.handlers, traceback
 
 __csvFile = None
 __csvWriter = None
+
+def isOpen():
+    if this.__csvWriter == None:
+        return False
+    return True
 
 def init(filename="modac.csv"):
     this.__csvFile = open(filename, "w")
@@ -26,10 +33,13 @@ def close():
     if this.__csvFile == None:
         return
     this.__csvFile.close()
+    del this.__csvFile
+    this.__csvFile = None
 
 def addRow():
-    row = moData.asArray()
-    #print("logRow:",row)
-    this.__csvWriter.writerow(row)
-    this.__csvFile.flush()
+    if this.isOpen():
+        row = moData.asArray()
+        #print("logRow:",row)
+        this.__csvWriter.writerow(row)
+        this.__csvFile.flush()
 

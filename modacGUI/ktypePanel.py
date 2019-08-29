@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -20,10 +22,6 @@ from matplotlib.figure import Figure
 
 from modac.moKeys import *
 from modac import moData, moLogger
-
-### kinda messy having global
-#__columnNames = []
-#__plotWidth = 100
 
 class ktypePanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
@@ -115,7 +113,7 @@ class ktypePanel():
                 self.listStore.remove(it)
         except :
             print("got an exception removing from listStore")
-            logging.error("Exception happened", exc_info=True)
+            log.error("Exception happened", exc_info=True)
             pass
         
         return True

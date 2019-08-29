@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -19,7 +21,7 @@ from modac import moCommand
 
 class binaryOutPanel():
     def __init__(self):        
-        print("initPanel")
+        #print("initPanel")
         self.label = Gtk.Label("BinaryOut Ctrl")
 
         self.dataCount = 0
@@ -27,14 +29,12 @@ class binaryOutPanel():
         builder.connect_signals(self)
 
         # because i forgot to add one in Glade and its too painful to go back and edit
-        self.summaryLabel = Gtk.Label("summary")
         self.box = Gtk.VBox()
         
         self.panel = builder.get_object("Panel")
         self.relayBtns = []
         self.relayLabels = []
         states = moData.getValue(keyForBinaryOut())
-        self.summaryLabel.set_text(str(states))
         assert len(states) == moData.numBinaryOut()
         for i in range(moData.numBinaryOut()):
             state = states[i]
@@ -47,14 +47,22 @@ class binaryOutPanel():
             self.updateBtn(i, state)
 
             labelName = "label"+str(i)
-            print("labelName", labelName)
+            #print("labelName", labelName)
             label = builder.get_object(labelName)
             assert not label == None
             self.relayLabels.append(label)
             self.updateLabel(i, state)
             pass
-        
         self.box.add(self.panel)
+
+        self.allBtn = Gtk.Button("All OFF")
+        self.allBtn.show()
+        self.allBtn.connect("clicked", self.on_clicked_allOff)
+        # add 
+        self.box.add(self.allBtn)
+
+        self.summaryLabel = Gtk.Label("summary")
+        self.summaryLabel.set_text(str(states))
         self.box.add(self.summaryLabel)
         self.panel.show()
         self.summaryLabel.show()
@@ -70,17 +78,24 @@ class binaryOutPanel():
         #moData.logData()
         states = moData.getValue(keyForBinaryOut())
         self.summaryLabel.set_text(str(states))
-        print("update BinOut lables:",states)
+        #print("update BinOut lables:",states)
         for i in range(len(states)):
             self.updateLabel(i,states[i])
     
     def on_toggled_button(self, button, idx):
         state = button.get_active()
-        print("toggled button idx state",idx, state)
+        #print("toggled button idx state",idx, state)
         self.updateBtn(idx,state)
         moCommand.cmdBinary(idx, state)
         pass
     
+    def on_clicked_allOff(self, button):
+        #print("clicked All Off")
+        moCommand.cmdAllOff()
+        # turn off the relay buttons
+        for idx in range(len(self.relayBtns)):
+            self.updateBtn(idx, False)
+        
     def updateLabel(self, idx, state):
         label = self.relayLabels[idx]
         assert not label == None
@@ -89,7 +104,7 @@ class binaryOutPanel():
             nameState += "ON  "
         else:
             nameState += "OFF  "
-        print("nameState", nameState)
+        #print("nameState", nameState)
         label.set_text(nameState)
     
     def updateBtn(self,idx,state):
@@ -100,6 +115,7 @@ class binaryOutPanel():
             nameState += "ON  "
         else:
             nameState += "OFF  "
-        print("nameState", nameState)
+        #print("nameState", nameState)
         btn.set_label(nameState)
+        
         

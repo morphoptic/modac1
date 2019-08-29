@@ -6,13 +6,11 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-#print("ad16 module name ",__name__, this)
-
-#import rest of modac
-#from . import 
-# locally required for this module
 
 import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import sys
 from time import sleep
 import time
@@ -60,7 +58,12 @@ class moAD16Device:
     def __init__(self, address= 72):
         self.address = address
         #print("Init AD16Device at i2c address", address)
-        #print("ad16 module name ",__name__, this)
+        # playing with dunder scope
+#        print("ad16 module name ",__name__, this)
+#        #print("this.values ", this.__values)
+#        print(dir(this))
+#        print(dir(self))
+        
         if this.get_i2c() == None:
             logger.debug("AD16Device initializing busio I2C")
             this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
@@ -118,7 +121,7 @@ def init():
 
      
 def update():
-    logging.debug("ad16 update()")
+    log.debug("ad16 update()")
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
     #print (this.__values)
     # currently crude get all 8 with same default configutatoin
@@ -133,3 +136,11 @@ def values():
     #print (this.__values)
     return this.__values
 
+def shutdown():
+    #hmm release all the channels?
+    this.__ad16dev = []
+    this.__channels = []
+    this.__values = []    
+
+
+    

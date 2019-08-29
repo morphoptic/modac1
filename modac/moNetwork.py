@@ -6,7 +6,10 @@ import sys
 this = sys.modules[__name__]
 
 # other system imports
-import logging, logging.handlers
+import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import json
 #from simplecrypt import encrypt, decrypt
 from binascii import hexlify, unhexlify
@@ -44,9 +47,11 @@ def cmdAddress():
         this.__cmdAddress = this.__myIPAddress +':21212'
     return this.__cmdAddress
 
+# timeout for cmd recieve.  CmdListener loop delays any checks this long
 def rcvTimeout():
-    return 100
+    return 10
 
+#################################
 # parts for composing/decomposing network messages    
 __topicDividerStr = '|'
 __topicDivider = __topicDividerStr.encode('utf8')
@@ -99,11 +104,11 @@ def modacDecrypt(crypto):
     return clearTxt
 
 def encryptCommand(cmd):
-    logging.info("encryptCommand cmd: %s"%cmd)
+    log.info("encryptCommand cmd: %s"%cmd)
     #package up the envelope with topic
     encoded = modacEncrypt(cmd)
     msg = mergeTopicBody(keyForModacCmd(), encoded)
-    logging.info("encryptCommand msg: %s"%msg)
+    log.info("encryptCommand msg: %s"%msg)
     # for testing
     #print("decypher test: ", decryptCommand(msg))
     return msg
@@ -114,7 +119,7 @@ def decryptCommand(cmdMsg):
     # print("decryptCommand", cmdMsg)
     topic, body = splitTopicStr(cmdMsg)
     if not topic == keyForModacCmd():
-        logging.error("decryptCommand not = %s => %s",keyForModacCmd(),topic)
+        log.error("decryptCommand not = %s => %s",keyForModacCmd(),topic)
         # should not receive non cmd this is error
         return ("error", "notModacCmd")
     decrypted = modacDecrypt(body) #might throw exception if fails?

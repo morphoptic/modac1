@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -89,7 +91,7 @@ class ad16Panel():
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
         data = moData.getValue(self.key)
-        print(self.key+" Update = ", data)
+        #print(self.key+" Update = ", data)
  
         self.count = self.count+1
        
@@ -112,7 +114,7 @@ class ad16Panel():
                 self.listStore.remove(it)
         except :
             print("got an exception removing from listStore")
-            logging.error("Exception happened", exc_info=True)
+            log.error("Exception happened", exc_info=True)
             pass
         
         return True
@@ -121,19 +123,19 @@ class ad16Panel():
         if self.plotColumn == 0:
             print("cant plot time vs time")
             return
-        print(self.key+"Plot column ", self.plotColumn, len(self.col))
+        #print(self.key+"Plot column ", self.plotColumn, len(self.col))
         colData = self.col[self.plotColumn-1]
-        print("ColData:", colData)
+        #print("ColData:", colData)
         mi = np.min(colData)
         ma = np.max(colData)
         self.ax.clear()
-        print("min max", mi, ma)
+        #print("min max", mi, ma)
         r = (ma-mi) *0.1
         if r < ma*0.5:
             r+=ma*0.5
         mi -= r
         ma += r
-        print("revised min max", mi, ma)
+        #print("revised min max", mi, ma)
         self.line, = self.ax.plot(self.times, colData )  # plot the first row
         self.ax.set_title(self.columnNames[self.plotColumn])
         self.ax.set_ylim(mi,ma) # 10% under and over
@@ -148,7 +150,7 @@ class ad16Panel():
             print(row[:])
     
     def clickedColumn(self, treeCol, idx):
-        print("clicked column ", idx, self.columnNames[idx])
+        #print("clicked column ", idx, self.columnNames[idx])
         if idx == 0:
             print("Cant plot time")
             return

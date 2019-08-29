@@ -5,11 +5,15 @@ import sys
 this = sys.modules[__name__]
 # other system imports
 import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import json
 
 #import rest of modac
 from .moKeys import *
 from . import moData, moNetwork
+from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
 
@@ -33,52 +37,58 @@ def startCmdSender():
     pass
 
 # we really only have one topic at present. defaults should work until dispatch gets smarter
-def startSubscriber(keys=[keyForAllData()]):#topics=[moTopicForKey(keyForAllData)]):
+def startSubscriber(keys=[keyForAllData(), keyForKilnState()]):#topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
     this.__subscribers.append(subscriber)
-    #logging.debug("startSubscriber: ", subscriber)
+    #log.debug("startSubscriber: ", subscriber)
     return subscriber
 
 
-# client Recieve Loop, server will be different
+# client Recieve called from main or gtk loop 
 # servers may also be doing a Pair1 sendCmd in their loop
 def clientReceive():
     msgReceived = False
     for i in range(len(this.__subscribers)):
         try:
-            while(1): #stays here till timeout or receive
+            while not msgReceived: #stays here till timeout or receive
                 msgRaw = this.__subscribers[i].recv()
                 #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
-                logging.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
+                #log.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 #print("clientReceive msgRaw", msgRaw)
                 msg = msgRaw.decode('utf8')
                 topic, body = moNetwork.splitTopicStr(msg)
                 clientDispatch(topic,body)
                 msgReceived = True
         except Timeout:
-            logging.debug("receive timeout on subsciber %d"%(i))
+            log.debug("receive timeout on subsciber %d"%(i))
         except :
-            logging.exception("Some other exeption! on sub%d "%(i))
+            log.exception("Some other exeption! on sub%d "%(i))
     return msgReceived
             
 def clientDispatch(topic,body):
-    #print("Dispatch: Topic:%s Obj:%s"%(topic,body))
+    log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
         moData.updateAllData(body)
+    elif topic == keyForKilnState():
+        if kiln.kiln == None:
+            kiln.startKiln()
+        kiln.kiln.set_state(body)
     else:
-        logging.warning("Unknown Topic in ClientDispatch %s"%topic)
+        log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
 
 def sendCommand(key, value):
+    print("moClient sendCommand key value ", key, value)
+    log.debug("moClient sendCommand key value "+ key+" " +str( value))
     if this.__CmdSender == None:
-        logging.error("attempt to sendCommand from non-client")
+        log.error("attempt to sendCommand from non-client")
         return False
-    logging.info("send command: key %s"%key)
+    log.info("send command: key %s"%key)
     #package up the envelope with topic
     cmd = moNetwork.mergeTopicBody(key, value)
     msg = moNetwork.encryptCommand(cmd)
-    logging.info("sendCommand msg: %s"%msg)
+    log.info("sendCommand msg: %s"%msg)
     bmsg = msg.encode('utf8')
    #decryptCommand(msg)
     this.__CmdSender.send(bmsg)

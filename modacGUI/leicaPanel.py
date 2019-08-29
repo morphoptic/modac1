@@ -5,6 +5,8 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -20,6 +22,7 @@ from matplotlib.figure import Figure
 
 from modac.moKeys import *
 from modac import moData, moLogger
+from modac import moCommand
 
 ### kinda messy having global
 # TODO: replace columnNames and plotWidth with Config values
@@ -32,6 +35,14 @@ class leicaPanel():
         self.key = keyForLeicaDisto()
         self.box = Gtk.VBox(homogeneous=False, spacing=8)
         self.label = Gtk.Label("Leica Dist")
+        
+        self.resetBtn = Gtk.Button("Reset Leica")
+        self.resetBtn.set_property("width-request",200)
+        self.resetBtn.set_property("height-request",25)
+        self.resetBtn.show()
+        self.resetBtn.connect("clicked", self.on_clicked_resetBtn)
+        # add 
+        self.box.pack_start(self.resetBtn, False,False,0)
     
         ### setup Plot Data 
         self.count=0
@@ -88,9 +99,11 @@ class leicaPanel():
     def getData(self):
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
-        self.timestamp = moData.getValue(keyForTimeStamp())
-        data = moData.getValue(self.key)
-        print(self.key+" Update = ", data)
+        lData = moData.getValue(self.key)
+        #print("leicaPanel.getData = ", lData)
+        self.timestamp = lData[keyForTimeStamp()]
+        data = lData[keyForDistance()]
+        #print(self.key+" Update = ", data)
         
         self.count = self.count+1
 
@@ -110,8 +123,8 @@ class leicaPanel():
                 it = self.listStore.iter_nth_child(None,self.plotWidth)
                 self.listStore.remove(it)
         except :
-            print(self.key+"got an exception removing from listStore")
-            logging.error(self.key+" Exception happened", exc_info=True)
+            #print(self.key+"got an exception removing from listStore")
+            log.error(self.key+" Exception happened", exc_info=True)
             pass
         
         return True
@@ -119,21 +132,21 @@ class leicaPanel():
         
     def plotOne(self): #, treeview, path, view_column):
         if self.plotColumn == 0:
-            print("cant plot time vs time")
+            log.error("cant plot time vs time")
             return
-        print(self.key+" Plot column ", self.plotColumn)
+        #print(self.key+" Plot column ", self.plotColumn)
         colData = self.distance
-        print("ColData:", colData)
+        #print("ColData:", colData)
         mi = np.min(colData)
         ma = np.max(colData)
         self.ax.clear()
-        print("min max", mi, ma)
+        #print("min max", mi, ma)
         r = (ma-mi) *0.1
         if r < ma*0.5:
             r+=ma*0.5
         mi -= r
         ma += r
-        print("revised min max", mi, ma)
+        #print("revised min max", mi, ma)
         self.line, = self.ax.plot(self.times, colData )  # plot the first row
         self.ax.set_title(self.columnNames[self.plotColumn])
         self.ax.set_ylim(mi,ma) # 10% under and over
@@ -144,10 +157,15 @@ class leicaPanel():
         self.plotOne()
             
     def clickedColumn(self, treeCol, idx):
-        print("clicked column ", idx, self.columnNames[idx])
+        #print("clicked column ", idx, self.columnNames[idx])
         self.plotColumn = idx
         self.updatePlot()
 
     def update(self):
         self.getData()
         self.updatePlot()
+
+    def on_clicked_resetBtn(self, button):
+        moCommand.cmdResetLeica()
+        pass
+    

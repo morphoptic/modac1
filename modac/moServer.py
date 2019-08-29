@@ -5,6 +5,9 @@ import sys
 this = sys.modules[__name__]
 # other system imports
 import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import json
 #from simplecrypt import encrypt, decrypt
 from binascii import hexlify, unhexlify
@@ -12,6 +15,8 @@ from binascii import hexlify, unhexlify
 #import rest of modac
 from .moKeys import *
 from . import moData, moNetwork, moHardware
+from kilnControl import kiln
+
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
 
@@ -20,47 +25,69 @@ __Publisher = None
 __CmdListener = None 
 
 def shutdownServer():
+    __killCmdListener = True
     if not this.__Publisher == None:
+        this.publish() # one last time
+        this.publishData(keyForShutdown(), keyForShutdown())
         this.__Publisher.close()
         this.__Publisher = None
-    if not this.__CmdListener == None:
-        this.__CmdListener.close()
-        this.__CmdListener = None
-    pass
 
-def startServer():
+async def startServer(nursery):
+    # publisher is synchronous for now
     startPublisher()
-    startCmdListener()
+    # spawn off async cmd listener
+    nursery.start_soon(startCmdListener, nursery)
 
 def startPublisher():
-    logging.debug("start_Publisher")
+    log.debug("start_Publisher")
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
-
-def startCmdListener():
-    this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(), polyamorous=True, recv_timeout=moNetwork.rcvTimeout())
-    print("Cmd Listener: ",this.__CmdListener)
-    pass
-
+    
 def publish():
-    #logging.debug("publish - only AllData for now")
+    #log.debug("publish - only AllData for now")
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
+    if this.__Publisher == None:
+        log.debug("publisher offline "+key)
+        return
     #print("dataStr: ", tempStr)
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
     #print("pub: ", msg)
-    logging.debug("sendTopic %s"%msg)
+    log.debug("sendTopic %s"%msg)
 
-def serverReceive():
+async def startCmdListener(nursery):
+    this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
+                                polyamorous=True,
+                                recv_timeout=moNetwork.rcvTimeout())
+    print("Cmd Listener: ",this.__CmdListener)
+    nursery.start_soon(cmdListenLoop)
+
+__killCmdListener = False
+async def cmdListenLoop():
+    # async forever loop
+    # sorta semiphore to signal we are shutting down 
+    while not this.__killCmdListener:
+        try:
+            await this.serverReceive()
+        except trio.Cancelled:
+            log.error("cmdListenLoop caught trioCancelled, exiting")
+            break
+    if not this.__CmdListener == None:
+        this.__CmdListener.close()
+        this.__CmdListener = None
+
+async def serverReceive():
     #not sure yet what this might become
     if this.__CmdListener == None:
-        logging.error("attempt to serverReceive() CmdListener not initialized")
+        log.error("aserverReceive() but CmdListener not initialized")
+        this.__killCmdListener = True
         return False
     msg = None
     try:
-        msgObj = this.__CmdListener.recv_msg()
+        msgObj = await this.__CmdListener.arecv_msg()
+        # async read will block here
         #msgObj is a pyNNG Message with gives info on sender
         # body of msg is byteArray version of string keyforModacCommand()|cmd
         # where cmd is an encrypted Topic/body pairing
@@ -68,44 +95,64 @@ def serverReceive():
         # by the time it gets back here as topic/body
         # it should be a string key and Object body (converted from json text)
         #print("Server Receive msgObj", msgObj)
-        msgBytes = msgObj.bytes
-        #print("Server Receive msgBytes", msgBytes)
-        msgStr = msgBytes.decode('utf8')
+        source_addr = str(msgObj.pipe.remote_address)
+        # do we need to verify the source address?
+        msgStr = msgObj.bytes.decode('utf8')
         #print("Server Receive msgStr",msgStr)
         topic, body = moNetwork.decryptCommand(msgStr)
+        log.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
+        
         print("Cmd topic,body:", topic,body)
         if topic == "error":
-            logging.warning("CmdListener got non-modac command %s"%topic)
-            return False
+            log.warning("CmdListener got non-modac command %s"%topic)
+            return True
         # ok... body should hold modac encrypted command
         serverDispatch(topic,body)
         return True
     except Timeout:
-        logging.debug("serverReceive() receive timeout")
-        return False
+        # be quiet about it
+        #log.debug("serverReceive() receive timeout")
+        return True
     except :
-        logging.error("serverReceive() caught exception %s"%sys.exc_info()[0])
+        log.error("serverReceive() caught exception %s"%sys.exc_info()[0])
         traceback.print_exc()#sys.exc_info()[2].print_tb()
-        logging.exception("Some other exeption! on sub%d "%(i))
+        #log.exception("Some other exeption! on sub%d "%(i))
+        this.__killCmdListener = True
         return False
-
-
-def cmdBinary(binaryId, onOff):
-    #print("cmdBinary", binaryId, onOff)
-    body = (binaryId, onOff)
-    return this.sendCommand(keyforBinary((), body))
 
 def serverDispatch(topic,body):
-    print("serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    log.info("serverDispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForBinaryCmd():
         payload = body # json.loads(body)
-        print("serverDispatch payload")
-        print(payload)
+        #print("serverDispatch payload")
+        #print(payload)
         moHardware.binaryCmd(payload[0],payload[1]) # channel, onOff
+    elif topic == keyForAllOffCmd():
+        moHardware.allOffCmd()
+    elif topic == keyForResetLeica():
+        moHardware.resetLeicaCmd()
+    elif topic == keyForKilnAbortCmd():
+        if kiln.kiln == None:
+            return
+        log.info("Recieve kilnAbord Command")
+        kiln.kiln.abort_run()
+    elif topic == keyForRunKilnCmd():
+        # where do we have the kiln stashed?
+        if kiln.kiln == None:
+            log.error("No Kiln to run!")
+        else:
+            print("\n\nload and run kiln, body == ", body)
+            if body == []:
+                moData.getNursery().start_soon(kiln.loadAndRun)
+            else:
+                # need to unpack body?
+                log.info("kiln cmd rcv with body: "+str(body))
+                moData.getNursery().start_soon(kiln.loadAndRun,body)
+    elif topic == keyForResetLeica():
+        leicaDistoAsync.reset()
     else:
-        logging.warning("Unknown Topic in ClientDispatch %s"%topic)
+        log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
-
 
 
 

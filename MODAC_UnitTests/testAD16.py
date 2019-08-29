@@ -5,10 +5,6 @@ from time import sleep
 from modac import ad16, moData
 from modac.moKeys import *
 
-from modac import moLogger
-if __name__ == "__main__":
-    moLogger.init()
-
 if __name__ == "__main__":
     moLogger.init()
     

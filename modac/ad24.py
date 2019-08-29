@@ -9,6 +9,9 @@ this = sys.modules[__name__]
 # locally required for this module
 
 import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 import sys
 from time import sleep
 import time
@@ -34,14 +37,17 @@ __adsRawToV = (5.0/0x7fffff) # magic number to convert raw ADS1256 to 0-5Vdc
 __key = "ad24"
 
 def init():
-    logging.debug("ad24Bit init()")
+    log.debug("ad24Bit init()")
     this.__ads1256 = ADS1256.ADS1256()
     this.__ads1256.ADS1256_init()
     this.update()
     
 def update():
-    logging.debug("ad24Bit update()")
+    log.debug("ad24Bit update()")
     # currently crude get all 8 with same default configutatoin
+    if this.__ads1256 == None:
+        log.error("No device present, maybe shutdown")
+        return
     raw = this.__ads1256.ADS1256_GetAll()
     for i in range(len(raw)):
         this.__adsRaw[i] = raw[i]
@@ -56,4 +62,7 @@ def all0to5Array():
 
 def asDict():
     return { keyForAD24(): this.all0to5Array() }
+
+def shutdown():
+    this.__ads1256 = None
 

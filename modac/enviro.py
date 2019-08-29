@@ -4,13 +4,15 @@
  
 import sys
 this = sys.modules[__name__]
-#import rest of modac
-#from . import someModule
+
+import logging, logging.handlers
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 from .moKeys import *
 from . import moData
 
 # locally required for this module
-import logging, logging.handlers
 import sys
 from time import sleep
 import json
@@ -22,12 +24,15 @@ import bme280
 __eSensor = None
 
 def init():
-    logging.info("modac_BME280.init")
+    log.info("modac_BME280.init")
     this.__eSensor = moBME280()
     assert not this.__eSensor == None
     this.update()
 
 def update():
+    if this.__eSensor == None:
+        log.error(" no sensor ")
+        return
     this.__eSensor.read()
     moData.update(keyForTimeStamp(), timestampStr())
     moData.update(keyForEnviro(), asDict())
@@ -42,7 +47,7 @@ def asDict():
 
 def temperature():
     if not isinstance(this.__eSensor.temperature, float):
-        logging.warn("bme280 temp is not a float")
+        log.warn("bme280 temp is not a float")
         return 0.0
     return this.__eSensor.temperature
 
@@ -54,13 +59,13 @@ def degF():
 
 def humidity():
     if not isinstance(this.__eSensor.humidity, float):
-        logging.warn("bme280 humidity is not a float")
+        log.warn("bme280 humidity is not a float")
         return 0.0
     return this.__eSensor.humidity
 
 def pressure():
     if not isinstance(this.__eSensor.pressure, float):
-        logging.warn("bme280 pressure is not a float")
+        log.warn("bme280 pressure is not a float")
         return 0.0
     return this.__eSensor.pressure
 
@@ -103,9 +108,11 @@ class moBME280:
         string= self.timestamp.isoformat() + "{:.3f} %rH {:.3f}°C {:.3f} hPa".format(self.humidity, self.temperature, self.pressure)
         return string
 
+def shutdown():
+    this.__eSensor = None
 
 def testBME280():
-    logging.info("test BME temp, pressure, humidity sensor")
+    log.info("test BME temp, pressure, humidity sensor")
     print("test BME temp, pressure, humidity sensor")
     print("Key is", key())
     
@@ -117,7 +124,7 @@ def testBME280():
         timeStr = timestampStr() #timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
         msg = timeStr + hStr+tStr+pStr
         #print(msg)
-        logging.info(msg)
+        log.info(msg)
         print("AsDict: ", asDict())
         print("asJson ", asJson())
         #print("alt :", bme)

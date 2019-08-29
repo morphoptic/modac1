@@ -4,7 +4,6 @@
 # provides pyNNG Pair1 command pairing with clients
 # note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
 import datetime
-from time import sleep
 import sys
 import os
 import logging, logging.handlers, traceback
@@ -13,104 +12,120 @@ import gpiozero
 import json
 import signal
 
-# my stuff
-from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moLogger
+import trio #adding async
 
-loggerInit = False
+from modac import moLogger
+if __name__ == "__main__":
+    moLogger.init()
+    
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
+# my stuff
+from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
+from kilnControl import kiln
+
 runTests = False #True
-mainLoopDelay = 2 # seconds for sleep at end of main loop
+publishRate = 2 # seconds for sleep at end of main loop
 
 def modacExit():
-    logging.info("modacExit shutting down")
+    log.info("modacExit shutting down")
     moHardware.shutdown()  # turns off any hardware
+    kiln.endKiln()
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
+    moData.shutdown()
     moServer.shutdownServer()
-    exit()
+    log.info("closed everything i think")
+    #exit(0)
 
-def modac_ServerEventLoop():
-    print("event Loop")
-    logging.info("Enter Event Loop")
-    for i in range(300):
+async def modac_ReadPubishLoop():
+    #print("event Loop")
+    log.info("\n\nEnter Modac ReadPublish Loop")
+    #for i in range(300):
+    while True: # hopefully CtrlC will kill it
         #update inputs & run filters on data
+        log.debug("top forever read-publish loop")
         moHardware.update()
-        moData.logData()
+        # any logging?
+        #moData.logData()
         moCSV.addRow()
-        # run any filters
-        #test_json(inputData)
+        # publish data
         moServer.publish()
-        moServer.serverReceive()
-        sleep(mainLoopDelay)
+        log.debug("bottom forever read-publish loop")
+        try:
+            await trio.sleep(publishRate)
+        except trio.Cancelled:
+            log.warn("Trio Cancelled caught in ReadPublish Loop")
+            break
+    # after Forever
+    log.info("somehow we exited the ReadPublish Forever Loop")
 
-def modac_io_server():
-    logging.info("start modac_io_server()")
-    # modac_testLogging()
-    # load config files
+async def modac_asyncServer():
+    log.info("start modac_asyncServer()")
     modac_loadConfig()
-    # argparse ? use to override config files
-    modac_argDispatch()
-    # initialize data structures
-    # initialize GPIO channels
-    moData.init()
-    moHardware.init()
-    moCSV.init()
 
-    
-    # we are The Server, theHub, theBroker
-    moServer.startServer()
-    
-    try:
-        #   run event loop
-        print("modata:",moData.rawDict())
-        modac_ServerEventLoop()
-    except Exception as e:
-        print("Exception somewhere in modac_io_server event loop. see log files")
-        print("caught something", sys.exc_info()[0])
-        traceback.print_exc()#sys.exc_info()[2].print_tb()
-        logging.error("Exception happened", exc_info=True)
-        logging.exception("Exception Happened")
-    
+    async with trio.open_nursery() as nursery:
+        moData.init()
+        # save the nursey in moData for other modules
+        moData.setNursery(nursery)
+        
+        await moHardware.init(nursery)
+        moCSV.init()
+        
+        # we are The Server, theHub, theBroker
+        # async so it can spawn CmdListener
+        await moServer.startServer(nursery)
+        kiln.startKiln()
+        #await kiln.spawnSchedule(30)
+
+        try:
+            #   run event loop
+            #print("modata:",moData.rawDict())
+            await modac_ReadPubishLoop()
+        except trio.Cancelled:
+           log.warning("Trio propagated Cancelled to main, time to die")
+        except:
+            log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
+            # TODO need to handle Ctl-C on server better
+            # trio has ways to catch it, then we need to properly shutdown spawns
+            print("Exception somewhere in modac_io_server event loop. see log files")
+            print("caught something", sys.exc_info()[0])
+            traceback.print_exc()#sys.exc_info()[2].print_tb()
+    moData.setNursery(None)
+    log.debug("nusery try died");
+    log.error("Exception happened", exc_info=True)
     modacExit()
 
 # if we decide to use cmd line args, its 2 step process parsing and dispatch
 # parsing happens early to grab cmd line into argparse data model
 # dispatching converts the parse tree into modac data/confi settings
 
-__modac_argparse = argparse.ArgumentParser()
-__modac_args = None
-  
-def modac_argparse():
-    """ parse command line arguments into global __modac_args """
-    #logging.info("modac_argparse")
-    # add command line arg definitions here
-    # then call the parser to shift them into modac_args for later routines.
-    __modac_args = __modac_argparse.parse_args()
-
-def modac_argDispatch():
-    logging.info("modac_argDispatch")
-    # assumes config files & structures are loaded
-    # dispatches actions requested by
-    pass
-
 def modac_loadConfig():
-    logging.info("modac_loadConfig")
+    log.info("modac_loadConfig")
     pass
 
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
+    log.error("signal exit! someone hit ctrl-C?")
+    with moData.getNursery() as nursery:
+        if nursery == None:
+            log.info("signal exit, no nursery")
+        else:
+            print("nursery still contains ", nursery.child_tasks)
+            
     modacExit()
     
 if __name__ == "__main__":
-    modac_argparse() # capture cmd line args to modac_args dictionary for others
+    #modac_argparse() # capture cmd line args to modac_args dictionary for others
     moLogger.init() # start logging (could use cmd line args config files)
     print("modac_io_server testbed for MODAC hardware server")
     signal.signal(signal.SIGINT, signalExit)
     try:
-        modac_io_server()
+        trio.run(modac_asyncServer)
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
-        logging.error("Exception happened", exc_info=True)
-        logging.exception("huh?")
+        log.error("Exception happened", exc_info=True)
     finally:
         print("end main")
     modacExit()
