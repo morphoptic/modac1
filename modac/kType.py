@@ -16,7 +16,7 @@ from . import ad24, enviro
 from thermocouples_reference import thermocouples
 
 __typeK = thermocouples['K']
-__kTypeIdx= [4,5,6] #indexs into AD24Bit array for k-type thermocouple
+__kTypeIdx= [4,5,6,7] #indexs into AD24Bit array for k-type thermocouple
 # TODO - expand to AD16 as well
 
 def mVToC(mV,tempRef=0):

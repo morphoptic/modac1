@@ -92,6 +92,9 @@ class binaryOutPanel():
     def on_clicked_allOff(self, button):
         #print("clicked All Off")
         moCommand.cmdAllOff()
+        # turn off the relay buttons
+        for idx in range(len(self.relayBtns)):
+            self.updateBtn(idx, False)
         
     def updateLabel(self, idx, state):
         label = self.relayLabels[idx]

@@ -29,7 +29,7 @@ __moDataDictionary = {}
 # but wont have actual data until receive from Server
 # TODO: set this with config shared with server (original concept of Channels)
 def numKType():
-    return 3
+    return 4
 def numBinaryOut():
     return 9
 def numAD24():
