@@ -16,6 +16,7 @@ from modac import leicaDistoAsync as leicaDisto
 
 # locally required for this module
 import trio
+import datetime
 
 __nursery = None
 async def init(nursery):
@@ -27,11 +28,15 @@ async def init(nursery):
     kType.init()
     leicaDisto.init()
     nursery.start_soon(leicaDisto.runLoop)
+    moData.setStatusInitialized()
     # force at least one update so moData is populated
     update()
     log.debug("moData initialized")
 
+
 def update():
+    # get our own timestamp
+    moData.update(keyForTimeStamp(), datetime.datetime.now())
     enviro.update()
     binaryOutputs.update()
     ad24.update()

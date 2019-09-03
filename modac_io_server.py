@@ -3,7 +3,6 @@
 # provides pyNNG pubSub publishing of data (see moNetwork)
 # provides pyNNG Pair1 command pairing with clients
 # note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
-import datetime
 import sys
 import os
 import logging, logging.handlers, traceback
@@ -28,6 +27,8 @@ from kilnControl import kiln
 runTests = False #True
 publishRate = 2 # seconds for sleep at end of main loop
 
+csvActive = True
+
 def modacExit():
     log.info("modacExit shutting down")
     moHardware.shutdown()  # turns off any hardware
@@ -43,13 +44,15 @@ async def modac_ReadPubishLoop():
     #print("event Loop")
     log.info("\n\nEnter Modac ReadPublish Loop")
     #for i in range(300):
+    moData.setStatusRunning()
     while True: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
         moHardware.update()
         # any logging?
-        #moData.logData()
-        moCSV.addRow()
+        moData.logData() # log info as json
+        if csvActive == True:
+            moCSV.addRow()
         # publish data
         moServer.publish()
         log.debug("bottom forever read-publish loop")

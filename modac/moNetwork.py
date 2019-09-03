@@ -20,7 +20,7 @@ from . import moData
 # locally required for this module
 
 # TODO: convert us from raw ip to a zeroConf address
-__zConfigName = "modac.local"
+__zConfigName = "modacServer.local"
 __myIPAddress = 'tcp://127.0.0.1'
 __pubAddress = None 
 __cmdAddress = None

@@ -18,9 +18,10 @@ import datetime, json
 
 from enum import Enum
 class moDataStatus(Enum):
-    Initialized = 0
     Shutdown = -1
-    Running = 1
+    Startup = 0
+    Initialized = 0
+    Running = 2
 
 __moDataDictionary = {}
 
@@ -60,23 +61,31 @@ def init():
     # so need alternative... perhaps a local function deviceInitValue()
     # that would return the initial value,
     # devices could use moData.deviceInitValue() to initialize internal values
-    update(keyForStatus(),moDataStatus.Initialized.name)
+    update(keyForStatus(),moDataStatus.Startup.name)
     update(keyForTimeStamp(),"No Data Yet")
-    update(keyForBinaryOut(), [0]*this.numBinaryOut())
-    update(keyForEnviro(), d)
-    update(keyForAD24(), [0.0]*this.numAD24())
-    update(keyForAD16(), [0.0]*this.numAD16())
-    update(keyForKType(), [0.0]*this.numKType())
-    update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
+    
+    # individual devices should post their own init values
+    #update(keyForBinaryOut(), [0]*this.numBinaryOut())
+    #update(keyForEnviro(), d)
+    #update(keyForAD24(), [0.0]*this.numAD24())
+    #update(keyForAD16(), [0.0]*this.numAD16())
+    #update(keyForKType(), [0.0]*this.numKType())
+    #update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
     log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass
 
+def setStatusInitialized():
+    update(keyForStatus(),moDataStatus.Initialized.name)
+
+def setStatusRunning():
+    update(keyForStatus(),moDataStatus.Running.name)
+
 def update(key,value):
     if key == keyForTimeStamp():
-        if isinstance(str, datetime.datetime):
-            value = value.strftime("%Y-%m-%d %H:%M:%S%Z : ")
+        if isinstance(value, datetime.datetime):
+            value = value.strftime("%Y-%m-%d %H:%M:%S%Z")
     this.__moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass

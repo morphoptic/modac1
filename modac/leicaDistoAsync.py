@@ -338,8 +338,15 @@ def reset():
  
 def init():
     log.debug("leica init")
+    d = {
+    keyForTimeStamp(): "no data yet",
+    keyForDistance(): -1,
+    keyForStatus(): this._state.name
+    }
+    moData.update(keyForLeicaDisto(), d)
+
     if not this._state == LeicaState.Closed:
-        log.error("tyring to Init Leica when not Closed, needs Reset")
+        log.error("trying to Init Leica when not Closed, needs Reset")
         return
     this._state = LeicaState.Offline
     if not this.__gattProc == None:
@@ -355,8 +362,8 @@ def init():
 
 def update():
     # empty routine to keep moHardware pattern
-    log.debug("leicaDisto update() does nothing state="+str(this._state))
-    log.info("leica last data: %r"%moData.getValue(keyForLeicaDisto()))
+    #log.debug("leicaDisto update() does nothing state="+str(this._state))
+    #log.info("leica last data: %r"%moData.getValue(keyForLeicaDisto()))
     pass
 
 async def runLoop():
