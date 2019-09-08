@@ -164,8 +164,10 @@ class Kiln:
             self.runtime = runtimeDelta
 
         self.currTemp = this.getTemperature()
+        
         # lookup the target temperature at current time
         self.target = self.schedule.get_target_temperature(self.runtime)
+        
         pid = self.pid.compute(self.target,  self.currTemp)
 
         # FIX - this whole thing should be replaced with

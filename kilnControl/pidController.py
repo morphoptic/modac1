@@ -1,5 +1,6 @@
 # modac pid Controller, built on generic modac data acq & control
 # ripped from picoReflow.Oven
+# https://github.com/apollo-ng/picoReflow
 #
     
 # cute hack to use module namespace this.fIO this.value should work
@@ -27,6 +28,7 @@ default_minOutput = 0
 default_maxOutput = 1
 
 #mostly direct copy from timdelbruegger github
+# https://github.com/timdelbruegger/freecopter/blob/master/src/python3/pid.py
 class PIDController:
     def __init__(self, ki=1, kp=1, kd=1):
         self.ki = ki

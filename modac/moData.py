@@ -48,7 +48,7 @@ def getNursery():
 def shutdown():
     __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
 
-def init():
+def init(client=False):
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
     d = {keyForTimeStamp():"No Data Yet",
@@ -64,13 +64,14 @@ def init():
     update(keyForStatus(),moDataStatus.Startup.name)
     update(keyForTimeStamp(),"No Data Yet")
     
-    # individual devices should post their own init values
-    #update(keyForBinaryOut(), [0]*this.numBinaryOut())
-    #update(keyForEnviro(), d)
-    #update(keyForAD24(), [0.0]*this.numAD24())
-    #update(keyForAD16(), [0.0]*this.numAD16())
-    #update(keyForKType(), [0.0]*this.numKType())
-    #update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
+    # in server individual devices will post their own init values
+    if client == True:
+        update(keyForBinaryOut(), [0]*this.numBinaryOut())
+        update(keyForEnviro(), d)
+        update(keyForAD24(), [0.0]*this.numAD24())
+        update(keyForAD16(), [0.0]*this.numAD16())
+        update(keyForKType(), [0.0]*this.numKType())
+        update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
     log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()

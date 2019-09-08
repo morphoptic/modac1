@@ -230,19 +230,17 @@ def modacExit():
     moClient.shutdownClient()
     #sys.exit(0)
     
-def modacInit():
-    # setup MODAC data/networking
-    moData.init()
-    log.debug("try startClient()")
-    moClient.startClient()
-    log.debug("client started")
-
 if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
-    moLogger.init("moGUI_1") # start logging (could use cmd line args config files)
+    #moLogger.init("moGUI_1") # start logging (could use cmd line args config files)
+    # logging initialized at top to avoid start by libraries
     log.debug("moGUI_1: modac from glade files")
     try:
-        modacInit()
+        moData.init(client=True)
+        # setup MODAC data/networking
+        log.debug("try startClient networking")
+        moClient.startClient()
+        log.debug("start client gui")
         Application = ModacApp("com.mioat.modacGUI1", Gio.ApplicationFlags.FLAGS_NONE)
         Application.run()
     except Exception as e:
