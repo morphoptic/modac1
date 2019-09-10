@@ -22,7 +22,7 @@ log.setLevel(logging.DEBUG)
 
 # my stuff
 from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
-from kilnControl import kiln
+import kilnControl
 
 runTests = False #True
 publishRate = 2 # seconds for sleep at end of main loop
@@ -31,8 +31,8 @@ csvActive = True
 
 def modacExit():
     log.info("modacExit shutting down")
+    kilnControl.kiln.endKiln()
     moHardware.shutdown()  # turns off any hardware
-    kiln.endKiln()
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
     moData.shutdown()
@@ -55,11 +55,11 @@ async def modac_ReadPubishLoop():
             moCSV.addRow()
         # publish data
         moServer.publish()
-        log.debug("bottom forever read-publish loop")
+        log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
         except trio.Cancelled:
-            log.warn("Trio Cancelled caught in ReadPublish Loop")
+            log.warn("***Trio Cancelled caught in ReadPublish Loop")
             break
     # after Forever
     log.info("somehow we exited the ReadPublish Forever Loop")
@@ -69,25 +69,30 @@ async def modac_asyncServer():
     modac_loadConfig()
 
     async with trio.open_nursery() as nursery:
-        moData.init()
+        # initialize data blackboard
+        moData.init(client=False) 
+        
         # save the nursey in moData for other modules
         moData.setNursery(nursery)
         
+        # pass it nursery so it can start complex sensor monitors like Leica
         await moHardware.init(nursery)
+        
         moCSV.init()
         
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
-        kiln.startKiln()
-        #await kiln.spawnSchedule(30)
+        
+        # start the kiln control process
+        await kilnControl.kiln.startKiln(nursery)
 
         try:
             #   run event loop
             #print("modata:",moData.rawDict())
             await modac_ReadPubishLoop()
         except trio.Cancelled:
-           log.warning("Trio propagated Cancelled to main, time to die")
+           log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
             log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
             # TODO need to handle Ctl-C on server better

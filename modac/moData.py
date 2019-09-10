@@ -142,10 +142,10 @@ def asArray():
     return a
 
 def __appendAName(key):
-    print("__appendAName key:", key)
+    #print("__appendAName key:", key)
     cPrefix = key
     a = this.getValue(key)
-    print("__appendAName a:", a)
+    #print("__appendAName a:", a)
     assert isinstance(a, list)
     for i in range(len(a)):
         s = cPrefix+"_"+str(i)

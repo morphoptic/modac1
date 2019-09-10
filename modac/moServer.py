@@ -72,7 +72,7 @@ async def cmdListenLoop():
         try:
             await this.serverReceive()
         except trio.Cancelled:
-            log.error("cmdListenLoop caught trioCancelled, exiting")
+            log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
     if not this.__CmdListener == None:
         this.__CmdListener.close()

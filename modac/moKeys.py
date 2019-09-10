@@ -69,10 +69,15 @@ def keyForResetLeica():
 def keyForRunKilnCmd(): return "runKiln"
 def keyForKilnAbortCmd(): return "abortKiln"
 
-def keyForKilnState(): return "kilnState"
+def keyForKilnStatus(): return "KilnStatus"
 def keyForRuntime(): return 'runtime'
-def keyForTarget(): return 'target'
+def keyForTargetTemp(): return 'targetTemp'
 def keyForState(): return 'state'
-def keyForHeat(): return 'heat'
 def keyForTotalTime():return 'totaltime'
-
+def keyForStartTime():return 'start_time'
+def keyForDeflectionDist():return 'deflectionDist'
+def keyForMaxTime():return 'maxTime'
+def keyForStartDist():return 'startDist'
+def keyForCurrDeflection():return 'currDeflection'
+def keyForTargetDist():return 'targetDist'
+def keyForTimeStep(): return"time_step"
