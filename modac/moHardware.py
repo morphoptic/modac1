@@ -75,3 +75,11 @@ def resetLeicaCmd():
         leicaDisto.close()
     leicaDisto.reset()
     this.__nursery.start_soon(leicaDisto.runLoop)
+
+def simulateKiln(onOff=True):
+    from kilnControl import kiln
+    kType.setSimulate(onOff)
+    # leica simulation????
+    from kilnControl import kiln
+    kiln.setSimulation(onOff)
+    

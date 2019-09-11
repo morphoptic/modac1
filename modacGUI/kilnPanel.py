@@ -20,8 +20,8 @@ from gi.repository import GObject as Gobj
 from modac.moKeys import *
 from modac import moData, moLogger
 from modac import moCommand
-import kilnControl
-from kilnControl import kiln
+#import kilnControl
+#from kilnControl import kiln
 
 defaultTargetTemp = 500
 defaultDeflection = 5.1
@@ -62,6 +62,9 @@ class kilnPanel():
         self.timeStepSpinner = self.builder.get_object(keyForTimeStep())
         adj = self.timeStepSpinner.get_adjustment()
         adj.configure(defaultStepTime, 5,100.0, 1, 10, 10)
+        
+        self.simulateBtn = self.builder.get_object(keyForSimulate())
+        self.simulateBtn.set_active(False)
         
         # fill in the readOnly values
         self.update()
@@ -114,14 +117,16 @@ class kilnPanel():
         # collect targetTemp, deflection, maxTime, startTime)
         targetT = self.targetTSpinner.get_value()
         
-        widget = self.builder.get_object(keyForDeflectionDist())
-        deflection = widget.get_value()
+#        widget = self.builder.get_object(keyForDeflectionDist())
+        deflection = self.deflectionSpinner.get_value()
         
-        widget = self.builder.get_object(keyForMaxTime())
-        maxTime = widget.get_value()
+#        widget = self.builder.get_object(keyForMaxTime())
+        maxTime = self.maxTimeSpinner .get_value()
         
-        widget = self.builder.get_object(keyForTimeStep())
-        timeStep = widget.get_value_as_int()
+#        widget = self.builder.get_object(keyForTimeStep())
+        timeStep = self.timeStepSpinner.get_value_as_int()
+
+        simulate = self.simulateBtn.get_active()
 
         #def startRun(holdTemp=default_holdTemp,
         #             deflectionDist=default_deflectionDist,
@@ -131,8 +136,10 @@ class kilnPanel():
             keyForTargetTemp(): targetT,
             keyForDeflectionDist(): deflection,
             keyForMaxTime(): maxTime,
-            keyForTimeStep(): timeStep
+            keyForTimeStep(): timeStep,
+            keyForSimulate(): simulate, 
         }
+        print("\n**** Send RunKiln: ", param)
         moCommand.cmdRunKiln(param)
         
     def onTerminateRun(self, button):

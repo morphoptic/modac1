@@ -222,6 +222,7 @@ class ModacAppWindow(object):
         self.leicaPanel.update()
         self.binaryOutPanel.update()
         self.tempDistPanel.update()
+        self.kilnPanel.update()
 
 def modacExit():
     log.info("modacExit")

@@ -40,3 +40,12 @@ def cmdAbortKiln():
     
 def cmdResetLeica():
     moClient.sendCommand(keyForResetLeica(),())
+
+def cmdSimulate(onOff=False):
+    moClient.sendCommand(keyForSimulate(),(onOff))
+    #moHardware.simulateKiln(True)
+
+    
+    
+    
+    

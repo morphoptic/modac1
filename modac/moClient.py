@@ -13,7 +13,7 @@ import json
 #import rest of modac
 from .moKeys import *
 from . import moData, moNetwork
-from kilnControl import kiln
+#from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
 

@@ -90,7 +90,7 @@ class ktypePanel():
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
         ktypes = moData.getValue(keyForKType())
-        #print("kTypes Update = ", ktypes)
+        print("kTypes Update = ", ktypes)
  
         self.count = self.count+1
        

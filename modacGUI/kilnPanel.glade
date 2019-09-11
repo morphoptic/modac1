@@ -325,5 +325,20 @@
         <property name="position">13</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkCheckButton" id="Simulate">
+        <property name="label" translatable="yes">Simulate Kiln</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">False</property>
+        <property name="active">True</property>
+        <property name="draw_indicator">True</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">14</property>
+      </packing>
+    </child>
   </object>
 </interface>

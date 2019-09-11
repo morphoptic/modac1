@@ -86,3 +86,5 @@ def keyForLowerHeater(): return 'LowerHeater'
 def keyForMiddleHeater(): return 'MiddleHeater'
 def keyForUpperHeater(): return 'UpperHeater'
 
+def keyForSimulate(): return 'Simulate'
+

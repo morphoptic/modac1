@@ -100,6 +100,8 @@ async def serverReceive():
         msgStr = msgObj.bytes.decode('utf8')
         #print("Server Receive msgStr",msgStr)
         topic, body = moNetwork.decryptCommand(msgStr)
+        
+        log.info("\n\nCommand Received")
         log.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
         
         print("Cmd topic,body:", topic,body)
@@ -121,7 +123,7 @@ async def serverReceive():
         return False
 
 def serverDispatch(topic,body):
-    log.info("serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForBinaryCmd():
         payload = body # json.loads(body)
         #print("serverDispatch payload")
@@ -151,6 +153,9 @@ def serverDispatch(topic,body):
                 kiln.runKilnCmd(body)
     elif topic == keyForResetLeica():
         leicaDistoAsync.reset()
+#    elif topic == keyForSimulate():
+#        log.debug("Simulate command: ", body)
+#        moHardware.simulateKiln(body)
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
