@@ -1,4 +1,6 @@
 # moData = common data repo under mordac
+# Other modules include this but this doesnt include them
+
 if __name__ == "__main__":
     print("moData has no self test")
     exit(0)
@@ -51,11 +53,6 @@ def shutdown():
 def init(client=False):
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
-    d = {keyForTimeStamp():"No Data Yet",
-     keyForHumidity():0,
-     keyForTemperature():0,
-     keyForPressure():0
-     }
     # initial values for hardware
     # TODO: ideally it could ask each hardware module but Client wont have hardware
     # so need alternative... perhaps a local function deviceInitValue()
@@ -65,14 +62,38 @@ def init(client=False):
     update(keyForTimeStamp(),"No Data Yet")
     
     # in server individual devices will post their own init values
+    # client needs to fake em - which may be maintance issue to keep consistent
     if client == True:
+        def_env = {keyForTimeStamp():"No Data Yet",
+         keyForHumidity():0,
+         keyForTemperature():0,
+         keyForPressure():0
+         }
+        update(keyForEnviro(), def_env)
         update(keyForBinaryOut(), [0]*this.numBinaryOut())
-        update(keyForEnviro(), d)
         update(keyForAD24(), [0.0]*this.numAD24())
         update(keyForAD16(), [0.0]*this.numAD16())
         update(keyForKType(), [0.0]*this.numKType())
-        update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
-    log.info("moData.init = "+asJson())
+        def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
+        update(keyForLeicaDisto(), def_leica)
+        def_kiln = {
+            keyForState(): 'Closed',
+            keyForTimeStep(): 1,
+            keyForRuntime(): 0,
+            keyForTemperature(): 0,
+            keyForCurrTemp(): 0,
+            keyForTargetTemp(): 0,
+            keyForStartTime(): "Not Started",
+            keyForDeflectionDist(): -1,
+            keyForMaxTime(): 0,
+            keyForStartDist(): 0,
+            keyForCurrDeflection(): 0,
+            keyForTargetDist(): 0,
+            keyForAllHeaters(): 0,
+        }
+        update(keyForKilnStatus(), def_kiln)
+
+        log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass

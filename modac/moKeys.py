@@ -70,14 +70,19 @@ def keyForRunKilnCmd(): return "runKiln"
 def keyForKilnAbortCmd(): return "abortKiln"
 
 def keyForKilnStatus(): return "KilnStatus"
-def keyForRuntime(): return 'runtime'
-def keyForTargetTemp(): return 'targetTemp'
-def keyForState(): return 'state'
-def keyForTotalTime():return 'totaltime'
-def keyForStartTime():return 'start_time'
-def keyForDeflectionDist():return 'deflectionDist'
-def keyForMaxTime():return 'maxTime'
-def keyForStartDist():return 'startDist'
-def keyForCurrDeflection():return 'currDeflection'
-def keyForTargetDist():return 'targetDist'
-def keyForTimeStep(): return"time_step"
+def keyForRuntime(): return 'Runtime'
+def keyForTargetTemp(): return 'TargetTemp'
+def keyForState(): return 'State'
+def keyForStartTime():return 'StartTime'
+def keyForDeflectionDist():return 'Deflection'
+def keyForMaxTime():return 'MaxTime'
+def keyForStartDist():return 'StartDistance'
+def keyForCurrDeflection():return 'CurrentDeflection'
+def keyForTargetDist():return 'TargetDistance'
+def keyForTimeStep(): return 'TimeStep'
+def keyForCurrTemp(): return 'CurrentTemp'
+def keyForAllHeaters(): return 'AllHeaters'
+def keyForLowerHeater(): return 'LowerHeater'
+def keyForMiddleHeater(): return 'MiddleHeater'
+def keyForUpperHeater(): return 'UpperHeater'
+

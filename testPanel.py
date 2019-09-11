@@ -25,7 +25,12 @@ log.setLevel(logging.INFO)
 from modac.moKeys import *
 from modac import moData, moClient
 
-from modacGUI import leicaPanel
+#HMM  this should work but doesnt
+#import modacGUI
+
+#apparently must use from import method
+from modacGUI import kilnPanel
+#from modacGUI import leicaPanel
 #from modacGUI import tempDistPanel
 #from modacGUI import kilnPanel
 #from modacGUI import enviroPanel, ktypePanel, ad24Panel,
@@ -72,7 +77,8 @@ class TestPanelWindow(object):
         self.viewport = builder.get_object("MainViewport")
         
         # to change panel under test, simply load it here
-        self.panel = leicaPanel.leicaPanel() # Panel to be tested
+        self.panel = kilnPanel.kilnPanel() # Panel to be tested
+        #self.panel = leicaPanel.leicaPanel() # Panel to be tested
         #self.panel = ad24Panel.ad24Panel()
         #self.panel = ktypePanel.ktypePanel()
         
@@ -125,7 +131,7 @@ def modacExit():
     
 def modacInit():
     # setup MODAC data/networking
-    moData.init()
+    moData.init(client=True)
     log.debug("try startClient()")
     moClient.startClient()
     log.debug("client started")

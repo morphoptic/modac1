@@ -143,11 +143,12 @@ def serverDispatch(topic,body):
         else:
             print("\n\nload and run kiln, body == ", body)
             if body == []:
-                moData.getNursery().start_soon(kiln.loadAndRun)
+                log.error("No data on runKiln")
             else:
+                log.info("=== RunKiln param:", body)
                 # need to unpack body?
                 log.info("kiln cmd rcv with body: "+str(body))
-                moData.getNursery().start_soon(kiln.loadAndRun,body)
+                kiln.runKilnCmd(body)
     elif topic == keyForResetLeica():
         leicaDistoAsync.reset()
     else:

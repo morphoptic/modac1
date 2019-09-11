@@ -51,6 +51,9 @@ def cmdAddress():
 def rcvTimeout():
     return 10
 
+def sendTimeout():
+    return 10
+
 #################################
 # parts for composing/decomposing network messages    
 __topicDividerStr = '|'

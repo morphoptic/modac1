@@ -38,7 +38,6 @@ from enum import Enum
 import trio
 
 from . import pidController
-from . import schedule as kilnSchedule
 
 from modac import moData, moHardware, moServer
 from modac.moKeys import *
@@ -55,6 +54,7 @@ heater_combined = 4
 heater_lower = 1
 heater_middle = 2
 heater_upper = 3
+heaters = [heater_lower, heater_middle, heater_upper]
 
 # fans are wired ?? as 12v? as gpio?
 fan_supoort = 5  # jet to support glass
@@ -62,15 +62,21 @@ fan_exhaust = 6  # heat exhaust fan
 
 #####################
 # kType thermocouples: may or may not be wired separate or combined
-kType_combined = 4 # all wired to single
+# kType_combined = 4 # all wired to single
+# note these are NOT the ad24 connections; see ktypes.py for that
 kType_lower = 0
 kType_middle = 1
-kType_upper = 3
+kType_upper = 2
+kiln_ktypes = [kType_lower, kType_middle, kType_upper] #indices of moData.ktype thermocouples to monitor
 
 #####################
-kiln_timeStep = 1 # seconds between kiln read/control (loop delay)
-
 emergency_shutoff_temp = 800  # if kiln ever gets this hot, shutdown and vent
+default_holdTemp = 500
+default_deflectionDist = 10
+default_maxTime = 1000 #minutes
+default_stepTime = 1
+
+kiln_timeStep = default_stepTime # seconds between kiln read/control (loop delay)
 
 #####################
 kiln = None
@@ -100,17 +106,17 @@ def endKiln():
     this.kiln.abort_run()
 #    this.kiln = None
                
-#def getTemperature():
-#    ''' retrieve thermocouple values degC, avg the ones we want '''
-#    kTemps = moData.getValue(keyForKType())
-#    log.debug("kTemps = "+str(kTemps))
-#    log.debug("klin uses "+str(this.kiln_ktypes))
-#    sum = 0.0
-#    for idx in this.kiln_ktypes:
-#        sum += kTemps[idx]
-#    avg = sum/len(this.kiln_ktypes)
-#    log.debug("Kiln temp = %d"%(avg))
-#    return avg
+def getTemperature():
+    ''' retrieve thermocouple values degC, avg the ones we want '''
+    kTemps = moData.getValue(keyForKType())
+    log.debug("kTemps = "+str(kTemps))
+    log.debug("klin uses "+str(this.kiln_ktypes))
+    sum = 0.0
+    for idx in this.kiln_ktypes:
+        sum += kTemps[idx]
+    avg = sum/len(this.kiln_ktypes)
+    log.debug("Kiln temp = %d"%(avg))
+    return avg
 
 class Kiln:
     '''kiln class is the primary interface for externals.
@@ -137,6 +143,8 @@ class Kiln:
         self.startDist = 0
         self.currDeflection = 0
         self.targetDist = 0
+        self.heatAll = False
+        self.heaters = [False, False, False]
         # only one at present, if use separate kType/Heater, then a Pid needed too
         self.pid = pidController.PIDController()
         log.debug("Kiln reset")
@@ -149,32 +157,27 @@ class Kiln:
         
         
     def get_status(self):
+        startTimeStr =" NotStarted"
+        if isinstance(self.startTime, datetime.datetime):
+            startTimeStr =self.startTime.strftime("%Y-%m-%d %H:%M:%S%Z")
         status = {
             keyForState(): self.state.name,
-            keyForTimeStep(): self.time_step,
-            keyForRuntime(): self.runtime,
-            keyForTemperature(): self.currTemp,
-            keyForTotalTime(): self.totaltime,
             keyForTargetTemp(): self.targetTemp,
-            keyForStartTime(): self.startTime,
             keyForDeflectionDist(): self.deflectionDist,
+            keyForTimeStep(): self.time_step,
             keyForMaxTime(): self.maxTime,
+
+            keyForRuntime(): self.runtime,
+            keyForStartTime(): startTimeStr,
             keyForStartDist(): self.startDist,
             keyForCurrDeflection(): self.currDeflection,
             keyForTargetDist(): self.targetDist,
+            keyForCurrTemp(): self.currTemp,
+            keyForAllHeaters(): self.heatAll,
         }
         print("KilnStatus:", status)
         return status
     
-#    def set_status(self,status):
-#        print("kiln set_status: ", status)
-#        
-#        self.runtime = status[keyForRuntime()]
-#        self.currTemp = status[keyForTemperature()]
-#        self.target = status[keyForTarget()]
-#        self.state = status[keyForState()]
-#        self.heat = status[keyForHeat()]
-#        self.totaltime = status[keyForTotalTime()]
         
     def publishStatus(self):
         log.info("%r"%self.get_status())
@@ -225,25 +228,11 @@ class Kiln:
             return
         # how long since last step?
 
-        runtimeDelta = (datetime.datetime.now() - self.startTime).total_seconds()
-        if self.startat > 0:
-            self.runtime = self.startat + runtimeDelta;
-        else:
-            self.runtime = runtimeDelta
+        self.runtime = (datetime.datetime.now() - self.startTime).total_seconds()
 
-        kTemps = moData.getValue(keyForKType())
-        self.currTemp = kTemps[kType_combined]
-        
-        # lookup the target temperature at current time
-        
-        self.target = self.schedule.get_target_temperature(self.runtime)
+        self.currTemp = getTemperature()
         
         pidOut = self.pid.compute(self.target,  self.currTemp)
-
-        # FIX - this whole thing should be replaced with
-        # a warning low and warning high below and above
-        # set value.  If either of these are exceeded,
-        # warn in the interface. DO NOT RESET.
 
         # if we are WAY TOO HOT, shut down
         if(self.currTemp >= emergency_shutoff_temp):
@@ -253,15 +242,16 @@ class Kiln:
         #Capture the last temperature value.
         last_temp = self.currTemp 
         
-        self.heat = False
+        self.heatAll = False
         if (pidOut > 0):
             # turn heaters on
-            self.heat = True
+            self.heatAll = True
+
         # get current status
         bouts = moData.getValue(keyForBinaryOut())
         if not bouts[heater_combined] == self.heat:
             #change it
-            moHardware.binaryCmd(idx,self.heat)
+            moHardware.binaryCmd(idx,self.heatAll)
             
         # displacement
         # need to calculate start d vs current d
@@ -275,12 +265,16 @@ class Kiln:
             # reached temp, state should be Hold
             self.state = KilnState.Holding
 
-    def startRun(holdTemp, deflectionDist, maxTime):
+    def startRun(holdTemp=default_holdTemp,
+                 deflectionDist=default_deflectionDist,
+                 maxTime = default_maxTime,
+                 stepTime= default_stepTime):
+
         self.targetTemp = holdTemp
         self.deflectionDist= deflectionDist
         self.startTime = datetime.datetime.now()
         self.maxTime = maxTime
-        
+        self.step_time =  stepTime
         
         lData = moData.getValue(keyForLeicaDisto())
         print("startKiln Run leicaPanel.getData = ", lData)
@@ -288,15 +282,25 @@ class Kiln:
 
         # test for no data
         if dist <= 0 :
-            log.error("No data for Leica, cant run kiln")
+            log.error("No data for Leica, Kiln run may not work")
             self.state = KilnState.Idle
-            return;
+            #return;
         self.startDist = lData[keyForDistance()]
         self.targetDist = self.startDist+ self.deflectionDist
         self.state = KilnState.Heating
+        log.info("starting kiln run.. status:", self.get_status())
         
-
-        
+    def runKilnCmd(params):
+        print("runKilnCmd"+ params)
+        try:
+            targetT = params[keyForTargetTemp()]
+            deflection = params[keyForDeflectionDist()]
+            maxTime = params[keyForMaxTime()]
+            timeStep = params[keyForTimeStep()]
+            startRun(targetT, deflection, maxTime, timeStep)
+        except:
+            log.error("Bad Parameters: "+ params.ToString())
+            
         
         
         

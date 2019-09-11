@@ -7,62 +7,184 @@
     <property name="can_focus">False</property>
     <property name="orientation">vertical</property>
     <child>
-      <object class="GtkButton" id="StartSchedule">
-        <property name="label" translatable="yes">Start Schedule</property>
+      <object class="GtkBox" id="targetTemp Box">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <signal name="clicked" handler="on_StartSchedule_clicked" swapped="no"/>
+        <property name="can_focus">False</property>
+        <property name="baseline_position">top</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">     Target Temp (°C) </property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="TargetTemp">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="text" translatable="yes">500</property>
+            <property name="climb_rate">0.01</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="padding">1</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">True</property>
+        <property name="fill">False</property>
         <property name="position">0</property>
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="AbortSchedule">
-        <property name="label" translatable="yes">Abort Schedule</property>
+      <object class="GtkBox" id="DeflectionBox">
         <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <signal name="clicked" handler="on_AbortSchedule_clicked" swapped="no"/>
+        <property name="can_focus">False</property>
+        <property name="baseline_position">top</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">     Deflection (mm)  </property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="Deflection">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="text" translatable="yes">5</property>
+            <property name="climb_rate">0.01</property>
+            <property name="digits">2</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="padding">1</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">True</property>
+        <property name="fill">False</property>
         <property name="position">1</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="runtime">
+      <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
+        <property name="baseline_position">top</property>
+        <child>
+          <object class="GtkLabel" id="MaxTimeBox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes"> MaxTime (minutes) </property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="MaxTime">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="text" translatable="yes">0</property>
+            <property name="climb_rate">0.01</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="padding">1</property>
+            <property name="pack_type">end</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">True</property>
+        <property name="fill">False</property>
         <property name="position">2</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="temperature">
+      <object class="GtkBox" id="StepTimeBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
+        <property name="baseline_position">top</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes"> Step Time (seconds)</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="TimeStep">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="max_width_chars">3</property>
+            <property name="input_purpose">number</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
       </object>
       <packing>
         <property name="expand">False</property>
-        <property name="fill">True</property>
+        <property name="fill">False</property>
         <property name="position">3</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="target">
+      <object class="GtkLabel" id="State">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
+        <property name="label" translatable="yes">Kiln State: </property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -71,10 +193,13 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="state">
+      <object class="GtkLabel" id="CurrentTemp">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
+        <property name="label" translatable="yes">CurrentTemp</property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -83,10 +208,13 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="heat">
+      <object class="GtkLabel" id="StartTime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
+        <property name="label" translatable="yes">StartTime: </property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -95,15 +223,106 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="totaltime">
+      <object class="GtkLabel" id="Runtime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">label</property>
+        <property name="label" translatable="yes">Runtime: </property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
       </object>
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
         <property name="position">7</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="StartDistance">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">StartDistance:</property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">8</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="CurrentDeflection">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">CurrentDeflection:</property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">9</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="TargetDistance">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">TargetDistance:</property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">10</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="AllHeaters">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">AllHeaters :</property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">11</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="StartKiln">
+        <property name="label" translatable="yes">Start Kiln Run</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <signal name="clicked" handler="onStartKiln" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">12</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton">
+        <property name="label" translatable="yes">Terminate Kiln Run</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <signal name="clicked" handler="onTerminateRun" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">13</property>
       </packing>
     </child>
   </object>
