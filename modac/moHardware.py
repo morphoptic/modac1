@@ -77,9 +77,12 @@ def resetLeicaCmd():
     this.__nursery.start_soon(leicaDisto.runLoop)
 
 def simulateKiln(onOff=True):
-    from kilnControl import kiln
     kType.setSimulate(onOff)
-    # leica simulation????
+    # leica simulation - done inside kiln
     from kilnControl import kiln
     kiln.setSimulation(onOff)
     
+def EmergencyOff():
+    from kilnControl import kiln
+    log.warn("EMERGENCY OFF tiggered")
+    kiln.emergencyShutOff()

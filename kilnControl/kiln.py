@@ -44,45 +44,6 @@ from modac.moKeys import *
 from .kilnConfig import *
 
 #####################
-# Binary out configuration
-# here we define which BinaryOut have which function
-######################
-# mapping from BinaryOut -> heaters and fans
-# and ktypes used
-#
-# 12v power to driver side of relays is on BO[0] (controlled power strip)
-#relayPower = 0  # gpio conrolled power strip
-#
-## heaters: may or may not be wired separate or combined
-#heater_combined = 4
-#heater_lower = 1
-#heater_middle = 2
-#heater_upper = 3
-#heaters = [heater_lower, heater_middle, heater_upper]
-#
-## fans are wired ?? as 12v? as gpio?
-#fan_supoort = 5  # jet to support glass
-#fan_exhaust = 6  # heat exhaust fan
-
-# kType thermocouples: may or may not be wired separate or combined
-# kType_combined = 4 # all wired to single
-# note these are NOT the ad24 connections; see ktypes.py for that
-#kType_lower = 0
-#kType_middle = 1
-#kType_upper = 2
-#kiln_ktypes = [kType_lower, kType_middle, kType_upper] #indices of moData.ktype thermocouples to monitor
-
-#####################
-emergency_shutoff_temp = 800  # if kiln ever gets this hot, shutdown and vent
-default_holdTemp = 500
-default_deflectionDist = 10
-default_maxTime = 1000 #minutes
-default_stepTime = 10
-
-#####################
-kiln = None
-distanceEpsilon = 0.001
-
 class KilnState(Enum):
     '''States of the KilnProcess internal to LeicaDisto Module'''
     Closed = 0 # before start and when done w no error
@@ -92,6 +53,25 @@ class KilnState(Enum):
     Heating = 3
     Holding = 4
     Cooling = 5
+
+#####################
+kiln = None
+
+#####################
+def emergencyShutOff():
+    log.warn("EMERGENCY OFF tiggered")
+    # heat is too high
+    endKiln()
+    # shut off heaters
+    moHardware.binaryCmd(heater_lower, False)
+    moHardware.binaryCmd(heater_middle, False)
+    moHardware.binaryCmd(heater_upper, False)
+    # shut off 12v power
+    moHardware.binaryCmd(relayPower, False)
+    # turn on exhaust fan
+    moHardware.binaryCmd(fan_exhaust, True)
+    # ring alarm bell (dont have one, yet)
+    this.kiln.state = KilnState.Error
 
 #####################
 async def startKiln(nursery):
@@ -105,29 +85,80 @@ def endKiln():
     if this.kiln == None:
         log.debug("endKiln, no kiln")
         return
-    this.kiln.abort_run()
-#    this.kiln = None
-               
-def getTemperature():
+    this.kiln.abort_run() #stops run, doesnt terminate thread
+    this.kiln.runnable = False  # this should stop loop
+
+#####################
+
+def setRelayPower(onOff= False):
+    moHardware.binaryCmd(relayPower, onOff)
+
+#####################
+lowerHeaterState = False
+middleHeaterState = False
+upperHeaterState = False
+#heaterStateStr = ""
+reportedHeaterStates = [False, False, False, False]
+
+def getHeaterStates():
+    bouts = moData.getValue(keyForBinaryOut())
+    this.lowerHeaterState = bouts[heater_lower]
+    this.middleHeaterState = bouts[heater_middle]
+    this.upperHeaterState = bouts[heater_upper]
+    reportedHeaterStates[1] = this.lowerHeaterState
+    reportedHeaterStates[2] = this.middleHeaterState
+    reportedHeaterStates[3] = this.upperHeaterState
+    
+#    if this.lowerHeaterState:
+#        heaterStateStr = "lower ON "
+#    else:
+#        heaterStateStr = "lower OFF "
+#    if this.middleHeaterState:
+#        heaterStateStr += "middle ON "
+#    else:
+#        heaterStateStr += "middle OFF "
+#    if this.upperHeaterState:
+#        heaterStateStr += "upper ON "
+#    else:
+#        heaterStateStr += "upper OFF "
+    return reportedHeaterStates
+
+#####################
+
+kilnTemps = [0.0,0.0,0.0,0.0] # 0 is avg, 1 lower, 2 middle, 3 upper
+def getTemperatures():
     ''' retrieve thermocouple values degC, avg the ones we want '''
     kTemps = moData.getValue(keyForKType())
-    log.debug("kTemps = "+str(kTemps))
-    log.debug("klin uses "+str(this.kiln_ktypes))
+    print("Kiln ktypes read as: ", kTemps)
     sum = 0.0
-    for idx in this.kiln_ktypes:
-        sum += kTemps[idx]
-    avg = sum/len(this.kiln_ktypes)
-    log.debug("Kiln temp = %d"%(avg))
-    return avg
+    this.kilnTemps[1] = kTemps[kType_lower]
+    this.kilnTemps[2] = kTemps[kType_middle]
+    this.kilnTemps[3] = kTemps[kType_upper]
+    sum = kilnTemps[1] + kilnTemps[2] + kilnTemps[3]
+    avg = sum/3
+    this.kilnTemps[0] = avg
+
+    tempStr = keyForKilnTemps() +":"
+    for i in range(len(this.kilnTemps)):
+        tempStr += "{0:5.2f} ".format(this.kilnTemps[i])
+    log.debug("Kiln temps = "+ tempStr)
+    print("KilnTemps", this.kilnTemps)
+    return this.kilnTemps
 
 simulation = False
 def setSimulation(onOff):
-    simulation = True
-    
+    this.simulation = True
+
+#####################
+#####################
+
 class Kiln:
     '''kiln class is the primary interface for externals.
     It provides for trio type async monitoring and data posting loop
     '''
+    useSinglePID = True # implyze avg temp and single heater on/off
+    commandedHeaterStates = [False, False, False, False]
+    
     def __init__(self, time_step=default_stepTime):#, nursery=None):
         # simulation was removed for modac, need it for good testing
         self.state = KilnState.Closed
@@ -135,7 +166,6 @@ class Kiln:
         self.reset()
         log.debug("Kiln initialized")
         self.state = KilnState.Starting
-        self.tempEpsilon = 1
 
     def reset(self):
         self.currTemp = 0
@@ -145,52 +175,71 @@ class Kiln:
 
         self.state = KilnState.Idle
         self.targetTemp = 0
-        self.deflectionDist= -1
-        self.maxTime = 0
-        self.startDist = 0
+        self.targetDisplacement= -1
+        self.currentDisplacement = 0
+        self.maxTimeMin = 0
+        self.maxTimeSec = 0
+        self.startDistance = 0
         self.currentDistance = 0
         self.targetDist = 0
-        self.heatAll = False
-        self.heaters = [False, False, False]
-        # only one at present, if use separate kType/Heater, then a Pid needed too
-        self.pid = pidController.PIDController()
+        self.reportedHeaterStates = [False, False, False, False]
+        self.commandedHeaterStates = [False, False, False, False]
+        self.kilnTemps = [0,0,0,0]
+        self.pidOut = [0, 0, 0, 0]
+        self.pids = [None, None, None, None]
+        self.pids[0] = pidController.PIDController()
+        if not self.useSinglePID:
+            self.pids[1] = pidController.PIDController()
+            self.pids[2] = pidController.PIDController()
+            self.pids[3] = pidController.PIDController()
         log.debug("Kiln reset")
         self.publishStatus()
 
     def abort_run(self):
+        # should turn off all heaters
+        moHardware.binaryCmd(heater_lower, False)
+        moHardware.binaryCmd(heater_middle, False)
+        moHardware.binaryCmd(heater_upper, False)
         self.reset()
+        # turn off 12v Power
+        setRelayPower(False)
+        # and turn off simulation
+        moHardware.simulateKiln(False)
         log.info("abort_run")
-        self.publishStatus()
-        
+        self.publishStatus()      
         
     def get_status(self):
         startTimeStr =" NotStarted"
         if isinstance(self.startTime, datetime.datetime):
             startTimeStr =self.startTime.strftime("%Y-%m-%d %H:%M:%S%Z")
+        
         status = {
             keyForState(): self.state.name,
             keyForTargetTemp(): self.targetTemp,
-            keyForDeflectionDist(): self.deflectionDist,
+            keyForTargetDisplacement(): self.targetDisplacement,
             keyForTimeStep(): self.time_step,
-            keyForMaxTime(): self.maxTime,
+            keyForMaxTime(): self.maxTimeMin,
 
             keyForRuntime(): self.runtime,
             keyForStartTime(): startTimeStr,
-            keyForStartDist(): self.startDist,
-            keyForCurrDeflection(): self.currentDistance,
+            keyForStartDist(): self.startDistance,
             keyForTargetDist(): self.targetDist,
-            keyForCurrTemp(): self.currTemp,
-            keyForAllHeaters(): self.heatAll,
+            "Current Distance": self.currentDistance,
+            keyForCurrDisplacement(): self.currentDisplacement,
+            keyForKilnHeaters(): self.reportedHeaterStates,
+            keyForKilnHeaterCmd(): self.commandedHeaterStates,
+            keyForKilnTemps(): self.kilnTemps,
         }
         print("KilnStatus:", status)
         return status
     
         
     def publishStatus(self):
+        '''Put KilnStatus into moData, does NOT publish separate cmd'''
         log.info("%r"%self.get_status())
         moData.update(keyForKilnStatus(), self.get_status())
 #        moServer.publishData(keyForKilnStatus(), self.get_status())
-        
+    
     async def runKiln(self):
         self.state = KilnState.Idle
         print("runKiln starting", self.get_status())
@@ -210,6 +259,7 @@ class Kiln:
             self.publishStatus()
             #print("bottom of forever loop sleep for",self.sleepThisStep)
             # post kilnState
+            
             await trio.sleep(self.sleepThisStep)
             
         log.debug("\n\n******")
@@ -228,48 +278,91 @@ class Kiln:
     def kilnStep(self,temperature_count, last_temp, pid):
         '''kiln using one input for kType, and one binOut for heaters'''
         
+        # update the inputs
+        self.reportedHeaterStates = getHeaterStates()
+        self.kilnTemps = getTemperatures()
+
+        # if we are WAY TOO HOT, shut down kil run and turn on exhaust
+        if (self.kilnTemps[0] >= emergency_shutoff_temp):
+            log.error("emergency!!! temperature too high, shutting down")
+            moHardware.EmergencyOff()
+            return        
+    
         if self.state == KilnState.Idle:
             #print("Kiln idle step")
             return
+        
         # how long since last step?
-
         self.runtime = (datetime.datetime.now() - self.startTime).total_seconds()
 
-        self.currTemp = getTemperature()
+        if (self.runtime >= self.maxTimeSec):
+            log.error("Max Time for run exceeded, abort run")
+            self.abort_run()
+            return;
         
         # in Heating and Holding states, update PID/Heater control
-        self.heatAll = False
         if self.state == KilnState.Heating or self.state == KilnState.Holding:
-            pidOut = self.pid.compute(self.targetTemp,  self.currTemp)
-            if (pidOut > 0):
-                # turn heaters on
-                self.heatAll = True
+            # update PIDs
+            self.commandedHeaterStates[0] = False
+            self.commandedHeaterStates[1] = False
+            self.commandedHeaterStates[2] = False
+            self.commandedHeaterStates[3] = False
+            if self.useSinglePID:
+                self.pidOut[0] = self.pids[0].compute(self.targetTemp,  self.kilnTemps[0])
+                log.debug("======")
+                print("PID 0: ", self.pidOut[0], self.targetTemp, self.kilnTemps[0])
+                if (self.pidOut[0] > 0):
+                    # turn heaters on
+                    self.commandedHeaterStates[0] = True
+                    self.commandedHeaterStates[1] = True
+                    self.commandedHeaterStates[2] = True
+                    self.commandedHeaterStates[3] = True
+            else:
+                # compute individual pidOuts
+                # pidOut[0] true if any true
+                self.pidOut[1] = self.pids[1].compute(self.targetTemp,  self.kilnTemps[1])
+                if (self.pidOut[1] > 0):
+                    # turn heaters on
+                    self.commandedHeaterStates[0] = True
+                    self.commandedHeaterStates[1] = True
+                self.pidOut[2] = self.pids[2].compute(self.targetTemp,  self.kilnTemps[2])
+                if (self.pidOut[2] > 0):
+                    # turn heaters on
+                    self.commandedHeaterStates[0] = True
+                    self.commandedHeaterStates[2] = True
+                self.pidOut[3] = self.pids[3].compute(self.targetTemp,  self.kilnTemps[3])
+                if (self.pidOut[3] > 0):
+                    # turn heaters on
+                    self.commandedHeaterStates[0] = True
+                    self.commandedHeaterStates[3] = True
+            # common function to 
+            for i in range(1,4):
+                if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
+                    log.info("kiln cmd heater change %d"%i)
+                    moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
 
-            # get current status
-            bouts = moData.getValue(keyForBinaryOut())
-            if not bouts[heater_combined] == self.heatAll:
-                log.info("heater change")
-                # invoke Binary on/off via moHardware
-                moHardware.binaryCmd(heater_combined, self.heatAll)
+            # determine next step
+            # by temp or by any heater being ON (commandedHeaterStates[0])?
+            # by avg temp
+            if self.targetTemp <= self.kilnTemps[0]+tempertureEpsilon:
+                # reached temp, state should be Hold
+                self.state = KilnState.Holding
+                log.debug("Switch to Holding State")
 
-        # if we are WAY TOO HOT, shut down
-        if(self.currTemp >= emergency_shutoff_temp):
-            log.error("emergency!!! temperature too high, shutting down")
-            self.abort_run()
-            
-        #Capture the last temperature value. why? maybe holdover from old pid loop
-        self.last_temp = self.currTemp 
-            
-        # displacement
-        if simulation:
-            slumpRate = 0.01 # mm per loop
+        # displacement test
+        if this.simulation:
+            slumpRate = 0.1 # mm per loop
             if self.state == KilnState.Holding:
                 self.currentDistance += slumpRate
         else:
             lData = moData.getValue(keyForLeicaDisto())
             self.currentDistance = lData[keyForDistance()]
-        # if displacement target reached satate = Cooling
-        if (self.targetDist - distanceEpsilon) >= self.currentDistance:
+            
+        self.currentDisplacement = self.currentDistance - self.startDistance
+        
+        # if displacement target reached state = Cooling
+        # if our current is close enough to target, being cooling 
+        if (self.currentDisplacement + distanceEpsilon) >= self.targetDisplacement:
             # start cooling
             self.state = KilnState.Cooling
             #self.target = 0 # room temp, ignore?
@@ -277,43 +370,48 @@ class Kiln:
             moHardware.binaryCmd(fan_exhaust, True)
             # turn on support
             moHardware.binaryCmd(fan_support, True)
-        
+
+            
         #log, publish and put in data blackboard
         self.publishStatus()
         
-        # determine next step
-        deltaT = abs(self.currTemp - self.targetTemp)
-        if deltaT < self.tempEpsilon:
-            # reached temp, state should be Hold
-            self.state = KilnState.Holding
 
     def startRun(self,holdTemp=default_holdTemp,
-                 deflectionDist=default_deflectionDist,
+                 targetDisplacement=default_targetDisplacement,
                  maxTime = default_maxTime,
                  stepTime= default_stepTime):
 
         self.targetTemp = holdTemp
-        self.deflectionDist= deflectionDist
+        self.targetDisplacement= targetDisplacement
         self.startTime = datetime.datetime.now()
-        self.maxTime = maxTime
+        self.maxTimeMin = maxTime
+        self.maxTimeSec = maxTime* 60
         self.step_time =  stepTime
         
-        lData = moData.getValue(keyForLeicaDisto())
-        print("startKiln Run leicaPanel.getData = ", lData)
-        dist = lData[keyForDistance()]
+        if this.simulation :
+            dist = 1000.0 # 1meter start dist in simulation
+            print("Simulation start dist", dist)
+        else:
+            lData = moData.getValue(keyForLeicaDisto())
+            print("startKiln Run leicaPanel.getData = ", lData)
+            dist = lData[keyForDistance()]
 
         # test for no data
         if dist <= 0 :
             log.error("No data for Leica, Kiln run may not work")
             self.state = KilnState.Idle
             #return;
-        self.startDist = dist
-        self.targetDist = self.startDist+ self.deflectionDist
+        self.startDistance = dist
+        self.currentDistance = dist
+        self.targetDist = self.startDistance + self.targetDisplacement
+        
+        setRelayPower(True)
+
         self.state = KilnState.Heating
         log.info("starting kiln run.. status:", self.get_status())
         
 def runKilnCmd(params):
-    print("runKilnCmd", params)
+    print("\n\n*****runKilnCmd", params)
     if this.kiln == None:
         log.error("No Kiln found")
         return
@@ -322,10 +420,10 @@ def runKilnCmd(params):
         moHardware.simulateKiln(simulate)
         
         targetT = params[keyForTargetTemp()]
-        deflection = params[keyForDeflectionDist()]
+        displacement = params[keyForTargetDisplacement()]
         maxTime = params[keyForMaxTime()]
         timeStep = params[keyForTimeStep()]
-        this.kiln.startRun(targetT, deflection, maxTime, timeStep)
+        this.kiln.startRun(targetT, displacement, maxTime, timeStep)
     except:
         log.error("Bad Parameters: "+ params.ToString())
         

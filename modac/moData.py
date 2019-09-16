@@ -31,10 +31,11 @@ __moDataDictionary = {}
 # we need this early in Client startup
 # but wont have actual data until receive from Server
 # TODO: set this with config shared with server (original concept of Channels)
+# num of entries should be matched in their init and raise error/assert if not same
 def numKType():
     return 4
 def numBinaryOut():
-    return 9
+    return 12
 def numAD24():
     return 8
 def numAD16():
@@ -80,16 +81,16 @@ def init(client=False):
             keyForState(): 'Closed',
             keyForTimeStep(): 1,
             keyForRuntime(): 0,
-            keyForTemperature(): 0,
-            keyForCurrTemp(): 0,
+            keyForKilnTemps(): [0.0,0.0,0.0,0.0],
             keyForTargetTemp(): 0,
             keyForStartTime(): "Not Started",
-            keyForDeflectionDist(): -1,
+            keyForTargetDisplacement(): -1,
             keyForMaxTime(): 0,
             keyForStartDist(): 0,
-            keyForCurrDeflection(): 0,
+            keyForCurrDisplacement(): 0,
             keyForTargetDist(): 0,
-            keyForAllHeaters(): 0,
+            keyForKilnHeaters(): [False,False,False,False],
+            keyForKilnHeaterCmd(): [False,False,False,False],
         }
         update(keyForKilnStatus(), def_kiln)
 

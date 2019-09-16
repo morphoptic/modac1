@@ -29,7 +29,7 @@ from modac import moData, moClient
 #import modacGUI
 
 #apparently must use from import method
-from modacGUI import kilnPanel
+from modacGUI import kilnPanel,binaryOutPanel
 #from modacGUI import leicaPanel
 #from modacGUI import tempDistPanel
 #from modacGUI import kilnPanel
@@ -77,9 +77,9 @@ class TestPanelWindow(object):
         self.viewport = builder.get_object("MainViewport")
         
         # to change panel under test, simply load it here
-        self.panel = kilnPanel.kilnPanel() # Panel to be tested
+#        self.panel = kilnPanel.kilnPanel() # Panel to be tested
         #self.panel = leicaPanel.leicaPanel() # Panel to be tested
-        #self.panel = ad24Panel.ad24Panel()
+        self.panel = binaryOutPanel.binaryOutPanel()
         #self.panel = ktypePanel.ktypePanel()
         
         

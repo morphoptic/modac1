@@ -45,7 +45,5 @@ def cmdSimulate(onOff=False):
     moClient.sendCommand(keyForSimulate(),(onOff))
     #moHardware.simulateKiln(True)
 
-    
-    
-    
-    
+def cmdEmergencyOff():
+    moClient.sendCommand(keyForEmergencyOff(),())

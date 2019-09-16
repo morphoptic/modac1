@@ -153,9 +153,9 @@ def serverDispatch(topic,body):
                 kiln.runKilnCmd(body)
     elif topic == keyForResetLeica():
         leicaDistoAsync.reset()
-#    elif topic == keyForSimulate():
-#        log.debug("Simulate command: ", body)
-#        moHardware.simulateKiln(body)
+    elif topic == keyForEmergencyOff():
+        log.debug("EmergencyOff Cmd dispatching")
+        moHardware.EmergencyOff()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

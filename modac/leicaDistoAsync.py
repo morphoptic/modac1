@@ -17,6 +17,9 @@
 # TODO: Needs better Trio integration for async issues w pexpect process
 #
 # aug 11 reworking for better async citizen
+#
+# NOTE: Leica reads in METERS so we scale by 1000 to mm
+#
 '''
 LeicaDisto Module holds singleton State and methods to talk with BLE Device
     via interactive conversation with a pexpect process running gatttool
@@ -291,8 +294,9 @@ class gattProcess:
             # which starts in the [:11] bytes before received 'Indication'
             #    bytes.fromhex(''.join(value[:11].decode().split())) 
             #       value[:11] .decode()  .split()
-            self.distance = struct.unpack('<f',
+            meters = struct.unpack('<f',
                             bytes.fromhex(''.join(value[:11].decode().split())) )[0]
+            self.distance = meters * 1000 #  We Want mm
             self.timeoutCount = 0
             self.state= GattState.Open
             # and we were successful!!

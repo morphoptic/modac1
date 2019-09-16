@@ -68,8 +68,10 @@ async def modac_asyncServer():
     log.info("start modac_asyncServer()")
     modac_loadConfig()
 
+    # Trio is our async multi-threaded system.
+    # it uses the Nursery metaphor for spawning and controlling
     async with trio.open_nursery() as nursery:
-        # initialize data blackboard
+        # initialize data blackboard on which data is written and read from
         moData.init(client=False) 
         
         # save the nursey in moData for other modules
@@ -78,7 +80,8 @@ async def modac_asyncServer():
         # pass it nursery so it can start complex sensor monitors like Leica
         await moHardware.init(nursery)
         
-        moCSV.init()
+        # start the CSV server logging
+        moCSV.init("modacServerData.csv")
         
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
