@@ -54,8 +54,7 @@ def publishData(key, value):
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
-    #print("pub: ", msg)
-    log.debug("sendTopic %s"%msg)
+    #log.debug("sendTopic %s"%msg)
 
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
@@ -134,12 +133,14 @@ def serverDispatch(topic,body):
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
     elif topic == keyForKilnAbortCmd():
+        print("\n====== doing Kiln Abort :", topic)
         if kiln.kiln == None:
             return
         log.info("Recieve kilnAbord Command")
         kiln.kiln.abort_run()
     elif topic == keyForRunKilnCmd():
         # where do we have the kiln stashed?
+        print("\n====== doing Kiln RUN :", topic)
         if kiln.kiln == None:
             log.error("No Kiln to run!")
         else:

@@ -31,7 +31,6 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 import time
-import random
 import datetime
 from enum import Enum
 
@@ -141,8 +140,8 @@ def getTemperatures():
     tempStr = keyForKilnTemps() +":"
     for i in range(len(this.kilnTemps)):
         tempStr += "{0:5.2f} ".format(this.kilnTemps[i])
-    log.debug("Kiln temps = "+ tempStr)
-    print("KilnTemps", this.kilnTemps)
+    log.debug("Kiln get temps = "+ tempStr)
+    #print("KilnTemps", this.kilnTemps)
     return this.kilnTemps
 
 simulation = False
@@ -230,19 +229,19 @@ class Kiln:
             keyForKilnHeaterCmd(): self.commandedHeaterStates,
             keyForKilnTemps(): self.kilnTemps,
         }
-        print("KilnStatus:", status)
+        #print("KilnStatus:", status)
         return status
     
         
     def publishStatus(self):
         '''Put KilnStatus into moData, does NOT publish separate cmd'''
-        log.info("%r"%self.get_status())
+        log.info("Publish Kiln Status %r"%self.get_status())
         moData.update(keyForKilnStatus(), self.get_status())
 #        moServer.publishData(keyForKilnStatus(), self.get_status())
     
     async def runKiln(self):
         self.state = KilnState.Idle
-        print("runKiln starting", self.get_status())
+        log.info("\n\n****** RunKilnrunKiln starting Kiln Status %r"%self.get_status())
         self.runLoopStarted = True
         log.debug("runKiln")
         temperature_count = 0
@@ -250,7 +249,6 @@ class Kiln:
         pid = 0
         self.runnable = True
         #await trio.sleep(0.5)
-        print("\n\n******")
         print("runKiln starting loop")
         log.debug("runKiln start runnable loop")
         while self.runnable:
@@ -264,10 +262,9 @@ class Kiln:
             
         log.debug("\n\n******")
         print("runKiln end runnable loop")
-        log.debug("runKiln end runnable loop")
+        log.info("runKiln end forever loop")
         print("\n\n******")
         
-        Log.info("Kiln Loop Terminated")
         #out of while runnable
         self.reset()
         self.state = KilnState.Closed
@@ -281,12 +278,19 @@ class Kiln:
         # update the inputs
         self.reportedHeaterStates = getHeaterStates()
         self.kilnTemps = getTemperatures()
-
+        log.debug("Kiln Step top state: "+str(self.state)+" heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
+        
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
         if (self.kilnTemps[0] >= emergency_shutoff_temp):
             log.error("emergency!!! temperature too high, shutting down")
             moHardware.EmergencyOff()
-            return        
+            return
+        if (self.kilnTemps[0] < 0.0):
+            # should never get below zero
+            log.error("Kiln ERROR: average temp is below zero! "+str(self.kilnTemps[0]))
+            log.error("guess there is error somewhere, so shutdown")
+            moHardware.EmergencyOff()
+            return
     
         if self.state == KilnState.Idle:
             #print("Kiln idle step")
@@ -408,7 +412,8 @@ class Kiln:
         setRelayPower(True)
 
         self.state = KilnState.Heating
-        log.info("starting kiln run.. status:", self.get_status())
+        log.info("Starting kiln run.. status:", self.get_status())
+        log.info("async kiln loop should pick this up")
         
 def runKilnCmd(params):
     print("\n\n*****runKilnCmd", params)

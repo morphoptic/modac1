@@ -70,7 +70,7 @@ def keyForResetLeica():
 def keyForRunKiln(): return "RunKiln"
 def keyForAbortKiln(): return "AbortKiln"
 def keyForRunKilnCmd(): return keyForRunKiln()
-def keyForKilnAbortCmd(): return keyForKilnAbort()
+def keyForKilnAbortCmd(): return keyForAbortKiln()
 
 def keyForKilnStatus(): return "KilnStatus"
 def keyForRuntime(): return 'Runtime'

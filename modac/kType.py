@@ -66,6 +66,7 @@ def asDict():
 
 from kilnControl.kilnConfig import *
 from kilnControl.kiln import KilnState
+from random import random
 
 class SimulateKtypes:
     startTemp = 0
@@ -78,6 +79,8 @@ class SimulateKtypes:
         print("Simulated KType initial data: ", self.ktypeData)
 
     def update(self):
+        '''simulate KType temps: if heat on/off incr/decr
+            by rates * random() '''
         kilnStatus = moData.getValue(keyForKilnStatus())
         kilnState = kilnStatus[keyForState()]
         binOut = moData.getValue(keyForBinaryOut())
@@ -86,9 +89,9 @@ class SimulateKtypes:
             heaterOn = binOut[heaters[i]]
             if heaterOn:
                 print("Heater ",i, heaters[i], "is On")
-                self.ktypeData[i] += self.increaseRate
+                self.ktypeData[i] += self.increaseRate *random()
             if binOut[fan_exhaust]:
-                self.ktypeData[i] -= self.decreseRate
+                self.ktypeData[i] -= self.decreseRate *random()
             sum += self.ktypeData[i]
         self.ktypeData[0] = sum/3
 
