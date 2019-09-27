@@ -41,17 +41,7 @@ from . import pidController
 from modac import moData, moHardware, moServer
 from modac.moKeys import *
 from .kilnConfig import *
-
-#####################
-class KilnState(Enum):
-    '''States of the KilnProcess internal to LeicaDisto Module'''
-    Closed = 0 # before start and when done w no error
-    Error = -1 # done and error occured
-    Starting = 1 # between closed and open
-    Idle = 2
-    Heating = 3
-    Holding = 4
-    Cooling = 5
+from .kilnState import KilnState
 
 #####################
 kiln = None
@@ -296,6 +286,11 @@ class Kiln:
             #print("Kiln idle step")
             return
         
+        if self.state == KilnState.Cooling and self.kilnTemps[0] < 20:
+            log.info("Cooling kiln has reached 20C, back to idle")
+            self.state = KilnState.Idle
+            return
+        
         # how long since last step?
         self.runtime = (datetime.datetime.now() - self.startTime).total_seconds()
 
@@ -374,10 +369,9 @@ class Kiln:
             moHardware.binaryCmd(fan_exhaust, True)
             # turn on support
             moHardware.binaryCmd(fan_support, True)
-
             
         #log, publish and put in data blackboard
-        self.publishStatus()
+        #self.publishStatus()
         
 
     def startRun(self,holdTemp=default_holdTemp,

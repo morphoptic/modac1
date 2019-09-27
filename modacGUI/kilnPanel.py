@@ -22,6 +22,7 @@ from modac import moData, moLogger
 from modac import moCommand
 #import kilnControl
 #from kilnControl import kiln
+from kilnControl.kilnState import KilnState
 
 defaultTargetTemp = 100.0
 defaultDisplacement = 5.0
@@ -34,6 +35,7 @@ class kilnPanel():
         print("KilnStatus", self.kilnStatus)
         
     def __init__(self):        
+        self.lastState = KilnState.Closed
         #print("initPanel")
         self.label = Gtk.Label("Kiln Ctrl")
 
@@ -88,8 +90,13 @@ class kilnPanel():
     def setData(self):
         self.getKilnStatus()
         
+        state = self.kilnStatus[keyForState()]
+        if self.lastState == KilnState.Cooling and state == KilnState.Idle:
+            # transition noted, reset start/abort btns
+            self.resetRunAbort()    
+        
         widget = self.builder.get_object(keyForState())
-        widget.set_text(keyForState()+ " : "+ self.kilnStatus[keyForState()])
+        widget.set_text(keyForState()+ " : "+ state)
 
         widget = self.builder.get_object(keyForStartTime())
         widget.set_text(keyForStartTime()+ " : "+ self.kilnStatus[keyForStartTime()])
@@ -172,10 +179,13 @@ class kilnPanel():
         
     def onTerminateRun(self, button):
         log.debug("onTerminateRun")
-        self.abortBtn.set_sensitive(False)
-        self.runBtn.set_sensitive(True)
+        self.resetRunAbort()
         moCommand.cmdAbortKiln()
 
+    def resetRunAbort(self):
+        self.abortBtn.set_sensitive(False)
+        self.runBtn.set_sensitive(True)
+        
     def onEmergencyOff(self, button):
         log.warn("Emergency OFF clicked")
         moCommand.cmdEmergencyOff()
