@@ -65,7 +65,15 @@ class kilnPanel():
         adj.configure(defaultStepTime, 1,100.0, 1, 10, 10)
         
         self.simulateBtn = self.builder.get_object(keyForSimulate())
-        self.simulateBtn.set_active(True) # for debugging start w simulated 
+        self.simulateBtn.set_active(True) # for debugging start w simulated
+        
+        ## grab handles on some Buttons for later use
+        self.runBtn = self.builder.get_object(keyForRunKiln())
+        self.abortBtn = self.builder.get_object(keyForAbortKiln())
+        
+        # disable Abort until a run starts
+        self.abortBtn.set_sensitive(False)
+        self.runBtn.set_sensitive(True)
         
         # fill in the readOnly values
         self.update()
@@ -113,7 +121,7 @@ class kilnPanel():
         s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaterCmd()] ])
         widget.set_text(keyForKilnHeaterCmd()+ " : " + s)
 
-# get these direct from binary out
+        # Kiln Relay Status: get these direct from binary out
         from kilnControl import kilnConfig
         bouts = moData.getValue(keyForBinaryOut())
 
@@ -154,11 +162,18 @@ class kilnPanel():
             keyForTimeStep(): timeStep,
             keyForSimulate(): simulate, 
         }
+        
+        # Disable Run, Enable Terminate
+        self.runBtn.set_sensitive(False)
+        self.abortBtn.set_sensitive(True)
+
         print("\n**** Send RunKiln: ", param)
         moCommand.cmdRunKiln(param)
         
     def onTerminateRun(self, button):
         log.debug("onTerminateRun")
+        self.abortBtn.set_sensitive(False)
+        self.runBtn.set_sensitive(True)
         moCommand.cmdAbortKiln()
 
     def onEmergencyOff(self, button):

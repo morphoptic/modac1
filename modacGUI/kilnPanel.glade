@@ -376,7 +376,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="StartKiln">
+      <object class="GtkButton" id="RunKiln">
         <property name="label" translatable="yes">Start Kiln Run</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -391,7 +391,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="TerminateRun">
+      <object class="GtkButton" id="AbortKiln">
         <property name="label" translatable="yes">Terminate Kiln Run</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
