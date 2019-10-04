@@ -42,6 +42,7 @@ def cmdResetLeica():
     moClient.sendCommand(keyForResetLeica(),())
 
 def cmdSimulate(onOff=False):
+    # currently not used, no listener. its part of RunKilnCmd
     moClient.sendCommand(keyForSimulate(),(onOff))
     #moHardware.simulateKiln(True)
 

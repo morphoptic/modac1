@@ -32,6 +32,7 @@ defaultStepTime = 2
 class kilnPanel():
     def getKilnStatus(self):
         self.kilnStatus = moData.getValue(keyForKilnStatus())
+        self.stateName = self.kilnStatus[keyForState()]
         print("KilnStatus", self.kilnStatus)
         
     def __init__(self):        
@@ -85,18 +86,22 @@ class kilnPanel():
         self.box.show()
 
     def update(self):
+        log.debug("KilnPanel Update")
         self.setData()
         
     def setData(self):
         self.getKilnStatus()
         
-        state = self.kilnStatus[keyForState()]
-        if self.lastState == KilnState.Cooling and state == KilnState.Idle:
+        # state is the name or string rep of KilnState
+        log.debug("KilnPanel setData state: "+self.stateName)
+
+        if self.stateName == KilnState.EndRun.name:
             # transition noted, reset start/abort btns
+            log.info("\nEndRun detected\n")
             self.resetRunAbort()    
         
         widget = self.builder.get_object(keyForState())
-        widget.set_text(keyForState()+ " : "+ state)
+        widget.set_text(keyForState()+ " : "+ self.stateName)
 
         widget = self.builder.get_object(keyForStartTime())
         widget.set_text(keyForStartTime()+ " : "+ self.kilnStatus[keyForStartTime()])
@@ -183,6 +188,7 @@ class kilnPanel():
         moCommand.cmdAbortKiln()
 
     def resetRunAbort(self):
+        log.debug("Reset Abort/Run Buttons")
         self.abortBtn.set_sensitive(False)
         self.runBtn.set_sensitive(True)
         

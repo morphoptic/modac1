@@ -7,7 +7,7 @@
     <property name="can_focus">False</property>
     <property name="orientation">vertical</property>
     <child>
-      <object class="GtkCheckButton" id="Simulate">
+      <object class="GtkCheckButton" id="KilnSimulate">
         <property name="label" translatable="yes">Simulate Kiln</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -43,7 +43,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSpinButton" id="TargetTemp">
+          <object class="GtkSpinButton" id="KilnTargetTemp">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="text" translatable="yes">500</property>
@@ -85,7 +85,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSpinButton" id="TargetDisplacement">
+          <object class="GtkSpinButton" id="KilnTargetDisplacement">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="text" translatable="yes">5</property>
@@ -130,7 +130,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkSpinButton" id="MaxTime">
+          <object class="GtkSpinButton" id="KilnMaxTime">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="text" translatable="yes">0</property>
@@ -226,7 +226,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="StartTime">
+      <object class="GtkLabel" id="KilnStartTime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">StartTime: </property>
@@ -241,7 +241,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="Runtime">
+      <object class="GtkLabel" id="KilnRuntime">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Runtime: </property>
@@ -256,7 +256,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="StartDistance">
+      <object class="GtkLabel" id="KilnStartDistance">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">StartDistance:</property>
@@ -271,7 +271,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="CurrentDisplacement">
+      <object class="GtkLabel" id="KilnCurrentDisplacement">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">Displacement:</property>
@@ -286,7 +286,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="TargetDistance">
+      <object class="GtkLabel" id="KilnTargetDistance">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">TargetDistance:</property>
@@ -301,7 +301,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="KilnHeaters">
+      <object class="GtkLabel" id="KilnHeatersReported">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="label" translatable="yes">HeaterReported :</property>
@@ -316,10 +316,10 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="KilnHeaterCmd">
+      <object class="GtkLabel" id="KilnHeaterCommanded">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">HeaterCmd:</property>
+        <property name="label" translatable="yes">HeaterCommanded:</property>
         <attributes>
           <attribute name="weight" value="bold"/>
         </attributes>

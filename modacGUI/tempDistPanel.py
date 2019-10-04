@@ -183,5 +183,6 @@ class tempDistPanel():
         self.updatePlot()
 
     def update(self):
+        log.debug("KilnTemp-Dist panel update")
         self.getData()
         self.updatePlot()

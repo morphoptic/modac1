@@ -37,3 +37,7 @@ default_holdTemp = 500
 default_targetDisplacement = 10
 default_maxTime = 1000 #minutes
 default_stepTime = 10
+
+###
+# this lets any watchers note end of run and reset gui, etc
+endRunHoldTime = 60 # sec to wait after cool down before idle

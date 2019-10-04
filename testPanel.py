@@ -77,9 +77,9 @@ class TestPanelWindow(object):
         self.viewport = builder.get_object("MainViewport")
         
         # to change panel under test, simply load it here
-#        self.panel = kilnPanel.kilnPanel() # Panel to be tested
+        self.panel = kilnPanel.kilnPanel() # Panel to be tested
         #self.panel = leicaPanel.leicaPanel() # Panel to be tested
-        self.panel = binaryOutPanel.binaryOutPanel()
+        #self.panel = binaryOutPanel.binaryOutPanel()
         #self.panel = ktypePanel.ktypePanel()
         
         
