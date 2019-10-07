@@ -17,6 +17,9 @@
 # TODO: Needs better Trio integration for async issues w pexpect process
 #
 # aug 11 reworking for better async citizen
+#
+# NOTE: Leica reads in METERS so we scale by 1000 to mm
+#
 '''
 LeicaDisto Module holds singleton State and methods to talk with BLE Device
     via interactive conversation with a pexpect process running gatttool
@@ -291,8 +294,9 @@ class gattProcess:
             # which starts in the [:11] bytes before received 'Indication'
             #    bytes.fromhex(''.join(value[:11].decode().split())) 
             #       value[:11] .decode()  .split()
-            self.distance = struct.unpack('<f',
+            meters = struct.unpack('<f',
                             bytes.fromhex(''.join(value[:11].decode().split())) )[0]
+            self.distance = meters * 1000 #  We Want mm
             self.timeoutCount = 0
             self.state= GattState.Open
             # and we were successful!!
@@ -338,8 +342,15 @@ def reset():
  
 def init():
     log.debug("leica init")
+    d = {
+    keyForTimeStamp(): "no data yet",
+    keyForDistance(): -1,
+    keyForStatus(): this._state.name
+    }
+    moData.update(keyForLeicaDisto(), d)
+
     if not this._state == LeicaState.Closed:
-        log.error("tyring to Init Leica when not Closed, needs Reset")
+        log.error("trying to Init Leica when not Closed, needs Reset")
         return
     this._state = LeicaState.Offline
     if not this.__gattProc == None:
@@ -355,8 +366,8 @@ def init():
 
 def update():
     # empty routine to keep moHardware pattern
-    log.debug("leicaDisto update() does nothing state="+str(this._state))
-    log.info("leica last data: %r"%moData.getValue(keyForLeicaDisto()))
+    #log.debug("leicaDisto update() does nothing state="+str(this._state))
+    #log.info("leica last data: %r"%moData.getValue(keyForLeicaDisto()))
     pass
 
 async def runLoop():

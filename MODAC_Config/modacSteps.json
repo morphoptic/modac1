@@ -1,0 +1,5 @@
+[
+{"heatTo" :500},
+{"holdTemp": {"temp":500, "deflect": 100}},
+{"RampDown": {"support": 1, "exhaust": 1}}
+]

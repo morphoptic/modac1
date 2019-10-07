@@ -21,7 +21,7 @@ def isOpen():
         return False
     return True
 
-def init(filename="modac.csv"):
+def init(filename="modacDataLog.csv"):
     this.__csvFile = open(filename, "w")
     this.__csvWriter = csv.writer(this.__csvFile)
     names = moData.arrayColNames()

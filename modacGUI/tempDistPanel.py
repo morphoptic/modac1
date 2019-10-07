@@ -23,13 +23,17 @@ from matplotlib.figure import Figure
 from modac.moKeys import *
 from modac import moData, moLogger
 
+numKTypeInKiln = 4
+
 class tempDistPanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
-    def __init__(self):        
+    def __init__(self):
+        
         self.box = Gtk.VBox(homogeneous=False, spacing=8)
         self.label = Gtk.Label("Temp/Distance")
 
-        n_col = moData.numKType() + 1 # + one for dist
+        #n_col = moData.numKType() + 1 # + one for dist
+        n_col = numKTypeInKiln + 1 # + one for dist
         #print("NumCol: ", n_col)
         # initialized array of data of plotWidth
         self.count=0
@@ -37,7 +41,7 @@ class tempDistPanel():
         self.col = [ [0]*self.plotWidth ]*(n_col)
         #print("len self.col ", len(self.col))
         
-        self.columnNames = ["time"]+["K"+str(i) for i in range(moData.numKType()) ] +["Dist"]
+        self.columnNames = ["time"]+["AvgT"]+["Lower"]+["Middle"]+["Upper"] +["Dist"]
         #print("Columns:", self.columnNames)
         ### setup Plot Data 
         
@@ -92,12 +96,15 @@ class tempDistPanel():
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
-        ktypes = moData.getValue(keyForKType())
+        kilnStatus = moData.getValue(keyForKilnStatus())
+        
+        ktypes = kilnStatus[keyForKilnTemps()]
         #print("kTypes Update = ", ktypes)
-        lData = moData.getValue(keyForLeicaDisto())
+        #lData = moData.getValue(keyForLeicaDisto())
+        #distance = lData[keyForDistance()]
+        distance = kilnStatus[keyForCurrDisplacement()]
         #print("leicaPanel.getData = ", lData)
         #self.timestamp = lData[keyForTimeStamp()]
-        distance = lData[keyForDistance()]
 
         self.count = self.count+1
        
@@ -176,5 +183,6 @@ class tempDistPanel():
         self.updatePlot()
 
     def update(self):
+        log.debug("KilnTemp-Dist panel update")
         self.getData()
         self.updatePlot()

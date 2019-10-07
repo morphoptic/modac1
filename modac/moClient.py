@@ -13,7 +13,7 @@ import json
 #import rest of modac
 from .moKeys import *
 from . import moData, moNetwork
-from kilnControl import kiln
+#from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
 
@@ -33,11 +33,11 @@ def startClient():
     startCmdSender()
     
 def startCmdSender():
-    this.__CmdSender =  Pair1(dial=moNetwork.cmdAddress(), polyamorous=True, recv_timeout=moNetwork.rcvTimeout())
+    this.__CmdSender =  Pair1(dial=moNetwork.cmdAddress(), polyamorous=True, send_timeout=moNetwork.sendTimeout())
     pass
 
 # we really only have one topic at present. defaults should work until dispatch gets smarter
-def startSubscriber(keys=[keyForAllData(), keyForKilnState()]):#topics=[moTopicForKey(keyForAllData)]):
+def startSubscriber(keys=[keyForAllData(), keyForKilnStatus()]):#topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
     this.__subscribers.append(subscriber)
@@ -70,10 +70,8 @@ def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
         moData.updateAllData(body)
-    elif topic == keyForKilnState():
-        if kiln.kiln == None:
-            kiln.startKiln()
-        kiln.kiln.set_state(body)
+    elif topic == keyForKilnStatus():
+        moData.update(keyForKilnStatus(), body)
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
@@ -91,7 +89,10 @@ def sendCommand(key, value):
     log.info("sendCommand msg: %s"%msg)
     bmsg = msg.encode('utf8')
    #decryptCommand(msg)
-    this.__CmdSender.send(bmsg)
+    try:
+        this.__CmdSender.send(bmsg)
+    except Timeout:
+        log.warn("Timeout sending message "+key)
     # for testing
     #print("decypher test: ", decryptCommand(msg))
     return True

@@ -1,11 +1,20 @@
 # modac pid Controller, built on generic modac data acq & control
 # ripped from picoReflow.Oven
+# https://github.com/apollo-ng/picoReflow
+#
+# pid code based on Oven code found in several github projects.
+#  not sure which is the originator but these all seem to share very similar code
+#     https://github.com/apollo-ng/picoReflow
+#     https://github.com/jbruce12000/kiln-controller
+#  this PID controller also looks really close to one in above projects
+#     https://github.com/timdelbruegger/freecopter/blob/master/src/python3/pid.py
+#  and is based on an article "Improving Beginners PID"
+#     http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-introduction/
+#
 #
     
-# cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-print("loading kiln.pidController")
 
 import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
@@ -13,24 +22,17 @@ log.setLevel(logging.DEBUG)
 
 import datetime
 
-#import rest of modac
-#from modac.moKeys import *
-#from modac import moData, moHardware
+#####################
+#
+#   PID parameters - common for now, may need separate?
+default_kp = 25  # Proportional
+default_ki = 1088  # Integration
+default_kd = 217  # Derivative
 
-#import trio
-
-default_kp = 0
-default_ki = 0
-default_kd = 0
-default_state = 0
-default_minOutput = 0
-default_maxOutput = 1
-
-#mostly direct copy from timdelbruegger github
 class PIDController:
-    def __init__(self, ki=1, kp=1, kd=1):
-        self.ki = ki
+    def __init__(self, kp = default_kp, ki=default_ki, kd=default_kd):
         self.kp = kp
+        self.ki = ki
         self.kd = kd
         self.lastNow = datetime.datetime.now()
         self.iterm = 0
@@ -52,7 +54,3 @@ class PIDController:
 
         return output
 
-    
-# main for testing
-if __name__ == "__main__":
-    log.error("kiln.pid Controller has no self test")

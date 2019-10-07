@@ -54,8 +54,7 @@ def publishData(key, value):
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
-    #print("pub: ", msg)
-    log.debug("sendTopic %s"%msg)
+    #log.debug("sendTopic %s"%msg)
 
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
@@ -72,7 +71,7 @@ async def cmdListenLoop():
         try:
             await this.serverReceive()
         except trio.Cancelled:
-            log.error("cmdListenLoop caught trioCancelled, exiting")
+            log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
     if not this.__CmdListener == None:
         this.__CmdListener.close()
@@ -100,6 +99,8 @@ async def serverReceive():
         msgStr = msgObj.bytes.decode('utf8')
         #print("Server Receive msgStr",msgStr)
         topic, body = moNetwork.decryptCommand(msgStr)
+        
+        log.info("\n\nCommand Received")
         log.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
         
         print("Cmd topic,body:", topic,body)
@@ -121,7 +122,7 @@ async def serverReceive():
         return False
 
 def serverDispatch(topic,body):
-    log.info("serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForBinaryCmd():
         payload = body # json.loads(body)
         #print("serverDispatch payload")
@@ -132,24 +133,30 @@ def serverDispatch(topic,body):
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
     elif topic == keyForKilnAbortCmd():
+        print("\n====== doing Kiln Abort :", topic)
         if kiln.kiln == None:
             return
         log.info("Recieve kilnAbord Command")
         kiln.kiln.abort_run()
     elif topic == keyForRunKilnCmd():
         # where do we have the kiln stashed?
+        print("\n====== doing Kiln RUN :", topic)
         if kiln.kiln == None:
             log.error("No Kiln to run!")
         else:
             print("\n\nload and run kiln, body == ", body)
             if body == []:
-                moData.getNursery().start_soon(kiln.loadAndRun)
+                log.error("No data on runKiln")
             else:
+                log.info("=== RunKiln param:", body)
                 # need to unpack body?
                 log.info("kiln cmd rcv with body: "+str(body))
-                moData.getNursery().start_soon(kiln.loadAndRun,body)
+                kiln.runKilnCmd(body)
     elif topic == keyForResetLeica():
         leicaDistoAsync.reset()
+    elif topic == keyForEmergencyOff():
+        log.debug("EmergencyOff Cmd dispatching")
+        moHardware.EmergencyOff()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

@@ -99,7 +99,7 @@ class leicaPanel():
     def getData(self):
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
-        lData = moData.getValue(self.key)
+        lData = moData.getValue(keyForLeicaDisto())
         #print("leicaPanel.getData = ", lData)
         self.timestamp = lData[keyForTimeStamp()]
         data = lData[keyForDistance()]

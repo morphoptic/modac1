@@ -28,15 +28,23 @@ def cmdResetLeica():
     body = ()
     moClient.sendCommand(keyForResetLeica(), body)
 
-def cmdRunKiln(filename=None):
-    body =()
-    if not filename == None:
-        body = ( filename )
+def cmdRunKiln(param={}):
+    # new kiln.startRun: takes holdTemp, deflectionDist, maxTime, stepTime
+    # these could be fields in Kiln page
+    # also should display Kiln.status
     print("cmdRunKiln key=" , keyForRunKilnCmd())
-    moClient.sendCommand(keyForRunKilnCmd(), body)
+    moClient.sendCommand(keyForRunKilnCmd(), param)
     
 def cmdAbortKiln():
     moClient.sendCommand(keyForKilnAbortCmd(),())
     
 def cmdResetLeica():
     moClient.sendCommand(keyForResetLeica(),())
+
+def cmdSimulate(onOff=False):
+    # currently not used, no listener. its part of RunKilnCmd
+    moClient.sendCommand(keyForSimulate(),(onOff))
+    #moHardware.simulateKiln(True)
+
+def cmdEmergencyOff():
+    moClient.sendCommand(keyForEmergencyOff(),())

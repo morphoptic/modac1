@@ -3,7 +3,6 @@
 # provides pyNNG pubSub publishing of data (see moNetwork)
 # provides pyNNG Pair1 command pairing with clients
 # note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
-import datetime
 import sys
 import os
 import logging, logging.handlers, traceback
@@ -23,15 +22,17 @@ log.setLevel(logging.DEBUG)
 
 # my stuff
 from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
-from kilnControl import kiln
+import kilnControl
 
 runTests = False #True
 publishRate = 2 # seconds for sleep at end of main loop
 
+csvActive = True
+
 def modacExit():
     log.info("modacExit shutting down")
+    kilnControl.kiln.endKiln()
     moHardware.shutdown()  # turns off any hardware
-    kiln.endKiln()
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
     moData.shutdown()
@@ -43,20 +44,22 @@ async def modac_ReadPubishLoop():
     #print("event Loop")
     log.info("\n\nEnter Modac ReadPublish Loop")
     #for i in range(300):
+    moData.setStatusRunning()
     while True: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
         moHardware.update()
         # any logging?
-        #moData.logData()
-        moCSV.addRow()
+        moData.logData() # log info as json
+        if csvActive == True:
+            moCSV.addRow()
         # publish data
         moServer.publish()
-        log.debug("bottom forever read-publish loop")
+        log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
         except trio.Cancelled:
-            log.warn("Trio Cancelled caught in ReadPublish Loop")
+            log.warn("***Trio Cancelled caught in ReadPublish Loop")
             break
     # after Forever
     log.info("somehow we exited the ReadPublish Forever Loop")
@@ -65,26 +68,34 @@ async def modac_asyncServer():
     log.info("start modac_asyncServer()")
     modac_loadConfig()
 
+    # Trio is our async multi-threaded system.
+    # it uses the Nursery metaphor for spawning and controlling
     async with trio.open_nursery() as nursery:
-        moData.init()
+        # initialize data blackboard on which data is written and read from
+        moData.init(client=False) 
+        
         # save the nursey in moData for other modules
         moData.setNursery(nursery)
         
+        # pass it nursery so it can start complex sensor monitors like Leica
         await moHardware.init(nursery)
-        moCSV.init()
+        
+        # start the CSV server logging
+        moCSV.init("modacServerData.csv")
         
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
-        kiln.startKiln()
-        #await kiln.spawnSchedule(30)
-
+        
+        # start the kiln control process
+        await kilnControl.kiln.startKiln(nursery)
+        
         try:
             #   run event loop
             #print("modata:",moData.rawDict())
             await modac_ReadPubishLoop()
         except trio.Cancelled:
-           log.warning("Trio propagated Cancelled to main, time to die")
+           log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
             log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
             # TODO need to handle Ctl-C on server better

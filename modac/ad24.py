@@ -1,5 +1,9 @@
 # modac.ad24 : 24 bit Analog-Digital Inputs
 # built on waveshareADAC and ADS1256 chip
+# two arrays are kept by update() - raw and 0-5V
+# only the 0-5V is reported to moData
+#
+
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
@@ -58,6 +62,7 @@ def allRawArray():
     return this.__adsRaw
 
 def all0to5Array():
+    '''return values scaled to 0-5V readings'''
     return this.__ads0to5
 
 def asDict():

@@ -21,9 +21,9 @@ sudo apt-get -y install python-numpy python-scipy python-matplotlib
 sudo python3 -m pip install -U matplotlib scipy numpy
 #
 # hardware support
-sudo pip3 install spidev
-sudo pip3 install smbus2
-sudo pip3 install Rpi.bme280
+sudo pip3 install --upgrade spidev
+sudo pip3 install --upgrade smbus2
+sudo pip3 install --upgrade Rpi.bme280
 #
 #  ADAfruit for oled and other devices
 #  not using them mid-july so leave off
@@ -34,8 +34,8 @@ sudo pip3 install Rpi.bme280
 #
 # getting GTK3 installed
 sudo apt install -y libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
-sudo pip3 install pycairo
-sudo pip3 install PyGObject
+sudo pip3 install --upgrade pycairo
+sudo pip3 install --upgrade PyGObject
 sudo apt-get -y install glade
 #
 # experiment with QT and pyQTGraph
@@ -46,13 +46,14 @@ sudo apt-get -y install glade
 sudo pip3 install thermocouples_reference scipy
 #
 #sudo python3 -m pip install -U trio
-sudo pip3 install pexpect
-sudo pip3 install trio
-sudo pip3 install pylint
-sudo pip3 install pynng
-sudo pip3 install pytest
+sudo pip3 install --upgrade pexpect
+sudo pip3 install --upgrade trio
+sudo pip3 install --upgrade pylint
+sudo pip3 install --upgrade pynng
+sudo pip3 install --upgrade pytest
 #
 sudo apt-get install dosfstools
 sudo apt-get install hfsutils hfsprogs hfsutils
-
+#
+sudo pip3 install --upgrade zeroconf
 

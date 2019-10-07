@@ -16,6 +16,7 @@ from modac import leicaDistoAsync as leicaDisto
 
 # locally required for this module
 import trio
+import datetime
 
 __nursery = None
 async def init(nursery):
@@ -27,11 +28,15 @@ async def init(nursery):
     kType.init()
     leicaDisto.init()
     nursery.start_soon(leicaDisto.runLoop)
+    moData.setStatusInitialized()
     # force at least one update so moData is populated
     update()
     log.debug("moData initialized")
 
+
 def update():
+    # get our own timestamp
+    moData.update(keyForTimeStamp(), datetime.datetime.now())
     enviro.update()
     binaryOutputs.update()
     ad24.update()
@@ -70,3 +75,14 @@ def resetLeicaCmd():
         leicaDisto.close()
     leicaDisto.reset()
     this.__nursery.start_soon(leicaDisto.runLoop)
+
+def simulateKiln(onOff=True):
+    kType.setSimulate(onOff)
+    # leica simulation - done inside kiln
+    from kilnControl import kiln
+    kiln.setSimulation(onOff)
+    
+def EmergencyOff():
+    from kilnControl import kiln
+    log.warn("EMERGENCY OFF tiggered")
+    kiln.emergencyShutOff()

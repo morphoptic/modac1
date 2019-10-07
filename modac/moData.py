@@ -1,4 +1,6 @@
 # moData = common data repo under mordac
+# Other modules include this but this doesnt include them
+
 if __name__ == "__main__":
     print("moData has no self test")
     exit(0)
@@ -18,9 +20,10 @@ import datetime, json
 
 from enum import Enum
 class moDataStatus(Enum):
-    Initialized = 0
     Shutdown = -1
-    Running = 1
+    Startup = 0
+    Initialized = 0
+    Running = 2
 
 __moDataDictionary = {}
 
@@ -28,10 +31,11 @@ __moDataDictionary = {}
 # we need this early in Client startup
 # but wont have actual data until receive from Server
 # TODO: set this with config shared with server (original concept of Channels)
+# num of entries should be matched in their init and raise error/assert if not same
 def numKType():
     return 4
 def numBinaryOut():
-    return 9
+    return 12
 def numAD24():
     return 8
 def numAD16():
@@ -47,36 +51,64 @@ def getNursery():
 def shutdown():
     __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
 
-def init():
+def init(client=False):
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
-    d = {keyForTimeStamp():"No Data Yet",
-     keyForHumidity():0,
-     keyForTemperature():0,
-     keyForPressure():0
-     }
     # initial values for hardware
     # TODO: ideally it could ask each hardware module but Client wont have hardware
     # so need alternative... perhaps a local function deviceInitValue()
     # that would return the initial value,
     # devices could use moData.deviceInitValue() to initialize internal values
-    update(keyForStatus(),moDataStatus.Initialized.name)
+    update(keyForStatus(),moDataStatus.Startup.name)
     update(keyForTimeStamp(),"No Data Yet")
-    update(keyForBinaryOut(), [0]*this.numBinaryOut())
-    update(keyForEnviro(), d)
-    update(keyForAD24(), [0.0]*this.numAD24())
-    update(keyForAD16(), [0.0]*this.numAD16())
-    update(keyForKType(), [0.0]*this.numKType())
-    update(keyForLeicaDisto(), {keyForTimeStamp():"No Data Yet", keyForDistance():-1})
-    log.info("moData.init = "+asJson())
+    
+    # in server individual devices will post their own init values
+    # client needs to fake em - which may be maintance issue to keep consistent
+    if client == True:
+        def_env = {keyForTimeStamp():"No Data Yet",
+         keyForHumidity():0,
+         keyForTemperature():0,
+         keyForPressure():0
+         }
+        update(keyForEnviro(), def_env)
+        update(keyForBinaryOut(), [0]*this.numBinaryOut())
+        update(keyForAD24(), [0.0]*this.numAD24())
+        update(keyForAD16(), [0.0]*this.numAD16())
+        update(keyForKType(), [0.0]*this.numKType())
+        def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
+        update(keyForLeicaDisto(), def_leica)
+        def_kiln = {
+            keyForState(): 'Closed',
+            keyForTimeStep(): 1,
+            keyForRuntime(): 0,
+            keyForKilnTemps(): [0.0,0.0,0.0,0.0],
+            keyForTargetTemp(): 0,
+            keyForStartTime(): "Not Started",
+            keyForTargetDisplacement(): -1,
+            keyForMaxTime(): 0,
+            keyForStartDist(): 0,
+            keyForCurrDisplacement(): 0,
+            keyForTargetDist(): 0,
+            keyForKilnHeaters(): [False,False,False,False],
+            keyForKilnHeaterCmd(): [False,False,False,False],
+        }
+        update(keyForKilnStatus(), def_kiln)
+
+        log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass
 
+def setStatusInitialized():
+    update(keyForStatus(),moDataStatus.Initialized.name)
+
+def setStatusRunning():
+    update(keyForStatus(),moDataStatus.Running.name)
+
 def update(key,value):
     if key == keyForTimeStamp():
-        if isinstance(str, datetime.datetime):
-            value = value.strftime("%Y-%m-%d %H:%M:%S%Z : ")
+        if isinstance(value, datetime.datetime):
+            value = value.strftime("%Y-%m-%d %H:%M:%S%Z")
     this.__moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass
@@ -132,10 +164,10 @@ def asArray():
     return a
 
 def __appendAName(key):
-    print("__appendAName key:", key)
+    #print("__appendAName key:", key)
     cPrefix = key
     a = this.getValue(key)
-    print("__appendAName a:", a)
+    #print("__appendAName a:", a)
     assert isinstance(a, list)
     for i in range(len(a)):
         s = cPrefix+"_"+str(i)

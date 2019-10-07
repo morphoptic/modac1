@@ -25,16 +25,27 @@ __eSensor = None
 
 def init():
     log.info("modac_BME280.init")
-    this.__eSensor = moBME280()
-    assert not this.__eSensor == None
+    try:
+        this.__eSensor = moBME280()
+    except:
+        log.error("cant initialize BME280")
+        log.error(str( sys.exc_info()[0]))
+        
+    if this.__eSensor == None:
+        log.error(" no Enviro sensor BME280")
+        moData.update(keyForEnviro(), asDict())
+        return
+
+    #assert not this.__eSensor == None
     this.update()
 
 def update():
     if this.__eSensor == None:
-        log.error(" no sensor ")
+        #log.error(" no sensor ")
         return
     this.__eSensor.read()
-    moData.update(keyForTimeStamp(), timestampStr())
+    # removed global timestamp from here
+    #moData.update(keyForTimeStamp(), timestampStr())
     moData.update(keyForEnviro(), asDict())
 
 def asDict():
@@ -46,6 +57,8 @@ def asDict():
     return d
 
 def temperature():
+    if this.__eSensor == None:
+        return -1
     if not isinstance(this.__eSensor.temperature, float):
         log.warn("bme280 temp is not a float")
         return 0.0
@@ -58,12 +71,16 @@ def degF():
     return degC()*1.8 + 32
 
 def humidity():
+    if this.__eSensor == None:
+        return -1
     if not isinstance(this.__eSensor.humidity, float):
         log.warn("bme280 humidity is not a float")
         return 0.0
     return this.__eSensor.humidity
 
 def pressure():
+    if this.__eSensor == None:
+        return -1
     if not isinstance(this.__eSensor.pressure, float):
         log.warn("bme280 pressure is not a float")
         return 0.0
@@ -73,6 +90,8 @@ def timestamp():
     return this.__eSensor.timestamp
 
 def timestampStr():
+    if this.__eSensor == None:
+        return "no enviro sensor"
     return timestamp().strftime("%Y-%m-%d %H:%M:%S%Z")
 
 def timestampISOStr():
@@ -132,5 +151,7 @@ def testBME280():
 
 if __name__ == "__main__":
     print("modac.enviro has no self test")
+    init()
+    testBME280()
     exit(0)
   

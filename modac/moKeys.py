@@ -65,14 +65,27 @@ def keyForAllOffCmd():
 def keyForResetLeica():
     return "leicaReset"
 
-# kiln state
-def keyForRunKilnCmd(): return "runKiln"
-def keyForKilnAbortCmd(): return "abortKiln"
+# kiln state stuff
+## start/abort cmd == btn name but be kinda explicit
+def keyForRunKiln(): return "RunKiln"
+def keyForAbortKiln(): return "AbortKiln"
+def keyForRunKilnCmd(): return keyForRunKiln()
+def keyForKilnAbortCmd(): return keyForAbortKiln()
 
-def keyForKilnState(): return "kilnState"
-def keyForRuntime(): return 'runtime'
-def keyForTarget(): return 'target'
-def keyForState(): return 'state'
-def keyForHeat(): return 'heat'
-def keyForTotalTime():return 'totaltime'
+def keyForKilnStatus(): return "KilnStatus"
+def keyForRuntime(): return 'KilnRuntime'
+def keyForTargetTemp(): return 'KilnTargetTemp'
+def keyForState(): return 'State'
+def keyForStartTime():return 'KilnStartTime'
+def keyForTargetDisplacement():return 'KilnTargetDisplacement'
+def keyForMaxTime():return 'KilnMaxTime'
+def keyForStartDist():return 'KilnStartDistance'
+def keyForCurrDisplacement():return 'KilnCurrentDisplacement'
+def keyForTargetDist():return 'KilnTargetDistance'
+def keyForTimeStep(): return 'TimeStep'
+def keyForKilnHeaters(): return 'KilnHeatersReported'
+def keyForKilnHeaterCmd(): return 'KilnHeaterCommanded'
+def keyForKilnTemps(): return 'KilnTemps'
 
+def keyForSimulate(): return 'KilnSimulate'
+def keyForEmergencyOff(): return 'EmergencyOff'

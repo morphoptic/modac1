@@ -88,6 +88,18 @@ class ModacAppWindow(object):
         self.notebook.remove_page(0)
         
         #####
+        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
+        self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
+
+        self.tempDistPanel= tempDistPanel.tempDistPanel()
+        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
+        
+        self.leicaPanel = leicaPanel.leicaPanel()
+        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
+        
+        self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
+        self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
+        
         self.enviroPanel = enviroPanel.enviroPanel()
         self.notebook.append_page(self.enviroPanel.box, self.enviroPanel.label)
 
@@ -100,17 +112,6 @@ class ModacAppWindow(object):
         self.ad16Panel = ad16Panel.ad16Panel()
         self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
         
-        self.leicaPanel = leicaPanel.leicaPanel()
-        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
-        
-        self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
-        self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
-        
-        self.tempDistPanel= tempDistPanel.tempDistPanel()
-        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
-        
-        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
-        self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
 
         #  add here and then in updatePanels
         
@@ -215,6 +216,7 @@ class ModacAppWindow(object):
     
     def updatePanels(self):
         moCSV.addRow()
+        self.kilnPanel.update()
         self.enviroPanel.update()
         self.ktypePanel.update()
         self.ad24Panel.update()
@@ -230,19 +232,17 @@ def modacExit():
     moClient.shutdownClient()
     #sys.exit(0)
     
-def modacInit():
-    # setup MODAC data/networking
-    moData.init()
-    log.debug("try startClient()")
-    moClient.startClient()
-    log.debug("client started")
-
 if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
-    moLogger.init("moGUI_1") # start logging (could use cmd line args config files)
+    #moLogger.init("moGUI_1") # start logging (could use cmd line args config files)
+    # logging initialized at top to avoid start by libraries
     log.debug("moGUI_1: modac from glade files")
     try:
-        modacInit()
+        moData.init(client=True)
+        # setup MODAC data/networking
+        log.debug("try startClient networking")
+        moClient.startClient()
+        log.debug("start client gui")
         Application = ModacApp("com.mioat.modacGUI1", Gio.ApplicationFlags.FLAGS_NONE)
         Application.run()
     except Exception as e:
