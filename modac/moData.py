@@ -33,7 +33,7 @@ __moDataDictionary = {}
 # TODO: set this with config shared with server (original concept of Channels)
 # num of entries should be matched in their init and raise error/assert if not same
 def numKType():
-    return 4
+    return 8
 def numBinaryOut():
     return 12
 def numAD24():
@@ -105,6 +105,9 @@ def setStatusInitialized():
 def setStatusRunning():
     update(keyForStatus(),moDataStatus.Running.name)
 
+def updateTimestamp():
+    update(keyForTimeStamp(), datetime.datetime.now())
+    
 def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(value, datetime.datetime):
@@ -118,7 +121,12 @@ def asDict():
 
 def asJson():
     return json.dumps(asDict(), indent=4)
-                      
+
+def isValidKey(key):
+    if key in __moDataDictionary:
+        return True
+    return False
+
 def getValue(key):
     # will throw KeyError if key is not in dictionary
     return __moDataDictionary[key]
@@ -149,18 +157,24 @@ def __appendArray(key,targetArray):
 def asArray():
     a = []
     a.append(this.getValue(keyForTimeStamp()))
-    env = this.getValue(keyForEnviro())
-    a.append(env[keyForTemperature()])
-    a.append(env[keyForHumidity()])
-    a.append(env[keyForPressure()])
+    if isValidKey(keyForEnviro()):
+        env = this.getValue(keyForEnviro())
+        a.append(env[keyForTemperature()])
+        a.append(env[keyForHumidity()])
+        a.append(env[keyForPressure()])
     
-    leica = this.getValue(keyForLeicaDisto())
-    a.append(leica[keyForDistance()])
+    if isValidKey(keyForLeicaDisto()):
+        leica = this.getValue(keyForLeicaDisto())
+        a.append(leica[keyForDistance()])
     
-    a += this.getValue(keyForAD24())
-    a += this.getValue(keyForAD16())
-    a += this.getValue(keyForKType())
-    a += this.getValue(keyForBinaryOut())
+    if isValidKey(keyForAD24()):
+        a += this.getValue(keyForAD24())
+    if isValidKey(keyForAD16()):
+        a += this.getValue(keyForAD16())
+    if isValidKey(keyForKType()):
+        a += this.getValue(keyForKType())
+    if isValidKey(keyForBinaryOut()):
+        a += this.getValue(keyForBinaryOut())
     return a
 
 def __appendAName(key):
@@ -179,13 +193,34 @@ def arrayColNames():
         return this.__namesOfColumns
     this.__namesOfColumns = []
     this.__namesOfColumns.append(keyForTimeStamp())
-    this.__namesOfColumns.append(keyForTemperature())
-    this.__namesOfColumns.append(keyForHumidity())
-    this.__namesOfColumns.append(keyForPressure())
-    this.__namesOfColumns.append(keyForDistance())
-    this.__appendAName(keyForAD24())
-    this.__appendAName(keyForAD16())
-    this.__appendAName(keyForKType())
-    this.__appendAName(keyForBinaryOut())
+    if isValidKey(keyForTemperature()):
+        this.__namesOfColumns.append(keyForTemperature())
+    if isValidKey(keyForHumidity()):
+        this.__namesOfColumns.append(keyForHumidity())
+    if isValidKey(keyForPressure()):
+        this.__namesOfColumns.append(keyForPressure())
+    if isValidKey(keyForDistance()):
+        this.__namesOfColumns.append(keyForDistance())
+    if isValidKey(keyForAD24()):
+        this.__appendAName(keyForAD24())
+    if isValidKey(keyForAD16()):
+        this.__appendAName(keyForAD16())
+    if isValidKey(keyForKType()):
+        this.__appendAName(keyForKType())
+    if isValidKey(keyForBinaryOut()):
+        this.__appendAName(keyForBinaryOut())
     log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns
+
+def arrayNameOnlyAD24():
+    log.debug("modData.arrayNameOnlyAD24 - for testAD24")
+    if not this.__namesOfColumns == None:
+        log.error("moData columns already named")
+        return this.__namesOfColumns
+    this.__namesOfColumns = []
+    this.__namesOfColumns.append(keyForTimeStamp())
+    this.__appendAName(keyForAD24())
+    log.debug("col names: %r"%(__namesOfColumns))
+    return this.__namesOfColumns
+
+    

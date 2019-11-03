@@ -1,18 +1,25 @@
 # modac_io_server testbed for MODAC hardware server
 # connects hardware to data and network
+# inits services and devices, runs update forever loop
 # provides pyNNG pubSub publishing of data (see moNetwork)
 # provides pyNNG Pair1 command pairing with clients
-# note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
+# note hw interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
+# Trio provides async data handling
+# Some hardware, notably blutooth Leica Distance Sensor, require separate threads or processes
 import sys
 import os
 import logging, logging.handlers, traceback
 import argparse
-import gpiozero
+import gpiozero # basic rPi GPIO using gpiozero technique first
 import json
 import signal
 
-import trio #adding async
+import trio #adding async functions use the Trio package
 
+# moLogger is our frontend/startup to usual Python logging
+# we want it to run in main()__main__ before any libraries might
+# or they may capture the first call to logging.xxConfig()
+# and our main needs priority
 from modac import moLogger
 if __name__ == "__main__":
     moLogger.init()

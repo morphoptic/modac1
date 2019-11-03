@@ -9,12 +9,8 @@ from modac import moLogger
 if __name__ == "__main__":
     moLogger.init()
 
-if __name__ == "__main__":
-    moLogger.init()
-    
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
 
 def doTest():
     data = []
@@ -23,7 +19,7 @@ def doTest():
         ADC_Value = ad16.values()
         print("values", ADC_Value)
         for i in range(len(ADC_Value)):
-            print ("%d %d ADC = %lf"%(repeatCount, i, ADC_Value[i]))
+            print ("count %d chan %d AD16 = %lf"%(repeatCount, i, ADC_Value[i]))
         print("moData:",moData.getValue(keyForAD16()))
         sleep(1)
         

@@ -20,7 +20,7 @@ __typeK = thermocouples['K']
 
 # cant dunder kTypeIdx 'cause its used in Simulator
 # list 4 but only use idx 1-3 so it matches kilnHeaters etc 
-kTypeIdx= [0,5,6,7] # indicies into AD24Bit array for k-type thermocouple
+kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
 
 simulation = False
 simulator = None
@@ -51,12 +51,15 @@ def asArray():
     ktypeData = []
     # retrieve the ad as 0-5V values
     adArray = ad24.all0to5Array()
+    # these are in 0-5v, need in mV range for use with conversion library
     # it is not clear if we should be using the roomTemp as zero point
     # that might need to be a constant from testing with ice water
     roomTemp = enviro.degC()
     # only look at the ad24 that are identified by the kTypeIdx array
     for i in kTypeIdx:
-        t = this.mVToC(adArray[i],roomTemp)
+        # really crude T=(Vout-1.25)/0.005
+        t= (adArray[i]-1.25)/0.005
+        #t = this.mVToC(adArray[i]) #,roomTemp)
         #print("ktype", i, t)
         ktypeData.append(t)
     return ktypeData

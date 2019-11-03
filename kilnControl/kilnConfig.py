@@ -17,8 +17,8 @@ heater_upper = 3
 # and an array to hold those to match ktemps/kcmds heaters
 heaters = [0, heater_lower, heater_middle, heater_upper]
 
-# fans are wired ?? as 12v? as gpio?
-fan_support = 9  # jet to support glass
+# fans are wired via 
+fan_support = 11  # jet to support glass
 fan_exhaust = 10  # heat exhaust fan
 
 #####################
