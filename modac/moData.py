@@ -193,6 +193,9 @@ def arrayColNames():
         return this.__namesOfColumns
     this.__namesOfColumns = []
     this.__namesOfColumns.append(keyForTimeStamp())
+    if isValidKey(keyForEnviro()):
+        # note: this may cause issues with CSV as Enviro is dict
+        this.__namesOfColumns.append(keyForEnviro())
     if isValidKey(keyForTemperature()):
         this.__namesOfColumns.append(keyForTemperature())
     if isValidKey(keyForHumidity()):
