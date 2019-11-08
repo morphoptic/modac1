@@ -6,11 +6,11 @@ import logging
 from time import sleep
 import datetime
 import numpy as np
-from modac import moLogger, ad24, moData, moCSV, enviro
+from modac import moLogger, ad24, moData, moCSV, enviro, kType
 from modac.moKeys import *
 
 #idx of ktypes in AD24 array
-kTypeAD24 = [5,6,7]
+kTypeAD24 = [4,5,6]
 kTypeLog = []#[[0,0,0]]
 
 if __name__ == "__main__":
@@ -19,7 +19,7 @@ if __name__ == "__main__":
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-numMin = 10
+numMin = 1
 numSeconds = (60*numMin)
 sleepTime = 1
 def doTest():
@@ -29,26 +29,49 @@ def doTest():
     nowStr = now.strftime("%Y%m%d_%H%M%S")
     outName = name+nowStr+".csv"
     outFile = open(outName, "w")
-    print("Count,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev", file=outFile)
+    print("Count,TimeStamp,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev,mv1,mv2,mv3,mvAvg,mvMean,mvMedian, mvStdDev,K1,K2,K3,TAvg,TMean,TMedian, TStdDev, ",
+        file=outFile)
     for repeatCount in range(numSeconds):
         moData.updateTimestamp()
         ad24.update()
         enviro.update()
+        timestamp = moData.getValue(keyForTimeStamp())
         ADC_Value = ad24.all0to5Array()
         row = [repeatCount, enviro.degC()]
-        line = "%d, %6.5f, "%(repeatCount,enviro.degC() )
+        line = "%d, %s, %6.5f, "%(repeatCount,timestamp,enviro.degC() )
         tcoupleAD = []
+        ktype = []
+        mv = []
+        idx = 0
+        kline = ", "
+        mline = ", "
         for idxAD in kTypeAD24:
             tcoupleAD.append(ADC_Value[idxAD])
+            k = kType.mVToC(ADC_Value[idxAD],enviro.degC())
+            ktype.append(k)
+            m = kType.fnMagic(ADC_Value[idxAD])
+            mv.append(m)
             row.append(ADC_Value[idxAD])
             line = line + "%10.9f,"%ADC_Value[idxAD]
+            kline = kline + "%10.9f,"%k
+            mline = mline + "%10.9f,"%m
         a = np.array(tcoupleAD)
-        line = line + "%10.9f, %10.9f, %10.9f, %10.9f"%(a.mean(),np.median(a), np.average(a), np.std(a))
+        line = line + "%10.9f, %10.9f, %10.9f, %10.9f"%(
+                a.mean(),np.median(a), np.average(a), np.std(a))
+        b = np.array(ktype)
+        kline = kline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
+                b.mean(),np.median(b), np.average(b), np.std(b))
+        c = np.array(mv)
+        mline = mline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
+                c.mean(),np.median(c), np.average(c), np.std(c))
+        line += mline
+        line += kline
+        print(line, file=outFile)
+
         row.append(a.mean())
         row.append(np.median(a))
         row.append(np.average(a))
         row.append(np.std(a))
-        print(line, file=outFile)
         if repeatCount % 10 == 0:
             print(repeatCount)
         kTypeLog.append(row)
@@ -124,5 +147,7 @@ if __name__ == "__main__":
     enviro.init()
     print("Enviro says degC: ",enviro.degC())
     ad24.init()
+    kType.init()
+    #
     doTest()
     

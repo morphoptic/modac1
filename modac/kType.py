@@ -20,13 +20,37 @@ __typeK = thermocouples['K']
 
 # cant dunder kTypeIdx 'cause its used in Simulator
 # list 4 but only use idx 1-3 so it matches kilnHeaters etc 
-kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
+#kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
+kTypeIdx= [4,5,6] # indicies into AD24Bit array for k-type thermocouple
 
 simulation = False
 simulator = None
 
+def fnMagic(readMV):
+    ### convert readMV into proper mV for mvToC
+    # values from calibration runs.
+    # noted significant variation by sensor and channel
+    # but for simplicity now we use simple offset
+    # median ad0-5 at 0C = 0.13412795V
+    # median ad0-5 at room 25.539 = 0.23279848V
+    medianInIce = 0.13412795
+    medianAtRoom = 0.23279848
+    ampGain = 122.4 # from ad8495 spec sheet
+    mV = (readMV - medianInIce)/ ampGain
+    print("fnMagic %8.5f => %8.5f"%(readMV,mV))
+    return mV
+
+    # vOut = T*5mV = T* 0.005V
+    # T = vOut / 0.005 + magic
+    # table says 0C is 0.000 (3deg is 0.119mV)
+    # table says 25 is 1.0000mV = 0.001V
+    #magicNumber = (0.001f)/0.23279848f
+    #print("fnMagic ", magicNumber)
+    
+
 def mVToC(mV,tempRef=0):
-    return __typeK.inverse_CmV(mV, Tref=tempRef)
+    _mV = fnMagic(mV)
+    return __typeK.inverse_CmV(_mV, Tref=tempRef)
 
 def init():
     this.simulator = None
