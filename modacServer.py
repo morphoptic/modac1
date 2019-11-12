@@ -13,6 +13,7 @@ import argparse
 import gpiozero # basic rPi GPIO using gpiozero technique first
 import json
 import signal
+import datetime
 
 import trio #adding async functions use the Trio package
 
@@ -57,12 +58,12 @@ async def modac_ReadPubishLoop():
         log.debug("top forever read-publish loop")
         moHardware.update()
         # any logging?
-        moData.logData() # log info as json
+        #moData.logData() # log info as json to stdOut/console
         if csvActive == True:
             moCSV.addRow()
         # publish data
         moServer.publish()
-        log.debug("\n*****bottom forever read-publish loop")
+        #log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
         except trio.Cancelled:
@@ -88,7 +89,11 @@ async def modac_asyncServer():
         await moHardware.init(nursery)
         
         # start the CSV server logging
-        moCSV.init("modacServerData.csv")
+        if csvActive:
+            now = datetime.datetime.now()
+            nowStr = now.strftime("%Y%m%d_%H%M")
+            outName = "modacServerData_"+nowStr+".csv"
+            moCSV.init(outName)
         
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener

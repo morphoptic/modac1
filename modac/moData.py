@@ -33,7 +33,7 @@ __moDataDictionary = {}
 # TODO: set this with config shared with server (original concept of Channels)
 # num of entries should be matched in their init and raise error/assert if not same
 def numKType():
-    return 8
+    return 3
 def numBinaryOut():
     return 12
 def numAD24():
@@ -167,6 +167,8 @@ def asArray():
         leica = this.getValue(keyForLeicaDisto())
         a.append(leica[keyForDistance()])
     
+    if isValidKey(keyForAD24Raw()):
+        a += this.getValue(keyForAD24Raw())
     if isValidKey(keyForAD24()):
         a += this.getValue(keyForAD24())
     if isValidKey(keyForAD16()):
@@ -195,7 +197,10 @@ def arrayColNames():
     this.__namesOfColumns.append(keyForTimeStamp())
     if isValidKey(keyForEnviro()):
         # note: this may cause issues with CSV as Enviro is dict
-        this.__namesOfColumns.append(keyForEnviro())
+        #this.__namesOfColumns.append(keyForEnviro())
+        this.__namesOfColumns.append(keyForTemperature())
+        this.__namesOfColumns.append(keyForHumidity())
+        this.__namesOfColumns.append(keyForPressure())
     if isValidKey(keyForTemperature()):
         this.__namesOfColumns.append(keyForTemperature())
     if isValidKey(keyForHumidity()):
@@ -204,6 +209,8 @@ def arrayColNames():
         this.__namesOfColumns.append(keyForPressure())
     if isValidKey(keyForDistance()):
         this.__namesOfColumns.append(keyForDistance())
+    if isValidKey(keyForAD24Raw()):
+        this.__appendAName(keyForAD24Raw())
     if isValidKey(keyForAD24()):
         this.__appendAName(keyForAD24())
     if isValidKey(keyForAD16()):

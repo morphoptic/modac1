@@ -36,6 +36,7 @@ class ktypePanel():
         self.col = [ [0]*self.plotWidth ]*(n_col) 
         
         self.columnNames = ["time"]+["K"+str(i) for i in range(n_col) ]
+        print("KType col names:", self.columnNames)
         ### setup Plot Data 
         
         ### setup Table (aka listStore) in a ScrollWindow
@@ -105,6 +106,7 @@ class ktypePanel():
             row.append(str(v))
 
         # create strings for listStore and add them at top
+        print ("Ktype row:", row)
         it = self.listStore.prepend(row)
         # and limit the listStore
         try:

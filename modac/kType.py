@@ -19,9 +19,12 @@ from thermocouples_reference import thermocouples
 __typeK = thermocouples['K']
 
 # cant dunder kTypeIdx 'cause its used in Simulator
-# list 4 but only use idx 1-3 so it matches kilnHeaters etc 
+# ktypes in use are White, Green, Yellow (not blue) from amp box
+# amp-connector & pi-connector order is Green-White-Yellow-Blue
+# two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
 #kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
 kTypeIdx= [4,5,6] # indicies into AD24Bit array for k-type thermocouple
+
 
 ampGain = 122.4 # from ad8495 spec sheet
 medianInIce = 0.13412795

@@ -33,6 +33,8 @@ from waveshareADAC import ADS1256
 from .moKeys import *
 from . import moData
 
+# two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
+
 __ads1256 = None #ADS1256.ADS1256()
 __adsRaw = [0,0,0,0,0,0,0,0]
 __ads0to5 = [0,0,0,0,0,0,0,0]
@@ -57,6 +59,7 @@ def update():
         this.__adsRaw[i] = raw[i]
         this.__ads0to5[i] = raw[i] * this.__adsRawToV
     moData.update(keyForAD24(), all0to5Array())
+    moData.update(keyForAD24Raw(), allRawArray())
 
 def allRawArray():
     return this.__adsRaw

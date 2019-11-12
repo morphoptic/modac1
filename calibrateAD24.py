@@ -10,7 +10,7 @@ from modac import moLogger, ad24, moData, moCSV, enviro, kType
 from modac.moKeys import *
 
 #idx of ktypes in AD24 array
-kTypeAD24 = [4,5,6]
+kTypeAD24 = kType.kTypeIdx # [4,5,6]
 
 if __name__ == "__main__":
     moLogger.init()
@@ -27,20 +27,24 @@ def doTest():
     data = []
     name = "calibrateCSV_"
     now = datetime.datetime.now()
-    nowStr = now.strftime("%Y%m%d_%H%M%S")
+    nowStr = now.strftime("%Y%m%d_%H%M")
     outName = name+nowStr+".csv"
     outFile = open(outName, "w")
-    print("Count,TimeStamp,TempC, ad1, ad2, ad3, ,m1.1, m1.2, m1.3,, mv1,mv2,mv3,,Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, ")
-#    print("Count,TimeStamp,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev,mv1,mv2,mv3,mvAvg,mvMean,mvMedian, mvStdDev,K1,K2,K3,TAvg,TMean,TMedian, TStdDev, ",
-    print("Count,TimeStamp,TempC, ad1, ad2, ad3, ,m1.1, m1.2, m1.3, ,mv1,mv2,mv3,, Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3,  ",
-        file=outFile)
+    columnHeading = "Count,TimeStamp,TempC, ad4, ad5, ad6, ,m1.1, m1.2, m1.3,, mv1,mv2,mv3,,Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, "
+    print(columnHeading)
+    print(columnHeading,file=outFile)
     for repeatCount in range(numSeconds):
         # for each Row/timestep
         moData.updateTimestamp()
-        ad24.update()
         enviro.update()
+        ad24.update()
+        kType.init()
+        moCSV.addRow()
+        moData.logData()
+        #
         timestamp = moData.getValue(keyForTimeStamp())
         ADC_Value = ad24.all0to5Array()
+        ADC_Raw = ad24.allRawArray()
         # row provides columns for kTypeLog
         row = [repeatCount, enviro.degC()]
         rowMoG =[0]
@@ -112,8 +116,7 @@ def doTest():
 
         sleep(sleepTime) # one sample per sec
         
-    print("Count,TimeStamp,TempC, ad1, ad2, ad3, ,m1.1, m1.2, m1.3, ,mv1,mv2,mv3,, K1,K2,K3,,K0-1,K0-2,K0-3,  ",
-        file=outFile)
+    print(columnHeading,file=outFile)
     #using values saved in kTypeLog Array
     print("TCouple log has %d entries"%len(kTypeLog))
     summarizeColumns(kTypeLog, outFile)
@@ -186,6 +189,11 @@ if __name__ == "__main__":
     print("Enviro says degC: ",enviro.degC())
     ad24.init()
     kType.init()
+    #
+    now = datetime.datetime.now()
+    nowStr = now.strftime("%Y%m%d_%H%M")
+    csvLog = "moDataLog_"+nowStr+".csv"
+    moCSV.init(csvLog)
     #
     doTest()
     
