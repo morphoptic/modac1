@@ -11,7 +11,6 @@ from modac.moKeys import *
 
 #idx of ktypes in AD24 array
 kTypeAD24 = [4,5,6]
-kTypeLog = []#[[0,0,0]]
 
 if __name__ == "__main__":
     moLogger.init()
@@ -19,72 +18,109 @@ if __name__ == "__main__":
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-numMin = 1
+numMin = 5
 numSeconds = (60*numMin)
 sleepTime = 1
+
 def doTest():
+    kTypeLog = [] # collection of primary data, one row per Sample
     data = []
     name = "calibrateCSV_"
     now = datetime.datetime.now()
     nowStr = now.strftime("%Y%m%d_%H%M%S")
     outName = name+nowStr+".csv"
     outFile = open(outName, "w")
-    print("Count,TimeStamp,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev,mv1,mv2,mv3,mvAvg,mvMean,mvMedian, mvStdDev,K1,K2,K3,TAvg,TMean,TMedian, TStdDev, ",
+    print("Count,TimeStamp,TempC, ad1, ad2, ad3, ,m1.1, m1.2, m1.3,, mv1,mv2,mv3,,Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, ")
+#    print("Count,TimeStamp,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev,mv1,mv2,mv3,mvAvg,mvMean,mvMedian, mvStdDev,K1,K2,K3,TAvg,TMean,TMedian, TStdDev, ",
+    print("Count,TimeStamp,TempC, ad1, ad2, ad3, ,m1.1, m1.2, m1.3, ,mv1,mv2,mv3,, Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3,  ",
         file=outFile)
     for repeatCount in range(numSeconds):
+        # for each Row/timestep
         moData.updateTimestamp()
         ad24.update()
         enviro.update()
         timestamp = moData.getValue(keyForTimeStamp())
         ADC_Value = ad24.all0to5Array()
+        # row provides columns for kTypeLog
         row = [repeatCount, enviro.degC()]
-        line = "%d, %s, %6.5f, "%(repeatCount,timestamp,enviro.degC() )
-        tcoupleAD = []
-        ktype = []
-        mv = []
+        rowMoG =[0]
+        rowMv = [0]
+        rowK = [0]
+        # row accumulators
+        tcoupleAD = [] # 0-5V from ADC
+        mvog = [] #mV / ampGain
+        mv = []  #
+        ktype = [] # kType.mVToC( ,roomTemp)
+        ktype0 = [] # kType.mVToC( , 0c)
         idx = 0
+        # print strings
+        line = "%d, %s, %6.5f, "%(repeatCount,timestamp, enviro.degC() )
         kline = ", "
-        mline = ", "
+        kline0 = ", "
+        m1line = ", "
+        m2line = ", "
+        # collect data for each type, print columns to log file as we go
         for idxAD in kTypeAD24:
-            tcoupleAD.append(ADC_Value[idxAD])
-            k = kType.mVToC(ADC_Value[idxAD],enviro.degC())
+            #get adValue
+            adValue = ADC_Value[idxAD]
+            row.append(adValue)
+            tcoupleAD.append(adValue)
+            #m1 = ad/ampGain
+            m1 = kType.mvOverGain( adValue)
+            mvog.append(m1)
+            #m2 = (ad-ZeroOffset)/ampGain
+            m2 = kType.fnMagic(adValue)
+            mv.append(m2)
+            # k = inverseLoopup(m2, coldJunctionTemp)
+            k = kType.mVToC(adValue,enviro.degC())
             ktype.append(k)
-            m = kType.fnMagic(ADC_Value[idxAD])
-            mv.append(m)
-            row.append(ADC_Value[idxAD])
-            line = line + "%10.9f,"%ADC_Value[idxAD]
+            k0 =  kType.mVToC(adValue,0)
+            ktype0.append(k0)
+            #build up print line
+            line = line + "%10.9f,"%adValue
+            m1line = m1line + "%10.9f,"%m1
+            m2line = m2line + "%10.9f,"%m2
             kline = kline + "%10.9f,"%k
-            mline = mline + "%10.9f,"%m
-        a = np.array(tcoupleAD)
-        line = line + "%10.9f, %10.9f, %10.9f, %10.9f"%(
-                a.mean(),np.median(a), np.average(a), np.std(a))
-        b = np.array(ktype)
-        kline = kline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
-                b.mean(),np.median(b), np.average(b), np.std(b))
-        c = np.array(mv)
-        mline = mline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
-                c.mean(),np.median(c), np.average(c), np.std(c))
-        line += mline
+            kline0 = kline0 + "%10.9f,"%k0
+        row += mvog
+        row = row+mv
+        row = row+ktype
+        row = row+ktype0
+#        a = np.array(tcoupleAD)
+#        line = line + "%10.9f, %10.9f, %10.9f, %10.9f"%(
+#                a.mean(),np.median(a), np.average(a), np.std(a))
+#        b = np.array(ktype)
+#        kline = kline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
+#                b.mean(),np.median(b), np.average(b), np.std(b))
+#        c = np.array(mv)
+#        mline = mline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
+#                c.mean(),np.median(c), np.average(c), np.std(c))
+        line += m1line
+        line += m2line
         line += kline
+        line += kline0
         print(line, file=outFile)
 
-        row.append(a.mean())
-        row.append(np.median(a))
-        row.append(np.average(a))
-        row.append(np.std(a))
-        if repeatCount % 10 == 0:
-            print(repeatCount)
+#        row.append(a.mean())
+#        row.append(np.median(a))
+#        row.append(np.average(a))
+#        row.append(np.std(a))
+#        if repeatCount % 10 == 0:
+        print( line)
+        print(row)
         kTypeLog.append(row)
 
         sleep(sleepTime) # one sample per sec
         
-    print("TCouple log has %d entries", len(this.kTypeLog))
-#    print("kTypeLog: ", this.kTypeLog)
+    print("Count,TimeStamp,TempC, ad1, ad2, ad3, ,m1.1, m1.2, m1.3, ,mv1,mv2,mv3,, K1,K2,K3,,K0-1,K0-2,K0-3,  ",
+        file=outFile)
+    #using values saved in kTypeLog Array
+    print("TCouple log has %d entries"%len(kTypeLog))
+    summarizeColumns(kTypeLog, outFile)
     
-    #p = kTypeLog.pop(0)
-#    print("\n pop ",p)
-#    print("kTypeLog: ", this.kTypeLog)
-
+def summarizeColumns(kTypeLog, outFile):
+    # summarize columns
+    
     npA = np.array(kTypeLog)
     print("npA : ", npA)  
 #    this.kTypeLog = npA.tolist()
@@ -93,22 +129,22 @@ def doTest():
 #    np.savetxt("calibrate.csv",npA,delimiter=",")
     
     dataMax = npA.max(axis=0)
-    printRow("dataMax",dataMax,outFile)
+    printRow(",dataMax",dataMax,outFile)
     
     dataMin = npA.min(axis=0)
-    printRow("dataMin",dataMin,outFile)
+    printRow(",dataMin",dataMin,outFile)
     
     dataMean = np.mean(npA, axis=0)
-    printRow("dataMean",dataMean,outFile)
+    printRow(",dataMean",dataMean,outFile)
     
     dataMedian = np.median(npA, axis=0)
-    printRow("dataMedian",dataMedian,outFile)
+    printRow(",dataMedian",dataMedian,outFile)
     
     dataAverage = np.average(npA, axis=0)
-    printRow("dataAverage",dataAverage,outFile)
+    printRow(",dataAverage",dataAverage,outFile)
     
     dataStdDev = np.std(npA, axis=0)
-    printRow("dataStdDev",dataStdDev,outFile)
+    printRow(",dataStdDev",dataStdDev,outFile)
 
     print("dataMax ", dataMax)
     print("dataMin ", dataMin)
@@ -117,20 +153,22 @@ def doTest():
     print("dataAverage ", dataAverage)
     print("dataStdDev ", dataStdDev)
 
-    npB = npA
-    npB = np.vstack([npB,dataMax])
-    npB = np.vstack([npB,dataMin])
-    npB = np.vstack([npB,dataMean])
-    npB = np.vstack([npB,dataMedian])
-    npB = np.vstack([npB,dataAverage])
-#    print("npB",npB)
-    
-    np.savetxt("calibrate_2.csv",npB,fmt="%10.8f",delimiter=",",header="count,temp,a,b,c,mean,median,avg,stdDev")
-    print("Count,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev", file=outFile)
-#    print("saved data")
+#    npB = npA
+#    npB = np.vstack([npB,dataMax])
+#    npB = np.vstack([npB,dataMin])
+#    npB = np.vstack([npB,dataMean])
+#    npB = np.vstack([npB,dataMedian])
+#    npB = np.vstack([npB,dataAverage])
+##    print("npB",npB)
+#    
+#    np.savetxt("calibrate_2.csv",npB,  fmt="%10.8f",delimiter=",",
+#               header="count,temp,a,b,c,mean,median,avg,stdDev")
+#    print("Count,TempC, TC1, TC2, TC3, Avg,Mean,Median, StdDev", file=outFile)
+    print("saved data")
 
 def printRow(name,row,file):
     rowLen=len(row)
+    print("row: ",row)
     line = name+", "
     for i in range(1,rowLen):
         line = line + "%10.9f, "%row[i]

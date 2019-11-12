@@ -47,7 +47,7 @@ def init():
     this.update()
     
 def update():
-    log.debug("ad24Bit update()")
+    #log.debug("ad24Bit update()")
     # currently crude get all 8 with same default configutatoin
     if this.__ads1256 == None:
         log.error("No device present, maybe shutdown")
