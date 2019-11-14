@@ -25,13 +25,13 @@ __typeK = thermocouples['K']
 #kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
 kTypeIdx= [4,5,6] # indicies into AD24Bit array for k-type thermocouple
 
-
 ampGain = 122.4 # from ad8495 spec sheet
-medianInIce = 0.13412795
-medianInIce = 01.21125
-medianAtRoom = 0.23279848
+# offset at Zero calculated by average of 3 sensors run over 1min
+offsetAt0C = 0.645016706666667
+#offsetAt0C = 0.13412795
+#medianAtRoom = 0.23279848
 
-medianInIceOverGain = medianInIce/ampGain
+offsetAt0COverGain = offsetAt0C/ampGain
 
 simulation = False
 simulator = None
@@ -46,7 +46,7 @@ def fnMagic(readMV):
     # but for simplicity now we use simple offset
     # median ad0-5 at 0C = 0.13412795V
     # median ad0-5 at room 25.539 = 0.23279848V
-    mV = (readMV - medianInIce)/ ampGain
+    mV = (readMV - offsetAt0C)/ ampGain
     #print("fnMagic %8.5f => %8.5f"%(readMV,mV))
     return mV
 

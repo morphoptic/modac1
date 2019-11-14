@@ -43,7 +43,8 @@ __adsRawToV = (5.0/0x7fffff) # magic number to convert raw ADS1256 to 0-5Vdc
 __key = "ad24"
 
 def init():
-    log.debug("ad24Bit init()")
+    print("ad24Bit init() %10.9f"%(__adsRawToV*1000))
+    log.debug("ad24Bit init() ")
     this.__ads1256 = ADS1256.ADS1256()
     this.__ads1256.ADS1256_init()
     this.update()

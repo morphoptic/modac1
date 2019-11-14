@@ -18,11 +18,14 @@ if __name__ == "__main__":
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-numMin = 5
+numMin = 1
+#numMin = 5
 numSeconds = (60*numMin)
-sleepTime = 1
+#sleepTime = 0.005
+sleepTime = 1.0
 
 def doTest():
+    seconds = 0.00
     kTypeLog = [] # collection of primary data, one row per Sample
     data = []
     name = "calibrateCSV_"
@@ -30,7 +33,7 @@ def doTest():
     nowStr = now.strftime("%Y%m%d_%H%M")
     outName = name+nowStr+".csv"
     outFile = open(outName, "w")
-    columnHeading = "Count,TimeStamp,TempC, ad4, ad5, ad6, ,m1.1, m1.2, m1.3,, mv1,mv2,mv3,,Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, "
+    columnHeading = "Seconds,TimeStamp,TempC, ad4, ad5, ad6, ,m1.1, m1.2, m1.3,, mv1,mv2,mv3,,Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, "
     print(columnHeading)
     print(columnHeading,file=outFile)
     for repeatCount in range(numSeconds):
@@ -46,7 +49,7 @@ def doTest():
         ADC_Value = ad24.all0to5Array()
         ADC_Raw = ad24.allRawArray()
         # row provides columns for kTypeLog
-        row = [repeatCount, enviro.degC()]
+        row = [seconds, enviro.degC()]
         rowMoG =[0]
         rowMv = [0]
         rowK = [0]
@@ -58,7 +61,7 @@ def doTest():
         ktype0 = [] # kType.mVToC( , 0c)
         idx = 0
         # print strings
-        line = "%d, %s, %6.5f, "%(repeatCount,timestamp, enviro.degC() )
+        line = "%10.9f, %s, %6.5f, "%(seconds,timestamp, enviro.degC() )
         kline = ", "
         kline0 = ", "
         m1line = ", "
@@ -115,6 +118,7 @@ def doTest():
         kTypeLog.append(row)
 
         sleep(sleepTime) # one sample per sec
+        seconds+=sleepTime
         
     print(columnHeading,file=outFile)
     #using values saved in kTypeLog Array

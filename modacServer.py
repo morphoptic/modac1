@@ -33,7 +33,7 @@ from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
 import kilnControl
 
 runTests = False #True
-publishRate = 2 # seconds for sleep at end of main loop
+publishRate = 0.25 # seconds for sleep at end of main loop
 
 csvActive = True
 
