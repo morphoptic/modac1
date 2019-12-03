@@ -48,6 +48,8 @@ def init():
     this.__ads1256 = ADS1256.ADS1256()
     this.__ads1256.ADS1256_init()
     this.update()
+    log.debug("ad24Bit init() complete")
+
     
 def update():
     #log.debug("ad24Bit update()")

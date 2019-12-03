@@ -34,6 +34,8 @@ import kilnControl
 
 runTests = False #True
 publishRate = 0.25 # seconds for sleep at end of main loop
+publishRate = 0.5 # seconds for sleep at end of main loop
+#publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
 
@@ -58,11 +60,12 @@ async def modac_ReadPubishLoop():
         log.debug("top forever read-publish loop")
         moHardware.update()
         # any logging?
-        #moData.logData() # log info as json to stdOut/console
+        #moData.logData() # log info as json to stdOut/console + logfile
         if csvActive == True:
             moCSV.addRow()
         # publish data
         moServer.publish()
+        #moData.logData()
         #log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)

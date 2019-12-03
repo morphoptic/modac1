@@ -92,7 +92,7 @@ class AD16Channel:
                 
         assert isinstance(self.analogIn,AnalogIn)
 
-        print("InitAD16Channel analogIn", self.analogIn)
+        #print("InitAD16Channel analogIn:", self.analogIn)
         #print("InitAD16Channel myDevice ", self.myDevice)
         #print("Initialized device chan: ", self.deviceChannel)
         #print("   gives value: ", self.value())
@@ -126,11 +126,11 @@ def init():
     # init each channel
     #loop thru config array (deviceIdx, chanId)
     for idx in range(len(this.__ad16chanConfig)):
-        print("create channel ",idx,this.__ad16chanConfig[idx])
+        #print("create channel ",idx,this.__ad16chanConfig[idx])
         t = this.__ad16chanConfig[idx]
         deviceIdx = t[0]
         moDevice = this.__ad16dev[deviceIdx]
-        print("device= ",moDevice)
+        #print("device= ",moDevice)
         chanId = t[1]
         if moDevice == None or moDevice.device == None:
             channel = None
@@ -153,7 +153,7 @@ def update():
         return
     if this.__isAlive == False:
         return
-    log.debug("ad16 update()")
+    #log.debug("ad16 update()")
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
     #print (this.__values)
     # currently crude get all 8 with same default configutation

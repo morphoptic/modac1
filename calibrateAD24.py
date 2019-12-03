@@ -9,6 +9,9 @@ import numpy as np
 from modac import moLogger, ad24, moData, moCSV, enviro, kType
 from modac.moKeys import *
 
+type ="gun_"
+type ="room_"
+type ="ice_"
 #idx of ktypes in AD24 array
 kTypeAD24 = kType.kTypeIdx # [4,5,6]
 
@@ -18,22 +21,41 @@ if __name__ == "__main__":
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-numMin = 1
+numMin = 10
 #numMin = 5
 numSeconds = (60*numMin)
 #sleepTime = 0.005
 sleepTime = 1.0
 
+def makeHeader():
+#        ad2,ad4, ad5, ad6, ,m1.1, m1.2, m1.3,m1.4,, mv1,mv2,mv3,,
+#        Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, "
+    ad = ", "
+    m1 = ", "
+    mv = ", "
+    kr = ", "
+    k0 = ", "
+    deviceCount = len(kTypeAD24)
+    for idx in range(deviceCount):
+        ad += ", ad%d"%kTypeAD24[idx]
+        m1 += ", m1.%d"%idx
+        mv += ", mv.%d"%idx
+        kr += ", KR.%d"%idx
+        k0 += ", K0.%d"%idx
+    columnHeading = "Seconds,TimeStamp,TempC" + ad + m1 + mv + kr + k0
+    return columnHeading
+
 def doTest():
     seconds = 0.00
     kTypeLog = [] # collection of primary data, one row per Sample
     data = []
-    name = "calibrateCSV_"
+    calibrate = "calibrateCSV_"
     now = datetime.datetime.now()
     nowStr = now.strftime("%Y%m%d_%H%M")
+    name = calibrate + type
     outName = name+nowStr+".csv"
     outFile = open(outName, "w")
-    columnHeading = "Seconds,TimeStamp,TempC, ad4, ad5, ad6, ,m1.1, m1.2, m1.3,, mv1,mv2,mv3,,Kr1,Kr2,Kr3,,K0-1,K0-2,K0-3, "
+    columnHeading = makeHeader() #"Seconds,TimeStamp,TempC, "
     print(columnHeading)
     print(columnHeading,file=outFile)
     for repeatCount in range(numSeconds):
@@ -61,7 +83,7 @@ def doTest():
         ktype0 = [] # kType.mVToC( , 0c)
         idx = 0
         # print strings
-        line = "%10.9f, %s, %6.5f, "%(seconds,timestamp, enviro.degC() )
+        line = "%10.9f, %s, %6.5f, ,"%(seconds, timestamp, enviro.degC() )
         kline = ", "
         kline0 = ", "
         m1line = ", "
@@ -107,6 +129,7 @@ def doTest():
         line += kline
         line += kline0
         print(line, file=outFile)
+        outFile.flush()
 
 #        row.append(a.mean())
 #        row.append(np.median(a))
@@ -196,8 +219,8 @@ if __name__ == "__main__":
     #
     now = datetime.datetime.now()
     nowStr = now.strftime("%Y%m%d_%H%M")
-    csvLog = "moDataLog_"+nowStr+".csv"
-    moCSV.init(csvLog)
+    dataLog = "moDataLog_"+type+nowStr+".csv"
+    moCSV.init(dataLog) # log what is in MoData
     #
     doTest()
     

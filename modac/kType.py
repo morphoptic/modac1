@@ -23,11 +23,14 @@ __typeK = thermocouples['K']
 # amp-connector & pi-connector order is Green-White-Yellow-Blue
 # two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
 #kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
-kTypeIdx= [4,5,6] # indicies into AD24Bit array for k-type thermocouple
+kTypeIdx= [2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
 
 ampGain = 122.4 # from ad8495 spec sheet
 # offset at Zero calculated by average of 3 sensors run over 1min
 offsetAt0C = 0.645016706666667
+offsetAt0C = 0.131  # value of shorted amp 
+offsetAt0C = 0.03331469 # kiln couple in ice Dec3
+
 #offsetAt0C = 0.13412795
 #medianAtRoom = 0.23279848
 

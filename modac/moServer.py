@@ -73,6 +73,7 @@ async def cmdListenLoop():
         except trio.Cancelled:
             log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
+    log.error("***cmdListenLoop Not Running")
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None

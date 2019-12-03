@@ -46,7 +46,8 @@ from .kilnState import KilnState
 
 #####################
 kiln = None
-
+enableKilnControl = False
+enableEStop = False
 #####################
 def emergencyShutOff():
     log.warn("EMERGENCY OFF tiggered")
@@ -66,10 +67,12 @@ def emergencyShutOff():
 #####################
 async def startKiln(nursery):
     '''start kiln thread in nursery'''
-    log.debug("startKiln soon")
-    this.kiln = Kiln()#simulate=True)
-    nursery.start_soon(this.kiln.runKiln)
-
+    if enableKilnControl:
+        log.debug("startKiln soon")
+        this.kiln = Kiln()#simulate=True)
+        nursery.start_soon(this.kiln.runKiln)
+    else:
+        log.debug("Kiln Control Disabled")
 def endKiln():
     '''terminate the kiln thread'''
     if this.kiln == None:
@@ -287,10 +290,11 @@ class Kiln:
         log.debug("Kiln Step top state: "+str(self.state)+" heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
         
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
-        if (self.kilnTemps[0] >= emergency_shutoff_temp):
-            log.error("emergency!!! temperature too high, shutting down")
-            moHardware.EmergencyOff()
-            return
+        if enableEStop:
+            if (self.kilnTemps[0] >= emergency_shutoff_temp):
+                log.error("emergency!!! temperature too high, shutting down")
+                moHardware.EmergencyOff()
+                return
         if (self.kilnTemps[0] < 0.0):
             # should never get below zero
             log.error("Kiln ERROR: average temp is below zero! "+str(self.kilnTemps[0]))

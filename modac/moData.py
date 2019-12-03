@@ -33,7 +33,7 @@ __moDataDictionary = {}
 # TODO: set this with config shared with server (original concept of Channels)
 # num of entries should be matched in their init and raise error/assert if not same
 def numKType():
-    return 3
+    return 6
 def numBinaryOut():
     return 12
 def numAD24():
