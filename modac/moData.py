@@ -1,16 +1,39 @@
 # moData = common data repo under mordac
-# Other modules include this but this doesnt include them
 
-if __name__ == "__main__":
-    print("moData has no self test")
-    exit(0)
-    
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
 import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+# Other modules include this but this doesnt include them
+# number of sensors of each type
+# we need this early in Client startup
+# but wont have actual data until receive from Server
+
+# TODO: set this with config shared with server (original concept of Channels)
+# num of entries should be matched in their init and raise error/assert if not same
+__numKType = 4
+def setNumKType(num):
+    __numKType = num
+def numKType():
+    return this.__numKType
+def numBinaryOut():
+    return 12
+def numAD24():
+    return 8
+def numAD16():
+    return 4
+
+if __name__ == "__main__":
+    print("NumKtype: ", numKType())
+    print("numBinaryOut: ", numBinaryOut())
+    print("numAD24: ", numAD24())
+    print("numAD16: ", numAD16())
+    print("moData has no self test")
+    exit(0)
+
 
 #import rest of modac
 from .moKeys import *
@@ -26,20 +49,6 @@ class moDataStatus(Enum):
     Running = 2
 
 __moDataDictionary = {}
-
-# number of sensors of each type
-# we need this early in Client startup
-# but wont have actual data until receive from Server
-# TODO: set this with config shared with server (original concept of Channels)
-# num of entries should be matched in their init and raise error/assert if not same
-def numKType():
-    return 6
-def numBinaryOut():
-    return 12
-def numAD24():
-    return 8
-def numAD16():
-    return 4
 
 __nursery = None
 def setNursery(nursery=None):

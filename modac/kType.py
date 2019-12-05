@@ -22,8 +22,11 @@ __typeK = thermocouples['K']
 # ktypes in use are White, Green, Yellow (not blue) from amp box
 # amp-connector & pi-connector order is Green-White-Yellow-Blue
 # two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
-#kTypeIdx= [0,1,2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
-kTypeIdx= [2,3,4,5,6,7] # indicies into AD24Bit array for k-type thermocouple
+# kTypeIdx is indicies into AD24Bit array for k-type thermocouple
+# Note length must match moData value returned by
+#kTypeIdx= [0,1,2,3,4,5,6,7]
+#kTypeIdx= [2,3,4,5,6,7] 
+kTypeIdx= [3,4,5,6]
 
 ampGain = 122.4 # from ad8495 spec sheet
 # offset at Zero calculated by average of 3 sensors run over 1min
@@ -81,7 +84,7 @@ def adToC(adRead,tempRef=0):
     v = adOverGain(adRead)
     mv = v*1000.0
     c = mVToC(mv,tempRef)
-    print ("ad v mv c: ", adRead, v, mv, c)
+    #print ("ad v mv c: ", adRead, v, mv, c)
     return c
 
 def testCalc(mV):
@@ -105,8 +108,16 @@ def calc0_100_300():
     mv =     0.004037344783333*1000.0
     testCalc(mv)
 
+#this can vary as we develop and test
+    # but it doesent help gui so not really useful
+def getNumKType():
+    num = len(kTypeIdx)
+    moData.setNumKType(getNumKType)
+    return num
+
 def init():
     this.simulator = None
+    this.getNumKType()
     calc0_100_300()
     update()
     pass
@@ -129,7 +140,7 @@ def asArray():
     ktypeData = []
     # retrieve the ad as 0-5V values
     adArray = ad24.all0to5Array()
-    print("adArray: ", adArray)
+    #print("adArray: ", adArray)
     
     # these are in 0-5v, need in mV range for use with conversion library
     # it is not clear if we should be using the roomTemp as zero point
@@ -138,7 +149,7 @@ def asArray():
     # only look at the ad24 that are identified by the kTypeIdx array
     for adIdx in kTypeIdx:
         t = this.adToC(adArray[adIdx])#,roomTemp)
-        print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
+        #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         ktypeData.append(t)
     return ktypeData
 

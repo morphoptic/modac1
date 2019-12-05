@@ -29,17 +29,17 @@ class ad24Panel():
         self.box = Gtk.VBox(homogeneous=False, spacing=8)
         self.label = Gtk.Label("AD24 5v")
 
-        n_col = moData.numAD24()
+        self.n_col = moData.numAD24()
         # initialized array of data of plotWidth
         self.count=0
         self.times = [0]*self.plotWidth
-        self.col = [ [0]*self.plotWidth ]*(n_col) 
+        self.col = [ [0]*self.plotWidth ]*(self.n_col) 
         
-        self.columnNames = ["time"]+["AD24-"+str(i) for i in range(n_col) ]
+        self.columnNames = ["time"]+["AD24-"+str(i) for i in range(self.n_col) ]
         ### setup Plot Data 
         
         ### setup Table (aka listStore) in a ScrollWindow
-        colTypes = [str]*(n_col+1)
+        colTypes = [str]*(self.n_col+1)
         self.listStore = Gtk.ListStore()
         self.listStore.set_column_types(colTypes)#str,str,str,str)
         #self.listStore = Gtk.ListStore(str,float, float, float)
@@ -118,6 +118,24 @@ class ad24Panel():
         
         return True
     
+    def plotAll(self):
+        mi = np.min(self.col)
+        ma = np.max(self.col)
+        r = (ma-mi) *0.01
+        if r < ma*0.5:
+            r+=ma*0.5
+        mi -= r
+        ma += r
+        print("plotAll min",mi, "max", ma)
+        self.ax.clear()
+        self.ax.set_title("All 24Bit AD")
+        self.ax.set_ylim(mi,ma) # 10% under and over
+        for colIdx in range(self.n_col):
+            self.ax.plot(self.times, self.col[colIdx], label= self.columnNames[colIdx+1])
+        self.ax.legend(loc=2)
+        self.canvas.draw()
+        pass
+
     def plotOne(self): #, treeview, path, view_column):
         #self.line.set_ydata(self.press)
         if self.plotColumn == 0:
@@ -142,18 +160,20 @@ class ad24Panel():
         self.canvas.draw()
         
     def updatePlot(self):
-        #print("updatePlot column", self.plotColumn, self.columnNames[self.plotColumn])
-        self.plotOne()
-        
+        if self.plotColumn > 0 :
+            self.plotOne()
+        else:
+            self.plotAll()
+                
     def printList(self,widget):
         for row in self.listStore :
             print(row[:])
     
     def clickedColumn(self, treeCol, idx):
         #print("clicked column ", idx, self.columnNames[idx])
-        if idx == 0:
-            print("Cant plot time")
-            return
+#        if idx == 0:
+#            print("Cant plot time")
+#            return
         self.plotColumn = idx
         self.updatePlot()
 

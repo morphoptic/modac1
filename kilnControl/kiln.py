@@ -46,8 +46,8 @@ from .kilnState import KilnState
 
 #####################
 kiln = None
-enableKilnControl = False
-enableEStop = False
+enableKilnControl = True#False
+enableEStop = True# False
 #####################
 def emergencyShutOff():
     log.warn("EMERGENCY OFF tiggered")
