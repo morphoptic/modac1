@@ -11,7 +11,10 @@ from modac.moKeys import *
 
 type ="gun_"
 type ="room_"
-type ="ice_"
+#type ="ice_"
+#type ="25C_"
+#type ="60C_"
+#type ="ifa_"
 #idx of ktypes in AD24 array
 kTypeAD24 = kType.kTypeIdx # [4,5,6]
 
@@ -22,8 +25,10 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 numMin = 10
+numMin = 1
 #numMin = 5
 numSeconds = (60*numMin)
+#numSeconds = 3# (60*numMin)
 #sleepTime = 0.005
 sleepTime = 1.0
 
@@ -38,8 +43,8 @@ def makeHeader():
     deviceCount = len(kTypeAD24)
     for idx in range(deviceCount):
         ad += ", ad%d"%kTypeAD24[idx]
-        m1 += ", m1.%d"%idx
-        mv += ", mv.%d"%idx
+        m1 += ", ad/g.%d"%idx
+        mv += ", c.%d"%idx
         kr += ", KR.%d"%idx
         k0 += ", K0.%d"%idx
     columnHeading = "Seconds,TimeStamp,TempC" + ad + m1 + mv + kr + k0
@@ -63,13 +68,16 @@ def doTest():
         moData.updateTimestamp()
         enviro.update()
         ad24.update()
-        kType.init()
+        kType.update()
         moCSV.addRow()
         moData.logData()
         #
         timestamp = moData.getValue(keyForTimeStamp())
         ADC_Value = ad24.all0to5Array()
         ADC_Raw = ad24.allRawArray()
+        #get ktype from moData
+        kValues = moData.getValue(keyForKType())
+        print("kValues: ",kValues)
         # row provides columns for kTypeLog
         row = [seconds, enviro.degC()]
         rowMoG =[0]
@@ -88,33 +96,43 @@ def doTest():
         kline0 = ", "
         m1line = ", "
         m2line = ", "
+        print("enviroC", enviro.degC())
         # collect data for each type, print columns to log file as we go
+        kIdx = 0
         for idxAD in kTypeAD24:
+            print("idxAD", idxAD)
             #get adValue
             adValue = ADC_Value[idxAD]
             row.append(adValue)
             tcoupleAD.append(adValue)
+            
             #m1 = ad/ampGain
-            m1 = kType.mvOverGain( adValue)
+            m1 = kType.adOverGain( adValue)
             mvog.append(m1)
+            
             #m2 = (ad-ZeroOffset)/ampGain
-            m2 = kType.fnMagic(adValue)
+            m2 = kType.adToC(adValue)
             mv.append(m2)
-            # k = inverseLoopup(m2, coldJunctionTemp)
-            k = kType.mVToC(adValue,enviro.degC())
-            ktype.append(k)
-            k0 =  kType.mVToC(adValue,0)
+            
+#            # k = inverseLoopup(m2, coldJunctionTemp)
+#            k = kType.adToC(adValue,enviro.degC())
+            k = kValues[kIdx]
+            kIdx+=1
+            
+            k0 =  kType.adToC(adValue,0)
             ktype0.append(k0)
+            
             #build up print line
             line = line + "%10.9f,"%adValue
             m1line = m1line + "%10.9f,"%m1
             m2line = m2line + "%10.9f,"%m2
             kline = kline + "%10.9f,"%k
             kline0 = kline0 + "%10.9f,"%k0
-        row += mvog
-        row = row+mv
-        row = row+ktype
-        row = row+ktype0
+        # add numeric values to row array
+        row += [0] +mvog
+        row = row+ [0] +mv
+        row = row+ [0] +kValues
+        row = row+ [0] +ktype0
 #        a = np.array(tcoupleAD)
 #        line = line + "%10.9f, %10.9f, %10.9f, %10.9f"%(
 #                a.mean(),np.median(a), np.average(a), np.std(a))
@@ -124,6 +142,7 @@ def doTest():
 #        c = np.array(mv)
 #        mline = mline+ "%10.9f, %10.9f, %10.9f, %10.9f"%(
 #                c.mean(),np.median(c), np.average(c), np.std(c))
+        # build up string lines, inserting blank columns  "," +
         line += m1line
         line += m2line
         line += kline
@@ -136,8 +155,8 @@ def doTest():
 #        row.append(np.average(a))
 #        row.append(np.std(a))
 #        if repeatCount % 10 == 0:
-        print( line)
-        print(row)
+#        print( line)
+#        print(row)
         kTypeLog.append(row)
 
         sleep(sleepTime) # one sample per sec
@@ -152,7 +171,7 @@ def summarizeColumns(kTypeLog, outFile):
     # summarize columns
     
     npA = np.array(kTypeLog)
-    print("npA : ", npA)  
+#    print("npA : ", npA)  
 #    this.kTypeLog = npA.tolist()
 #    print("kTypeLog: ", this.kTypeLog)
     
@@ -176,12 +195,12 @@ def summarizeColumns(kTypeLog, outFile):
     dataStdDev = np.std(npA, axis=0)
     printRow(",dataStdDev",dataStdDev,outFile)
 
-    print("dataMax ", dataMax)
-    print("dataMin ", dataMin)
-    print("dataMean ", dataMean)
-    print("dataMedian ", dataMedian)
-    print("dataAverage ", dataAverage)
-    print("dataStdDev ", dataStdDev)
+#    print("dataMax ", dataMax)
+#    print("dataMin ", dataMin)
+#    print("dataMean ", dataMean)
+#    print("dataMedian ", dataMedian)
+#    print("dataAverage ", dataAverage)
+#    print("dataStdDev ", dataStdDev)
 
 #    npB = npA
 #    npB = np.vstack([npB,dataMax])
@@ -198,11 +217,50 @@ def summarizeColumns(kTypeLog, outFile):
 
 def printRow(name,row,file):
     rowLen=len(row)
-    print("row: ",row)
+#    print("row: ",row)
     line = name+", "
-    for i in range(1,rowLen):
+    # tempC
+    line = line + "%10.9f, ,"%row[1]
+    for i in range(2,rowLen):
         line = line + "%10.9f, "%row[i]
     print(line, file=file)
+    
+def calc0_100_300():
+    log.debug("CALC REF mV")
+    mv = 0.0
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv = 1.0
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv =4.096
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv = 12.209
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv = 0.0/1000.0
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv = 1.0/1000.0
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv =4.096/1000.0
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+    mv = 12.209/1000.0
+    c = kType.mVToC(mv,0)# ,25)
+    print("Temp at mv"+ str(mv) + " = " + str(c))
+    log.debug("Temp at mv"+ str(mv) + " = " + str(c))
+
+    #exit()
     
 if __name__ == "__main__":
     #    
@@ -210,6 +268,8 @@ if __name__ == "__main__":
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)#, format=logFormatStr)
     logging.captureWarnings(True)
     logging.info("Logging Initialized for MO 24Bit AD  main unitTest")
+    #
+    calc0_100_300()
     #
     moData.init()
     enviro.init()
