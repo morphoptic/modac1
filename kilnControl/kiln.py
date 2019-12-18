@@ -53,6 +53,8 @@ def emergencyShutOff():
     log.warn("EMERGENCY OFF tiggered")
     # heat is too high
     endKiln()
+    this.kiln.state = KilnState.Error
+    this.kiln.runnable = False
     # shut off heaters
     moHardware.binaryCmd(heater_lower, False)
     moHardware.binaryCmd(heater_middle, False)
@@ -62,7 +64,6 @@ def emergencyShutOff():
     # turn on exhaust fan
     moHardware.binaryCmd(fan_exhaust, True)
     # ring alarm bell (dont have one, yet)
-    this.kiln.state = KilnState.Error
 
 #####################
 async def startKiln(nursery):
@@ -73,14 +74,17 @@ async def startKiln(nursery):
         nursery.start_soon(this.kiln.runKiln)
     else:
         log.debug("Kiln Control Disabled")
+        
 def endKiln():
     '''terminate the kiln thread'''
     if this.kiln == None:
         log.debug("endKiln, no kiln")
         return
     this.kiln.end_run() #stops run, doesnt terminate thread
+    this.kiln.runnable = False
+    this.kiln.publishStatus() 
     # 
-    this.kiln.runnable = False  # this should stop loop
+    log.debug("endKiln executed")
 
 #####################
 
@@ -130,7 +134,8 @@ def getTemperatures():
     this.kilnTemps[3] = kTemps[kType_upper]
     sum = kilnTemps[1] + kilnTemps[2] + kilnTemps[3]
     avg = sum/3
-    this.kilnTemps[0] = avg
+    #this.kilnTemps[0] = avg
+    this.kilnTemps[0] = this.kilnTemps[1] 
 
     tempStr = keyForKilnTemps() +":"
     for i in range(len(this.kilnTemps)):
@@ -197,13 +202,14 @@ class Kiln:
         moHardware.binaryCmd(heater_middle, False)
         moHardware.binaryCmd(heater_upper, False)
         self.reset()
+        self.runnable = False  # this should stop loop
         # turn off 12v Power
         setRelayPower(False)
         # and turn off simulation
         moHardware.simulateKiln(False)
-        log.info("end_run")
         self.publishStatus()      
-        
+        log.info("end_run")
+       
     def get_status(self):
         startTimeStr =" NotStarted"
         if isinstance(self.startTime, datetime.datetime):
@@ -215,7 +221,7 @@ class Kiln:
             "kilnSimulation": this.simulation,
             "kiln CurDist": self.currentDistance,
             "kiln StartTemp0": self.kilnStartTemps[0],
-            
+            keyForTimeStamp():  datetime.datetime.now(),
             keyForState(): self.state.name,
             keyForTargetTemp(): self.targetTemp,
             keyForTargetDisplacement(): self.targetDisplacement,
@@ -298,7 +304,7 @@ class Kiln:
         if (self.kilnTemps[0] < 0.0):
             # should never get below zero
             log.error("Kiln ERROR: average temp is below zero! "+str(self.kilnTemps[0]))
-            log.error("guess there is error somewhere, so shutdown")
+            log.error("there is error somewhere, so shutdown")
             moHardware.EmergencyOff()
             return
     

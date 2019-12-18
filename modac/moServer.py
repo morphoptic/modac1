@@ -124,7 +124,10 @@ async def serverReceive():
 
 def serverDispatch(topic,body):
     log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
-    if topic == keyForBinaryCmd():
+    if topic == keyForEmergencyOff():
+        log.debug("EmergencyOff Cmd dispatching")
+        moHardware.EmergencyOff()
+    elif topic == keyForBinaryCmd():
         payload = body # json.loads(body)
         #print("serverDispatch payload")
         #print(payload)
@@ -155,9 +158,6 @@ def serverDispatch(topic,body):
                 kiln.runKilnCmd(body)
     elif topic == keyForResetLeica():
         leicaDistoAsync.reset()
-    elif topic == keyForEmergencyOff():
-        log.debug("EmergencyOff Cmd dispatching")
-        moHardware.EmergencyOff()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

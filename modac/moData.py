@@ -14,7 +14,8 @@ log.setLevel(logging.DEBUG)
 
 # TODO: set this with config shared with server (original concept of Channels)
 # num of entries should be matched in their init and raise error/assert if not same
-__numKType = 4
+# really should come from some config file, with names too
+__numKType = 3
 def setNumKType(num):
     __numKType = num
 def numKType():
@@ -87,6 +88,7 @@ def init(client=False):
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
         def_kiln = {
+            keyForTimeStamp(): "none yet" ,      
             keyForState(): 'Closed',
             keyForTimeStep(): 1,
             keyForRuntime(): 0,

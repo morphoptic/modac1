@@ -27,6 +27,7 @@ __typeK = thermocouples['K']
 #kTypeIdx= [0,1,2,3,4,5,6,7]
 #kTypeIdx= [2,3,4,5,6,7] 
 kTypeIdx= [3,4,5,6]
+kTypeIdx= [4,5,6]
 
 ampGain = 122.4 # from ad8495 spec sheet
 # offset at Zero calculated by average of 3 sensors run over 1min
@@ -148,8 +149,8 @@ def asArray():
     roomTemp = enviro.degC()
     # only look at the ad24 that are identified by the kTypeIdx array
     for adIdx in kTypeIdx:
-        t = this.adToC(adArray[adIdx])#,roomTemp)
-        #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
+        t = this.adToC(adArray[adIdx])#roomTemp)
+#        #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         ktypeData.append(t)
     return ktypeData
 
