@@ -50,7 +50,7 @@ def publishData(key, value):
     if this.__Publisher == None:
         log.debug("publisher offline "+key)
         return
-    #print("dataStr: ", tempStr)
+    print("publish: key/value: ", key, value)
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)

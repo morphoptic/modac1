@@ -66,7 +66,7 @@ async def modac_ReadPubishLoop():
         # publish data
         moServer.publish()
         #moData.logData()
-        #log.debug("\n*****bottom forever read-publish loop")
+        log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
         except trio.Cancelled:

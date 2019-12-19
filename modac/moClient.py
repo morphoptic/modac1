@@ -32,18 +32,19 @@ def startClient():
     startSubscriber()
     startCmdSender()
     
+# start PyNNG sender for commands to MODAC Server
 def startCmdSender():
     this.__CmdSender =  Pair1(dial=moNetwork.cmdAddress(), polyamorous=True, send_timeout=moNetwork.sendTimeout())
     pass
 
-# we really only have one topic at present. defaults should work until dispatch gets smarter
-def startSubscriber(keys=[keyForAllData(), keyForKilnStatus()]):#topics=[moTopicForKey(keyForAllData)]):
+# start PyNNG subscriber for Modac Server
+def startSubscriber(keys=[keyForAllData(), keyForKilnStatus()]):
+    #topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
     this.__subscribers.append(subscriber)
-    #log.debug("startSubscriber: ", subscriber)
+    log.debug("startSubscriber: ", subscriber)
     return subscriber
-
 
 # client Recieve called from main or gtk loop 
 # servers may also be doing a Pair1 sendCmd in their loop

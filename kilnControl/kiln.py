@@ -221,7 +221,8 @@ class Kiln:
             "kilnSimulation": this.simulation,
             "kiln CurDist": self.currentDistance,
             "kiln StartTemp0": self.kilnStartTemps[0],
-            keyForTimeStamp():  datetime.datetime.now(),
+            keyForTimeStamp():  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z"),
+
             keyForState(): self.state.name,
             keyForTargetTemp(): self.targetTemp,
             keyForTargetDisplacement(): self.targetDisplacement,
