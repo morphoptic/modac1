@@ -29,17 +29,21 @@ class ktypePanel():
         self.box = Gtk.VBox(homogeneous=False, spacing=8)
         self.label = Gtk.Label("K-Type Temp")
 
-        n_col = moData.numKType()
+        ktypes = moData.getValue(keyForKType())
+        #self.n_col = moData.numKType(len(ktypes))
+        self.n_col = len(ktypes)
+        
         # initialized array of data of plotWidth
         self.count=0
         self.times = [0]*self.plotWidth
-        self.col = [ [0]*self.plotWidth ]*(n_col) 
+        self.data = [ [0]*self.plotWidth ]*(self.n_col) 
         
-        self.columnNames = ["time"]+["K"+str(i) for i in range(n_col) ]
+        self.columnNames = ["time"]+["K"+str(i) for i in range(self.n_col) ]
+        print("KType col names:", self.columnNames)
         ### setup Plot Data 
         
         ### setup Table (aka listStore) in a ScrollWindow
-        colTypes = [str]*(n_col+1)
+        colTypes = [str]*(self.n_col+1)
         self.listStore = Gtk.ListStore()
         self.listStore.set_column_types(colTypes)#str,str,str,str)
         #self.listStore = Gtk.ListStore(str,float, float, float)
@@ -78,7 +82,7 @@ class ktypePanel():
         self.ax = self.fig.add_subplot(1,1,1)
         
         self.plotColumn = 1 # use first column, 
-        self.line, = self.ax.plot(self.times, self.col[self.plotColumn-1])  # plot the first row
+        self.ax.plot(self.times, self.data[self.plotColumn-1])  # plot the first row
         #self.lowerScroll.add_with_viewport(self.canvas)
         #print("canvas: ", self.canvas)
         self.upperScroll.show()
@@ -100,11 +104,12 @@ class ktypePanel():
         row = [moData.getValue(keyForTimeStamp())]
         for i in range(len(ktypes)):
             v = ktypes[i]
-            self.col[i].append(v)
-            self.col[i] = self.col[i][-self.plotWidth:]
+            self.data[i].append(v)
+            self.data[i] = self.data[i][-self.plotWidth:]
             row.append(str(v))
 
         # create strings for listStore and add them at top
+        print ("Ktype row:", row)
         it = self.listStore.prepend(row)
         # and limit the listStore
         try:
@@ -118,44 +123,66 @@ class ktypePanel():
         
         return True
     
+    def plotAll(self):
+        mi = np.min(self.data)
+        ma = np.max(self.data)
+        r = (ma-mi) *0.01
+        if r < ma*0.5:
+            r+=ma*0.5
+        mi -= r
+        ma += r
+        print("plotAll min",mi, "max", ma)
+        self.ax.clear()
+        self.ax.set_title("All kType Thermocouples")
+        self.ax.set_ylim(mi,ma) # 10% under and over
+        for colIdx in range(self.n_col):
+            self.ax.plot(self.times, self.data[colIdx], label= self.columnNames[colIdx+1])
+        self.ax.legend(loc=2)
+        self.canvas.draw()
+        pass
+    
     def plotOne(self): #, treeview, path, view_column):
         #self.line.set_ydata(self.press)
         if self.plotColumn == 0:
             print("cant plot time vs time")
             return
-        #print("Plot column ", self.plotColumn, len(self.col))
-        colData = self.col[self.plotColumn-1]
+        #print("Plot column ", self.plotColumn, len(self.data))
+        # plotColumn includes time, self.Data does not
+        colData = self.data[self.plotColumn-1]
         #print("ColData:", colData)
         mi = np.min(colData)
         ma = np.max(colData)
         self.ax.clear()
         #print("min max", mi, ma)
-        r = (ma-mi) *0.1
+        r = (ma-mi) *0.01
 #        if r < 5:
 #            r+=5
-        if r < ma*0.5:
-            r+=ma*0.5
+        if r < ma*0.15:
+            r+=ma*0.15
         mi -= r
         ma += r
         #print("revised min max", mi, ma)
-        self.line, = self.ax.plot(self.times, colData )  # plot the first row
+        self.line, = self.ax.plot(self.times, colData )
         self.ax.set_title(self.columnNames[self.plotColumn])
         self.ax.set_ylim(mi,ma) # 10% under and over
         self.canvas.draw()
         
     def updatePlot(self):
         #print("updatePlot column", self.plotColumn, self.columnNames[self.plotColumn])
-        self.plotOne()
-        
+        if self.plotColumn > 0 :
+            self.plotOne()
+        else:
+            self.plotAll()
+
     def printList(self,widget):
         for row in self.listStore :
             print(row[:])
     
     def clickedColumn(self, treeCol, idx):
         print("clicked column ", idx, self.columnNames[idx])
-        if idx == 0:
-            print("Cant plot time")
-            return
+#        if idx == 0:
+#            print("Cant plot time")
+#            return
         self.plotColumn = idx
         self.updatePlot()
 

@@ -10,6 +10,7 @@ sudo apt-get -y install python3-gpiozero
 sudo apt-get -y install rpi.gpio
 #sudo apt-get -y install python3-pyqt5
 sudo apt-get -y install libffi-dev
+sudo apt-get install exfat-fuse
 #
 sudo cp /usr/bin/pip3 /usr/bin/pip3.5
 sudo python3 -m pip install --upgrade pip setuptools wheel

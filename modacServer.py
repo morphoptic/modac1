@@ -1,18 +1,26 @@
 # modac_io_server testbed for MODAC hardware server
 # connects hardware to data and network
+# inits services and devices, runs update forever loop
 # provides pyNNG pubSub publishing of data (see moNetwork)
 # provides pyNNG Pair1 command pairing with clients
-# note the interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
+# note hw interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
+# Trio provides async data handling
+# Some hardware, notably blutooth Leica Distance Sensor, require separate threads or processes
 import sys
 import os
 import logging, logging.handlers, traceback
 import argparse
-import gpiozero
+import gpiozero # basic rPi GPIO using gpiozero technique first
 import json
 import signal
+import datetime
 
-import trio #adding async
+import trio #adding async functions use the Trio package
 
+# moLogger is our frontend/startup to usual Python logging
+# we want it to run in main()__main__ before any libraries might
+# or they may capture the first call to logging.xxConfig()
+# and our main needs priority
 from modac import moLogger
 if __name__ == "__main__":
     moLogger.init()
@@ -25,7 +33,9 @@ from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
 import kilnControl
 
 runTests = False #True
-publishRate = 2 # seconds for sleep at end of main loop
+#publishRate = 0.25 # seconds for sleep at end of main loop
+publishRate = 0.5 # seconds for sleep at end of main loop
+#publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
 
@@ -50,11 +60,12 @@ async def modac_ReadPubishLoop():
         log.debug("top forever read-publish loop")
         moHardware.update()
         # any logging?
-        moData.logData() # log info as json
+        #moData.logData() # log info as json to stdOut/console + logfile
         if csvActive == True:
             moCSV.addRow()
         # publish data
         moServer.publish()
+        #moData.logData()
         log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
@@ -81,7 +92,11 @@ async def modac_asyncServer():
         await moHardware.init(nursery)
         
         # start the CSV server logging
-        moCSV.init("modacServerData.csv")
+        if csvActive:
+            now = datetime.datetime.now()
+            nowStr = now.strftime("%Y%m%d_%H%M")
+            outName = "modacServerData_"+nowStr+".csv"
+            moCSV.init(outName)
         
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
@@ -114,6 +129,14 @@ async def modac_asyncServer():
 
 def modac_loadConfig():
     log.info("modac_loadConfig")
+    # configuration is done using python code/files
+    # generally inline of the module that needs them
+    # see modac/moData for things that should work for client and server
+    # see kilnControl/kilnConfig for lots of things specific to kiln (also kiln.py)
+    # see modacServer (main) for a few like PublishRate
+    # see moGui for its publish/read rate
+    # see moClient for client timeout on read
+    # see moNetwork for addresses and timeouts
     pass
 
 def signalExit(*args):

@@ -21,6 +21,8 @@ gi.require_version('Gdk', '3.0')
 from gi.repository import GObject, Gio, Gdk, Gtk
 
 from modac import moLogger
+from modac import kType
+
 if __name__ == "__main__":
     moLogger.init("modacGUI")
     

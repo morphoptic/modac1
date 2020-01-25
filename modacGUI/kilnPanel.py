@@ -30,16 +30,11 @@ defaultMaxTime = (60*24)
 defaultStepTime = 2
 
 class kilnPanel():
-    def getKilnStatus(self):
-        self.kilnStatus = moData.getValue(keyForKilnStatus())
-        self.stateName = self.kilnStatus[keyForState()]
-        print("KilnStatus", self.kilnStatus)
-        
     def __init__(self):        
         self.lastState = KilnState.Closed
         #print("initPanel")
         self.label = Gtk.Label("Kiln Ctrl")
-
+        self.timestamp = "none yet"
         self.dataCount = 0
         self.builder = Gtk.Builder.new_from_file("modacGUI/kilnPanel.glade")
         self.builder.connect_signals(self)
@@ -89,6 +84,12 @@ class kilnPanel():
         log.debug("KilnPanel Update")
         self.setData()
         
+    def getKilnStatus(self):
+        self.kilnStatus = moData.getValue(keyForKilnStatus())
+        self.stateName = self.kilnStatus[keyForState()]
+        self.timestamp = self.kilnStatus[keyForTimeStamp()]
+        print("KilnStatus", self.kilnStatus)
+        
     def setData(self):
         self.getKilnStatus()
         
@@ -100,6 +101,9 @@ class kilnPanel():
             log.info("\nEndRun detected\n")
             self.resetRunAbort()    
         
+        widget = self.builder.get_object(keyForTimeStamp())
+        widget.set_text(keyForTimeStamp()+ " : "+ self.timestamp)
+
         widget = self.builder.get_object(keyForState())
         widget.set_text(keyForState()+ " : "+ self.stateName)
 

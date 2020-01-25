@@ -41,7 +41,7 @@ def init():
 
 def update():
     if this.__eSensor == None:
-        #log.error(" no sensor ")
+        log.error(" no BME Enviro sensor ")
         return
     this.__eSensor.read()
     # removed global timestamp from here

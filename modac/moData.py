@@ -1,16 +1,40 @@
 # moData = common data repo under mordac
-# Other modules include this but this doesnt include them
 
-if __name__ == "__main__":
-    print("moData has no self test")
-    exit(0)
-    
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
 import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+# Other modules include this but this doesnt include them
+# number of sensors of each type
+# we need this early in Client startup
+# but wont have actual data until receive from Server
+
+# TODO: set this with config shared with server (original concept of Channels)
+# num of entries should be matched in their init and raise error/assert if not same
+# really should come from some config file, with names too
+__numKType = 3
+def setNumKType(num):
+    __numKType = num
+def numKType():
+    return this.__numKType
+def numBinaryOut():
+    return 12
+def numAD24():
+    return 8
+def numAD16():
+    return 4
+
+if __name__ == "__main__":
+    print("NumKtype: ", numKType())
+    print("numBinaryOut: ", numBinaryOut())
+    print("numAD24: ", numAD24())
+    print("numAD16: ", numAD16())
+    print("moData has no self test")
+    exit(0)
+
 
 #import rest of modac
 from .moKeys import *
@@ -26,20 +50,6 @@ class moDataStatus(Enum):
     Running = 2
 
 __moDataDictionary = {}
-
-# number of sensors of each type
-# we need this early in Client startup
-# but wont have actual data until receive from Server
-# TODO: set this with config shared with server (original concept of Channels)
-# num of entries should be matched in their init and raise error/assert if not same
-def numKType():
-    return 4
-def numBinaryOut():
-    return 12
-def numAD24():
-    return 8
-def numAD16():
-    return 4
 
 __nursery = None
 def setNursery(nursery=None):
@@ -78,6 +88,7 @@ def init(client=False):
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
         def_kiln = {
+            keyForTimeStamp(): "none yet" ,      
             keyForState(): 'Closed',
             keyForTimeStep(): 1,
             keyForRuntime(): 0,
@@ -105,6 +116,9 @@ def setStatusInitialized():
 def setStatusRunning():
     update(keyForStatus(),moDataStatus.Running.name)
 
+def updateTimestamp():
+    update(keyForTimeStamp(), datetime.datetime.now())
+    
 def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(value, datetime.datetime):
@@ -118,7 +132,12 @@ def asDict():
 
 def asJson():
     return json.dumps(asDict(), indent=4)
-                      
+
+def isValidKey(key):
+    if key in __moDataDictionary:
+        return True
+    return False
+
 def getValue(key):
     # will throw KeyError if key is not in dictionary
     return __moDataDictionary[key]
@@ -149,18 +168,26 @@ def __appendArray(key,targetArray):
 def asArray():
     a = []
     a.append(this.getValue(keyForTimeStamp()))
-    env = this.getValue(keyForEnviro())
-    a.append(env[keyForTemperature()])
-    a.append(env[keyForHumidity()])
-    a.append(env[keyForPressure()])
+    if isValidKey(keyForEnviro()):
+        env = this.getValue(keyForEnviro())
+        a.append(env[keyForTemperature()])
+        a.append(env[keyForHumidity()])
+        a.append(env[keyForPressure()])
     
-    leica = this.getValue(keyForLeicaDisto())
-    a.append(leica[keyForDistance()])
+    if isValidKey(keyForLeicaDisto()):
+        leica = this.getValue(keyForLeicaDisto())
+        a.append(leica[keyForDistance()])
     
-    a += this.getValue(keyForAD24())
-    a += this.getValue(keyForAD16())
-    a += this.getValue(keyForKType())
-    a += this.getValue(keyForBinaryOut())
+    if isValidKey(keyForAD24Raw()):
+        a += this.getValue(keyForAD24Raw())
+    if isValidKey(keyForAD24()):
+        a += this.getValue(keyForAD24())
+    if isValidKey(keyForAD16()):
+        a += this.getValue(keyForAD16())
+    if isValidKey(keyForKType()):
+        a += this.getValue(keyForKType())
+    if isValidKey(keyForBinaryOut()):
+        a += this.getValue(keyForBinaryOut())
     return a
 
 def __appendAName(key):
@@ -179,13 +206,43 @@ def arrayColNames():
         return this.__namesOfColumns
     this.__namesOfColumns = []
     this.__namesOfColumns.append(keyForTimeStamp())
-    this.__namesOfColumns.append(keyForTemperature())
-    this.__namesOfColumns.append(keyForHumidity())
-    this.__namesOfColumns.append(keyForPressure())
-    this.__namesOfColumns.append(keyForDistance())
-    this.__appendAName(keyForAD24())
-    this.__appendAName(keyForAD16())
-    this.__appendAName(keyForKType())
-    this.__appendAName(keyForBinaryOut())
+    if isValidKey(keyForEnviro()):
+        # note: this may cause issues with CSV as Enviro is dict
+        #this.__namesOfColumns.append(keyForEnviro())
+        this.__namesOfColumns.append(keyForTemperature())
+        this.__namesOfColumns.append(keyForHumidity())
+        this.__namesOfColumns.append(keyForPressure())
+    if isValidKey(keyForTemperature()):
+        this.__namesOfColumns.append(keyForTemperature())
+    if isValidKey(keyForHumidity()):
+        this.__namesOfColumns.append(keyForHumidity())
+    if isValidKey(keyForPressure()):
+        this.__namesOfColumns.append(keyForPressure())
+#    if isValidKey(keyForDistance()):
+    if isValidKey(keyForLeicaDisto()):
+         this.__namesOfColumns.append(keyForDistance())
+    if isValidKey(keyForAD24Raw()):
+        this.__appendAName(keyForAD24Raw())
+    if isValidKey(keyForAD24()):
+        this.__appendAName(keyForAD24())
+    if isValidKey(keyForAD16()):
+        this.__appendAName(keyForAD16())
+    if isValidKey(keyForKType()):
+        this.__appendAName(keyForKType())
+    if isValidKey(keyForBinaryOut()):
+        this.__appendAName(keyForBinaryOut())
     log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns
+
+def arrayNameOnlyAD24():
+    log.debug("modData.arrayNameOnlyAD24 - for testAD24")
+    if not this.__namesOfColumns == None:
+        log.error("moData columns already named")
+        return this.__namesOfColumns
+    this.__namesOfColumns = []
+    this.__namesOfColumns.append(keyForTimeStamp())
+    this.__appendAName(keyForAD24())
+    log.debug("col names: %r"%(__namesOfColumns))
+    return this.__namesOfColumns
+
+    

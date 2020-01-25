@@ -33,6 +33,8 @@ from waveshareADAC import ADS1256
 from .moKeys import *
 from . import moData
 
+# two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
+
 __ads1256 = None #ADS1256.ADS1256()
 __adsRaw = [0,0,0,0,0,0,0,0]
 __ads0to5 = [0,0,0,0,0,0,0,0]
@@ -41,13 +43,16 @@ __adsRawToV = (5.0/0x7fffff) # magic number to convert raw ADS1256 to 0-5Vdc
 __key = "ad24"
 
 def init():
-    log.debug("ad24Bit init()")
+    print("ad24Bit init() %10.9f"%(__adsRawToV*1000))
+    log.debug("ad24Bit init() ")
     this.__ads1256 = ADS1256.ADS1256()
     this.__ads1256.ADS1256_init()
     this.update()
+    log.debug("ad24Bit init() complete")
+
     
 def update():
-    log.debug("ad24Bit update()")
+    #log.debug("ad24Bit update()")
     # currently crude get all 8 with same default configutatoin
     if this.__ads1256 == None:
         log.error("No device present, maybe shutdown")
@@ -57,6 +62,7 @@ def update():
         this.__adsRaw[i] = raw[i]
         this.__ads0to5[i] = raw[i] * this.__adsRawToV
     moData.update(keyForAD24(), all0to5Array())
+    moData.update(keyForAD24Raw(), allRawArray())
 
 def allRawArray():
     return this.__adsRaw

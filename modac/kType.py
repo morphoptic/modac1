@@ -19,17 +19,107 @@ from thermocouples_reference import thermocouples
 __typeK = thermocouples['K']
 
 # cant dunder kTypeIdx 'cause its used in Simulator
-# list 4 but only use idx 1-3 so it matches kilnHeaters etc 
-kTypeIdx= [0,5,6,7] # indicies into AD24Bit array for k-type thermocouple
+# ktypes in use are White, Green, Yellow (not blue) from amp box
+# amp-connector & pi-connector order is Green-White-Yellow-Blue
+# two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
+# kTypeIdx is indicies into AD24Bit array for k-type thermocouple
+# Note length must match moData value returned by
+#kTypeIdx= [0,1,2,3,4,5,6,7]
+#kTypeIdx= [2,3,4,5,6,7] 
+kTypeIdx= [3,4,5,6]
+kTypeIdx= [4,5,6]
+
+ampGain = 122.4 # from ad8495 spec sheet
+# offset at Zero calculated by average of 3 sensors run over 1min
+offsetAt0C = 0.645016706666667
+offsetAt0C = 0.131  # value of shorted amp 
+offsetAt0C = 0.03331469 # kiln couple in ice Dec3
+adOffset = 0.012  #magic offset subtracted from adValue, based on roomtemp reading by ktype
+
+#offsetAt0C = 0.13412795
+#medianAtRoom = 0.23279848
+
+offsetAt0COverGain = offsetAt0C/ampGain
 
 simulation = False
 simulator = None
 
+#def fnMagic(readMV):
+#    ### convert readMV into proper mV for mvToC
+#    # values from calibration runs.
+#    # noted significant variation by sensor and channel
+#    # but for simplicity now we use simple offset
+#    # median ad0-5 at 0C = 0.13412795V
+#    # median ad0-5 at room 25.539 = 0.23279848V
+#    mV = (readMV - offsetAt0C)/ ampGain
+#    #print("fnMagic %8.5f => %8.5f"%(readMV,mV))
+#    return mV
+
+    # vOut = T*5mV = T* 0.005V
+    # T = vOut / 0.005 + magic
+    # table says 0C is 0.000 (3deg is 0.119mV)
+    # table says 25 is 1.0000mV = 0.001V
+    #magicNumber = (0.001f)/0.23279848f
+    #print("fnMagic ", magicNumber)
+    
+
+#def mVToC(mV,tempRef=0, printIt=False):
+#    #_mV = fnMagic(mV)
+#    _mV = adOverGain(mV) *1000.0
+#    print("mVToC",mV, _mV)
+#    c = __typeK.inverse_CmV(_mV, 0)#Tref=tempRef)
+#    if printIt:
+#        print(mV, _mV, c)
+#    return c
+# only looking at kType thermocouples
+__kTypeLookup = thermocouples['K']
+
+def adOverGain(adValue):
+    return (adValue- adOffset)/ampGain
+
 def mVToC(mV,tempRef=0):
-    return __typeK.inverse_CmV(mV, Tref=tempRef)
+    _mV = mV #fnMagic(mV)
+    return __kTypeLookup.inverse_CmV(_mV, Tref=tempRef)
+
+def adToC(adRead,tempRef=0):
+    v = adOverGain(adRead)
+    mv = v*1000.0
+    c = mVToC(mv,tempRef)
+    #print ("ad v mv c: ", adRead, v, mv, c)
+    return c
+
+def testCalc(mV):
+    c0 = mVToC(mV, 0.0)
+    c25 = mVToC(mV, 25.0)
+    msg = "Temp at mv"+ str(mV) + " = (0):" + str(c0) + " (25):" + str(c25)
+    print(msg)
+    #log.debug(msg)
+    
+# inverse_CmV
+def calc0_100_300():
+    log.debug("CALC REF mV")
+    mv = 0.0
+    testCalc(mv)
+    mv = 1.0
+    testCalc(mv)
+    mv = 4.096
+    testCalc(mv)
+    mv = 12.209
+    testCalc(mv)
+    mv =     0.004037344783333*1000.0
+    testCalc(mv)
+
+#this can vary as we develop and test
+    # but it doesent help gui so not really useful
+def getNumKType():
+    num = len(kTypeIdx)
+    moData.setNumKType(getNumKType)
+    return num
 
 def init():
     this.simulator = None
+    this.getNumKType()
+    calc0_100_300()
     update()
     pass
 
@@ -51,13 +141,16 @@ def asArray():
     ktypeData = []
     # retrieve the ad as 0-5V values
     adArray = ad24.all0to5Array()
+    #print("adArray: ", adArray)
+    
+    # these are in 0-5v, need in mV range for use with conversion library
     # it is not clear if we should be using the roomTemp as zero point
     # that might need to be a constant from testing with ice water
     roomTemp = enviro.degC()
     # only look at the ad24 that are identified by the kTypeIdx array
-    for i in kTypeIdx:
-        t = this.mVToC(adArray[i],roomTemp)
-        #print("ktype", i, t)
+    for adIdx in kTypeIdx:
+        t = this.adToC(adArray[adIdx])#roomTemp)
+#        #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         ktypeData.append(t)
     return ktypeData
 

@@ -36,7 +36,7 @@ async def init(nursery):
 
 def update():
     # get our own timestamp
-    moData.update(keyForTimeStamp(), datetime.datetime.now())
+    moData.updateTimestamp()
     enviro.update()
     binaryOutputs.update()
     ad24.update()

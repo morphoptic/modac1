@@ -50,7 +50,7 @@ def publishData(key, value):
     if this.__Publisher == None:
         log.debug("publisher offline "+key)
         return
-    #print("dataStr: ", tempStr)
+    print("publish: key/value: ", key, value)
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
@@ -73,6 +73,7 @@ async def cmdListenLoop():
         except trio.Cancelled:
             log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
+    log.error("***cmdListenLoop Not Running")
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None
@@ -123,7 +124,10 @@ async def serverReceive():
 
 def serverDispatch(topic,body):
     log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
-    if topic == keyForBinaryCmd():
+    if topic == keyForEmergencyOff():
+        log.debug("EmergencyOff Cmd dispatching")
+        moHardware.EmergencyOff()
+    elif topic == keyForBinaryCmd():
         payload = body # json.loads(body)
         #print("serverDispatch payload")
         #print(payload)
@@ -154,9 +158,6 @@ def serverDispatch(topic,body):
                 kiln.runKilnCmd(body)
     elif topic == keyForResetLeica():
         leicaDistoAsync.reset()
-    elif topic == keyForEmergencyOff():
-        log.debug("EmergencyOff Cmd dispatching")
-        moHardware.EmergencyOff()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

@@ -25,6 +25,8 @@ import busio
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
+__isAlive = False
+
 # Create the I2C bus
 __ad16_i2c = None
 def get_i2c():
@@ -58,13 +60,16 @@ class moAD16Device:
     device = None
     def __init__(self, address= 72):
         self.address = address
-        #print("Init AD16Device at i2c address", address)
+        if self.device != None:
+            log.error("moAD16device already initialized")
+            return
+        print("Init AD16Device at i2c address", address)
         
 #        if this.get_i2c() == None:
 #            logger.debug("AD16Device initializing busio I2C")
 #            __ad16_i2c = busio.I2C(board.SCL, board.SDA)
         if this.get_i2c() == None:
-            log.error("error getting i2c bus")
+            log.error("moAD16device error getting i2c bus")
             return
         # now add the Adafruit Object for device
         self.device = ADS.ADS1115(this.get_i2c(),address=self.address)
@@ -84,7 +89,10 @@ class AD16Channel:
         assert not self.myDevice == None
         self.deviceChannel = devChan
         self.analogIn = AnalogIn(ads=self.myDevice, positive_pin=self.deviceChannel)
-        #print("InitAD16Channel analogIn", self.analogIn)
+                
+        assert isinstance(self.analogIn,AnalogIn)
+
+        #print("InitAD16Channel analogIn:", self.analogIn)
         #print("InitAD16Channel myDevice ", self.myDevice)
         #print("Initialized device chan: ", self.deviceChannel)
         #print("   gives value: ", self.value())
@@ -95,6 +103,7 @@ class AD16Channel:
         return self.analogIn.voltage    
 
 def init():
+    log.warning("initialize AD16 - 16bit A-D converter")
     # init the adafruit i2c bus
     this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
     if this.__ad16_i2c == None:
@@ -102,26 +111,26 @@ def init():
         moData.update(keyForAD16(), this.__values)
         return
     # init each defined device
-    #print("  size: devAddress[]",len(this.__ad16devAddr))
+    print(" AD16 numDevices: ",len(this.__ad16devAddr))
     for idx in range(len(this.__ad16devAddr)):
         d = None
         try:
             d = moAD16Device(address=this.__ad16devAddr[idx])
         except:
-            log.error("Cant create device %d "%this.__ad16devAddr[idx]+str( sys.exc_info()[0]))
+            log.error(" Cant create device %d "%this.__ad16devAddr[idx]+str( sys.exc_info()[0]))
         this.__ad16dev.append(d)
         if d == None:
-            log.error("No device found")
-    #print("Initialized devices: ", this.__ad16dev)
+            log.error("No AD16 device found")
+    print("Initialized AD16 devices: ", this.__ad16dev)
         
     # init each channel
     #loop thru config array (deviceIdx, chanId)
     for idx in range(len(this.__ad16chanConfig)):
-        print("create channel ",idx,this.__ad16chanConfig[idx])
+        #print("create channel ",idx,this.__ad16chanConfig[idx])
         t = this.__ad16chanConfig[idx]
         deviceIdx = t[0]
         moDevice = this.__ad16dev[deviceIdx]
-        print("device= ",moDevice)
+        #print("device= ",moDevice)
         chanId = t[1]
         if moDevice == None or moDevice.device == None:
             channel = None
@@ -129,7 +138,8 @@ def init():
             channel = AD16Channel(moDevice, chanId)
         this.__channels.append(channel)
         this.__values.append(0)
-
+    this.__isAlive = True
+    
     # now get initial values
     this.update()
     #print("ad16 Initialized")
@@ -141,15 +151,26 @@ def init():
 def update():
     if this.__ad16_i2c == None:
         return
-    log.debug("ad16 update()")
+    if this.__isAlive == False:
+        return
+    #log.debug("ad16 update()")
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
     #print (this.__values)
-    # currently crude get all 8 with same default configutatoin
-    for i in range(len(this.__channels)):
-        channel = this.__channels[i]
-        #print(i, "channel", channel)
-        if channel != None:
-            this.__values[i] = channel.value()
+    # currently crude get all 8 with same default configutation
+    try:
+        for i in range(len(this.__channels)):
+            channel = this.__channels[i]
+            #print(i, "channel", channel)
+            if channel != None:
+                this.__values[i] = channel.value()
+    except:
+        log.error(" Error reading AD16 values, disable device")
+        log.exception("Exception follows")
+        # need to put at least one record in moData
+        moData.update(keyForAD16(), this.__values)
+        this.__ad16_i2c = None
+        this.__isAlive = False
+    #
     moData.update(keyForAD16(), this.__values)
 
 def values():
