@@ -218,8 +218,9 @@ def arrayColNames():
         this.__namesOfColumns.append(keyForHumidity())
     if isValidKey(keyForPressure()):
         this.__namesOfColumns.append(keyForPressure())
-    if isValidKey(keyForDistance()):
-        this.__namesOfColumns.append(keyForDistance())
+#    if isValidKey(keyForDistance()):
+    if isValidKey(keyForLeicaDisto()):
+         this.__namesOfColumns.append(keyForDistance())
     if isValidKey(keyForAD24Raw()):
         this.__appendAName(keyForAD24Raw())
     if isValidKey(keyForAD24()):

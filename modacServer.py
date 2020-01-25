@@ -129,6 +129,14 @@ async def modac_asyncServer():
 
 def modac_loadConfig():
     log.info("modac_loadConfig")
+    # configuration is done using python code/files
+    # generally inline of the module that needs them
+    # see modac/moData for things that should work for client and server
+    # see kilnControl/kilnConfig for lots of things specific to kiln (also kiln.py)
+    # see modacServer (main) for a few like PublishRate
+    # see moGui for its publish/read rate
+    # see moClient for client timeout on read
+    # see moNetwork for addresses and timeouts
     pass
 
 def signalExit(*args):

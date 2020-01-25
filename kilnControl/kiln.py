@@ -1,28 +1,18 @@
 # modac Kiln Controller, built on generic modac data acq & control
+#  runs as trio thread on ModacServer having direct control of BinaryOut
 #  links into the modac.moData blackboard of shared data for sensors
-#  as such a separate thread could substitute simulated values for ktypes
+#  most configuration is in kilnControl.py
+#  kilnState.py defines enum class for stateMachine
 #
-# could be very complex control programming or
-#   just do simple case of Heat to Temp, hold till displacement, run fans to cool?
+#  currently only does single PID run defined as
+#  Heat to Temp, hold till displacement, cool down
+#  single or 3 ktypes optional config, all heaters gang on/off
 #
-#  could either use direct controls of the BinaryOutput/DA effectors
-#  or use the pyNNG network commands, or perhaps the moHardware level commands
-#  which would get the commands logged at that level
-#
-#TempControl(target, combined|separate heater|ktype)
-#    used in Heating and holding
-#    do we need two?
-#    
-#State:
-#    Heating => pid to get to TargetTemp
-#    Holding => pid hold TargetTemp, watch Displacement, maxTime
-#    Cooling => SupportFan on, ExhaustFan On
-#    EndRun => a run has completed, held for N(30)sec
-#    Idle => wait for command
-#    
-#    Abort -> returns to Idle State
-#    Load Plan: targetTemp, Displacement, maxTime
-#
+# External API:
+#  startKiln(nursery) creates Kiln obj, sets up thread
+#  endKiln() terminates thread
+#  emergencyShutoff() shuts down kiln (12vrelay power)
+#  runKilnCmd(params): Cmd handler to run a kiln cycle. params is dictionary of Keys
 #
 
 import sys
@@ -45,25 +35,28 @@ from .kilnConfig import *
 from .kilnState import KilnState
 
 #####################
+# singleton really
 kiln = None
+# are we allowing control
 enableKilnControl = True#False
+# are we using EStop (software only at present)
 enableEStop = True# False
 #####################
 def emergencyShutOff():
     log.warn("EMERGENCY OFF tiggered")
-    # heat is too high
-    endKiln()
-    this.kiln.state = KilnState.Error
-    this.kiln.runnable = False
+    # shut off 12v power
+    # turn on exhaust fan
     # shut off heaters
+    moHardware.binaryCmd(relayPower, False)
     moHardware.binaryCmd(heater_lower, False)
     moHardware.binaryCmd(heater_middle, False)
     moHardware.binaryCmd(heater_upper, False)
-    # shut off 12v power
-    moHardware.binaryCmd(relayPower, False)
-    # turn on exhaust fan
     moHardware.binaryCmd(fan_exhaust, True)
     # ring alarm bell (dont have one, yet)
+    endKiln() #terminate thread
+    # error state tells it we not running
+    this.kiln.state = KilnState.Error
+    this.kiln.runnable = False
 
 #####################
 async def startKiln(nursery):
@@ -81,7 +74,8 @@ def endKiln():
         log.debug("endKiln, no kiln")
         return
     this.kiln.end_run() #stops run, doesnt terminate thread
-    this.kiln.runnable = False
+    this.kiln.runnable = False # this should terminate thread
+    this.kiln.state = KilnState.Closed
     this.kiln.publishStatus() 
     # 
     log.debug("endKiln executed")
@@ -91,12 +85,6 @@ def endKiln():
 def setRelayPower(onOff= False):
     moHardware.binaryCmd(relayPower, onOff)
 
-#####################
-lowerHeaterState = False
-middleHeaterState = False
-upperHeaterState = False
-#heaterStateStr = ""
-reportedHeaterStates = [False, False, False, False]
 
 def getHeaterStates():
     bouts = moData.getValue(keyForBinaryOut())
@@ -122,7 +110,8 @@ def getHeaterStates():
     return reportedHeaterStates
 
 #####################
-
+# kilnTemps is array of reported temps for our 3 Tcouple + average
+# this should be dependent on Num Ktype in kiln but not needed yet
 kilnTemps = [0.0,0.0,0.0,0.0] # 0 is avg, 1 lower, 2 middle, 3 upper
 def getTemperatures():
     ''' retrieve thermocouple values degC, avg the ones we want '''
@@ -134,8 +123,11 @@ def getTemperatures():
     this.kilnTemps[3] = kTemps[kType_upper]
     sum = kilnTemps[1] + kilnTemps[2] + kilnTemps[3]
     avg = sum/3
-    #this.kilnTemps[0] = avg
-    this.kilnTemps[0] = this.kilnTemps[1] 
+    
+    if kType_avgAll:
+        this.kilnTemps[0] = avg
+    else:
+        this.kilnTemps[0] = this.kilnTemps[1] 
 
     tempStr = keyForKilnTemps() +":"
     for i in range(len(this.kilnTemps)):
@@ -144,6 +136,8 @@ def getTemperatures():
     #print("KilnTemps", this.kilnTemps)
     return this.kilnTemps
 
+# simulation of Temps is controlled by this var/func
+# and code is down below normal loop
 simulation = False
 def setSimulation(onOff):
     this.simulation = True
@@ -156,6 +150,7 @@ class Kiln:
     It provides for trio type async monitoring and data posting loop
     '''
     useSinglePID = True # implyze avg temp and single heater on/off
+    # we havent built 3 PID version yet
     commandedHeaterStates = [False, False, False, False]
     
     def __init__(self, time_step=default_stepTime):#, nursery=None):
@@ -450,12 +445,14 @@ class Kiln:
         log.info("async kiln loop should pick this up")
         
 def runKilnCmd(params):
+    '''handler for interprocess command to run a kiln cycle. params is dictionary of Keys'''
     print("\n\n*****runKilnCmd", params)
     if this.kiln == None:
         log.error("No Kiln found")
         return
     try:
         simulate = params[keyForSimulate()]
+        # moHardware tells kTypes to simulate values and Kiln to use sim processing
         moHardware.simulateKiln(simulate)
         
         targetT = params[keyForTargetTemp()]
