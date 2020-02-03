@@ -86,12 +86,20 @@ class kilnPanel():
         
     def getKilnStatus(self):
         self.kilnStatus = moData.getValue(keyForKilnStatus())
+        if self.kilnStatus == keyForNotStarted():
+            self.stateName = keyForNotStarted()
+            return False
         self.stateName = self.kilnStatus[keyForState()]
         self.timestamp = self.kilnStatus[keyForTimeStamp()]
         print("KilnStatus", self.kilnStatus)
+        return True
         
     def setData(self):
-        self.getKilnStatus()
+        if not self.getKilnStatus():
+            log.debug("kiln not started")
+            widget = self.builder.get_object(keyForState())
+            widget.set_text(keyForState()+ " : "+ keyForNotStarted())
+            return
         
         # state is the name or string rep of KilnState
         log.debug("KilnPanel setData state: "+self.stateName)

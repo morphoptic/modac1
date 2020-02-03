@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 # my stuff
-from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
+from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moJSON
 import kilnControl
 
 runTests = False #True
@@ -38,6 +38,8 @@ publishRate = 60.0 # seconds for sleep at end of main loop
 publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
+jsonActive = True
+startKilnOnStartup = False
 
 def modacExit():
     log.info("modacExit shutting down")
@@ -45,6 +47,7 @@ def modacExit():
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     moCSV.close()
+    moJSON.closeJsonLog()
     moData.shutdown()
     moServer.shutdownServer()
     log.info("closed everything i think")
@@ -61,11 +64,16 @@ async def modac_ReadPubishLoop():
         moHardware.update()
         # any logging?
         #moData.logData() # log info as json to stdOut/console + logfile
-        if csvActive == True:
-            moCSV.addRow()
         # publish data
         moServer.publish()
         #moData.logData()
+        if csvActive == True:
+            print("call csvAddRow")
+            moCSV.addRow()
+        if jsonActive == True:
+            print("call moJSON.snapshot")
+            moJSON.snapshot()
+            
         log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
@@ -95,16 +103,23 @@ async def modac_asyncServer():
         if csvActive:
             now = datetime.datetime.now()
             nowStr = now.strftime("%Y%m%d_%H%M")
-            outName = "modacServerData_"+nowStr+".csv"
+            outName = "logs/modacServerData_"+nowStr+".csv"
             moCSV.init(outName)
         
+        if jsonActive:
+            moJSON.startJsonLog("logs/modacServer")
+            
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
         
+        # Start kiln now or on reciept of StartKiln?
         # start the kiln control process
-        await kilnControl.kiln.startKiln(nursery)
-        
+        if startKilnOnStartup == True:
+            await kilnControl.kiln.startKilnCmd(nursery)
+        else:
+            moData.update(moKeys.keyForKilnStatus(), moKeys.keyForNotStarted())
+
         try:
             #   run event loop
             #print("modata:",moData.rawDict())

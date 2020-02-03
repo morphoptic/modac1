@@ -6,6 +6,9 @@ def moKeyToTopic(key):
     assert isinstance(key,str)
     return key.encode('utf8')
 
+def keyForNotStarted():
+    return "NotStarted"
+
 # at this point we are really only using AllData and Cmd for net comms
 # but other keys are used for getting data from the moData active data repository
 def keyForAllData():
@@ -67,7 +70,7 @@ def keyForResetLeica():
 
 # kiln state stuff
 ## start/abort cmd == btn name but be kinda explicit
-def keyForStartKiln(): return "StartKiln"
+def keyForStartKilnCmd(): return "StartKiln"
 def keyForRunKiln(): return "RunKiln"
 def keyForAbortKiln(): return "AbortKiln"
 def keyForRunKilnCmd(): return keyForRunKiln()

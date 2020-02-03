@@ -43,14 +43,14 @@ def startPublisher():
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
     
 def publish():
-    #log.debug("publish - only AllData for now")
+    log.debug("publish - only AllData for now")
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
     if this.__Publisher == None:
         log.debug("publisher offline "+key)
         return
-    print("publish: key/value: ", key, value)
+    #print("publish: key/value: ", key, value)
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
@@ -136,6 +136,8 @@ def serverDispatch(topic,body):
         moHardware.allOffCmd()
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
+    elif topic == keyForStartKilnCmd():
+        startKiln
     elif topic == keyForKilnAbortCmd():
         print("\n====== doing Kiln Abort :", topic)
         if kiln.kiln == None:
@@ -161,8 +163,6 @@ def serverDispatch(topic,body):
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
-
-
 
 if __name__ == "__main__":
     print("moServer has no self test")

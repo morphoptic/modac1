@@ -27,6 +27,8 @@ def numAD24():
 def numAD16():
     return 4
 
+logAsJSON = True
+
 if __name__ == "__main__":
     print("NumKtype: ", numKType())
     print("numBinaryOut: ", numBinaryOut())
@@ -154,8 +156,8 @@ def updateAllData(d):
     #print("Updated: ", asJson())
 
 def logData():
-    log.info(this.asJson())
-    
+    json = this.asJson()
+    log.info(json)    
 
 ######  for CSV
 __namesOfColumns = None

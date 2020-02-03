@@ -38,9 +38,11 @@ from .kilnState import KilnState
 # singleton really
 kiln = None
 # are we allowing control
-enableKilnControl = True#False
+#enableKilnControl = False
+enableKilnControl = True
 # are we using EStop (software only at present)
 enableEStop = True# False
+
 #####################
 def emergencyShutOff():
     log.warn("EMERGENCY OFF tiggered")
@@ -59,6 +61,16 @@ def emergencyShutOff():
     this.kiln.runnable = False
 
 #####################
+# use command to start kiln process
+async def startKilnCmd(nursery=None):
+    if not this.kiln == None:
+        log.error("StartKilnCmd but Kiln already instanced")
+        return
+    if nursery == None:
+        nursery = moData.getNursery()
+    await startKiln(nursery)
+        
+
 async def startKiln(nursery):
     '''start kiln thread in nursery'''
     if enableKilnControl:
@@ -67,7 +79,12 @@ async def startKiln(nursery):
         nursery.start_soon(this.kiln.runKiln)
     else:
         log.debug("Kiln Control Disabled")
-        
+
+def closeKiln():
+    endKiln()
+    kiln = None
+    log.debug("kiln closed")
+    
 def endKiln():
     '''terminate the kiln thread'''
     if this.kiln == None:

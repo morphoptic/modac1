@@ -12,7 +12,7 @@ import os
 import logging, logging.handlers, traceback
 
 __loggerInit = False
-def init(name="modac", level="logging.DEBUG"):
+def init(name="modac", level=logging.DEBUG):
     print("setupLogging")
     if this.__loggerInit :
         logging.warn("Duplicate call to setupLogging()")

@@ -30,6 +30,7 @@ def init(filename="modacDataLog.csv"):
     #names = moData.arrayNameOnlyAD24()
     print("moCSV col Names", names)
     this.__csvWriter.writerow(names)
+    this.__csvFile.flush()
     pass
 
 def close():
