@@ -34,8 +34,8 @@ import kilnControl
 
 runTests = False #True
 #publishRate = 0.25 # seconds for sleep at end of main loop
-publishRate = 0.5 # seconds for sleep at end of main loop
-#publishRate = 1.0 # seconds for sleep at end of main loop
+publishRate = 60.0 # seconds for sleep at end of main loop
+publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
 

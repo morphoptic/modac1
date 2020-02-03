@@ -35,6 +35,7 @@ offsetAt0C = 0.645016706666667
 offsetAt0C = 0.131  # value of shorted amp 
 offsetAt0C = 0.03331469 # kiln couple in ice Dec3
 adOffset = 0.012  #magic offset subtracted from adValue, based on roomtemp reading by ktype
+#adOffset = 0.0  #magic offset subtracted from adValue, based on roomtemp reading by ktype
 
 #offsetAt0C = 0.13412795
 #medianAtRoom = 0.23279848
