@@ -80,7 +80,8 @@ def adOverGain(adValue):
 
 def mVToC(mV,tempRef=0):
     _mV = mV #fnMagic(mV)
-    return __kTypeLookup.inverse_CmV(_mV, Tref=tempRef)
+    retVal = __kTypeLookup.inverse_CmV(_mV, Tref=tempRef)
+    return retVal
 
 def adToC(adRead,tempRef=0):
     v = adOverGain(adRead)
@@ -150,8 +151,12 @@ def asArray():
     roomTemp = enviro.degC()
     # only look at the ad24 that are identified by the kTypeIdx array
     for adIdx in kTypeIdx:
-        t = this.adToC(adArray[adIdx])#roomTemp)
+        try:
+            t = this.adToC(adArray[adIdx])#roomTemp)
 #        #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
+        except ValueError:
+            log.error("Error converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]))
+            t = 0
         ktypeData.append(t)
     return ktypeData
 
@@ -190,7 +195,7 @@ class SimulateKtypes:
         self.ktypeData[0] = sum/3
 
         #post updated values to moData
-        print("Simulated KType data: ", self.ktypeData)
+        log.debug("Simulated KType data: "+ str( self.ktypeData))
         moData.update(keyForKType(), self.ktypeData)
         
 def setSimulate(onOff = True):
@@ -201,6 +206,7 @@ def setSimulate(onOff = True):
     else:
         log.info("Simulation of KType is OFF")
         this.simulator = None
+    log.info("KType values: " +str(moData.getValue(keyForKType())))
 
 if __name__ == "__main__":
     print("modac.kType has no self test")

@@ -39,7 +39,7 @@ publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
 jsonActive = True
-startKilnOnStartup = False
+startKilnOnStartup = True
 
 def modacExit():
     log.info("modacExit shutting down")
@@ -128,11 +128,13 @@ async def modac_asyncServer():
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
             log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
+            exc = traceback.format_exc()
+            log.error("Traceback is: "+exc)
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
-            print("Exception somewhere in modac_io_server event loop. see log files")
-            print("caught something", sys.exc_info()[0])
-            traceback.print_exc()#sys.exc_info()[2].print_tb()
+            print("Exception somewhere in modac_io_server event loop.")
+            print(exc)
+            #traceback.print_exc()#sys.exc_info()[2].print_tb()
     moData.setNursery(None)
     log.debug("nusery try died");
     log.error("Exception happened", exc_info=True)
@@ -168,6 +170,7 @@ def signalExit(*args):
 if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
     moLogger.init() # start logging (could use cmd line args config files)
+    log.info("that may be the 2nd logger init. not a problem")
     print("modac_io_server testbed for MODAC hardware server")
     signal.signal(signal.SIGINT, signalExit)
     try:

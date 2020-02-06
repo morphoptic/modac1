@@ -157,7 +157,8 @@ def getTemperatures():
 # and code is down below normal loop
 simulation = False
 def setSimulation(onOff):
-    this.simulation = True
+    this.simulation = onOff
+    log.info("Kiln setSimulation "+str(onOff)+ " this.simulation:"+str(this.simulation ))
 
 #####################
 #####################
@@ -209,6 +210,7 @@ class Kiln:
         self.publishStatus()
 
     def end_run(self):
+        log.info("kiln.end_run()")
         # should turn off all heaters
         moHardware.binaryCmd(heater_lower, False)
         moHardware.binaryCmd(heater_middle, False)
@@ -225,7 +227,7 @@ class Kiln:
     def get_status(self):
         startTimeStr =" NotStarted"
         if isinstance(self.startTime, datetime.datetime):
-            startTimeStr =self.startTime.strftime("%Y-%m-%d %H:%M:%S%Z")
+            startTimeStr = self.startTime.strftime("%Y-%m-%d %H:%M:%S%Z")
         
         status = {
             # a few with no shared keys - for debug purposes
@@ -306,7 +308,7 @@ class Kiln:
         # update the inputs
         self.reportedHeaterStates = getHeaterStates()
         self.kilnTemps = getTemperatures()
-        log.debug("Kiln Step top state: "+str(self.state)+" heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
+        log.debug("KilnStep top state: "+str(self.state)+" heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
         
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
         if enableEStop:
@@ -324,7 +326,7 @@ class Kiln:
         if self.state == KilnState.Idle:
             #print("Kiln idle step")
             return
-        
+        log.info("kilnStep not Idle")
         
         # how long since last step?
         self.runtime = (datetime.datetime.now() - self.startTime).total_seconds()
@@ -440,7 +442,7 @@ class Kiln:
         
         if this.simulation :
             dist = 1000.0 # 1meter start dist in simulation
-            print("Simulation start dist", dist)
+            print("Kiln Simulation start dist", dist)
         else:
             lData = moData.getValue(keyForLeicaDisto())
             print("startKiln Run leicaPanel.getData = ", lData)
@@ -458,7 +460,7 @@ class Kiln:
         setRelayPower(True)
 
         self.state = KilnState.Heating
-        log.info("Starting kiln run.. status:", self.get_status())
+        log.info("Starting Kiln run.. status:"+ str(self.get_status()))
         log.info("async kiln loop should pick this up")
         
 def runKilnCmd(params):

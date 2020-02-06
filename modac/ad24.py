@@ -41,14 +41,22 @@ __ads0to5 = [0,0,0,0,0,0,0,0]
 __adsRawToV = (5.0/0x7fffff) # magic number to convert raw ADS1256 to 0-5Vdc
 
 __key = "ad24"
+__isAlive = False
 
 def init():
-    print("ad24Bit init() %10.9f"%(__adsRawToV*1000))
+    print("ad24Bit init() scaling 0-5V by %10.9f"%(__adsRawToV*1000))
     log.debug("ad24Bit init() ")
     this.__ads1256 = ADS1256.ADS1256()
-    this.__ads1256.ADS1256_init()
+    if this.__ads1256 == None:
+        log.error("error creating ads1256 A-D Converter")
+    else:
+        initRet = this.__ads1256.ADS1256_init()
+        if initRet > 0:
+            this.__isAlive = True
+        else:
+            log.error("error initializing ADS1256 A-D Converter")
     this.update()
-    log.debug("ad24Bit init() complete")
+    log.debug("ad24Bit init() complete ... successs? = "+str(this.__isAlive))
 
     
 def update():
@@ -56,6 +64,8 @@ def update():
     # currently crude get all 8 with same default configutatoin
     if this.__ads1256 == None:
         log.error("No device present, maybe shutdown")
+        return
+    if this.__isAlive == False:
         return
     raw = this.__ads1256.ADS1256_GetAll()
     for i in range(len(raw)):

@@ -147,7 +147,9 @@ class ModacAppWindow(object):
         if moCSV.isOpen():
             moCSV.close()
             # TODO maybe we should ask to close
-            
+        
+        # select Time?
+        
         # debugging message
         log.debug('on_startCSV_activate')
         dialog=Gtk.FileChooserDialog(
@@ -217,7 +219,9 @@ class ModacAppWindow(object):
         return True
     
     def updatePanels(self):
+        # should do this only on CSV schedule
         moCSV.addRow()
+        
         self.kilnPanel.update()
         self.enviroPanel.update()
         self.ktypePanel.update()

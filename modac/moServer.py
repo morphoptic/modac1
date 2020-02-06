@@ -137,13 +137,14 @@ def serverDispatch(topic,body):
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
     elif topic == keyForStartKilnCmd():
-        startKiln
+        startKiln() # spawn thread to run kiln
     elif topic == keyForKilnAbortCmd():
         print("\n====== doing Kiln Abort :", topic)
+        log.info("Received kilnAbort Command")
         if kiln.kiln == None:
+            log.info("no kiln object, ignore abort")
             return
-        log.info("Recieve kilnAbord Command")
-        kiln.kiln.abort_run()
+        kiln.kiln.end_run()
     elif topic == keyForRunKilnCmd():
         # where do we have the kiln stashed?
         print("\n====== doing Kiln RUN :", topic)
