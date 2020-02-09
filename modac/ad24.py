@@ -19,6 +19,7 @@ log.setLevel(logging.DEBUG)
 import sys
 from time import sleep
 import time
+import json
 
 #print("importing waveshare")
 #if __name__ == "__main__":
@@ -51,12 +52,14 @@ def init():
         log.error("error creating ads1256 A-D Converter")
     else:
         initRet = this.__ads1256.ADS1256_init()
-        if initRet > 0:
+        print ("ADS1256 init: ", initRet)
+        if initRet >= 0:
             this.__isAlive = True
         else:
             log.error("error initializing ADS1256 A-D Converter")
     this.update()
     log.debug("ad24Bit init() complete ... successs? = "+str(this.__isAlive))
+    log.debug("AD24 0-5" + json.dumps(asDict()))
 
     
 def update():
