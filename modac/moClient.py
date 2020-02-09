@@ -42,8 +42,10 @@ def startSubscriber(keys=[keyForAllData(), keyForKilnStatus()]):
     #topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
+    if subscriber == None:
+        log.error("client failed to connect to publisher")
     this.__subscribers.append(subscriber)
-    log.debug("startSubscriber: ", subscriber)
+    # this doesnt format log.debug("startSubscriber: ", subscriber.toString())
     return subscriber
 
 # client Recieve called from main or gtk loop 

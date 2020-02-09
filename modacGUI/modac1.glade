@@ -64,18 +64,40 @@ Joe Ritter - MorphOptic</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="StartCSV">
-                        <property name="label">Start CSV Record</property>
+                      <object class="GtkMenuItem" id="SetCSVTiming">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="label">Set CSV Record Rate</property>
+                        <signal name="activate" handler="on_SetCSVTiming_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="SetCSVFile">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label">Set CSV File</property>
+                        <signal name="activate" handler="on_SetCSVFile_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="StartCSV">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label">Start CSV Record</property>
                         <signal name="activate" handler="on_startCSV_activate" swapped="no"/>
                       </object>
                     </child>
                     <child>
                       <object class="GtkMenuItem" id="StopCSV">
-                        <property name="label">Stop CSV Recording</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="label">Stop CSV Recording</property>
                         <signal name="activate" handler="on_stopCSV_activate" swapped="no"/>
                       </object>
                     </child>

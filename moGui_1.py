@@ -34,6 +34,9 @@ from modac import moData, moNetwork, moClient, moCommand, moCSV
 from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
 from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
 from modacGUI import kilnPanel
+#from modacGUI import CsvStartDialog, CsvTimeStepDialog
+
+maxCsvStep = 240
 
 class ModacApp(Gtk.Application):
     # Main initialization routine
@@ -59,6 +62,13 @@ class ModacAppWindow(object):
     def __init__(self, application):
         self.Application = application
         builder = None
+        now = datetime.datetime.now()
+        self.startTimeStr = now.strftime("%Y%m%d_%H%M")
+        self.csvFilename = "modacClientDataLog_"+self.startTimeStr+".csv"
+        self.last_open_dir = "logs/"
+        self.csvStep = timer_interval
+        self.lastCsvStep = None
+
         # Read GUI from file and retrieve objects from Gtk.Builder
         try:
             log.debug("load gui from file")
@@ -128,8 +138,8 @@ class ModacAppWindow(object):
     
     def on_winMain_destroy(self, widget, data=None):
         log.debug("on_winMain_destory")
-        self.shutdown()
-        #modacExit()
+        #self.shutdown()
+        modacExit()
         #Gtk.main_quit()
 
     def on_notebook1_switch_page(self,  notebook, page, page_num, data=None):
@@ -143,21 +153,57 @@ class ModacAppWindow(object):
         log.debug("should be panel "+ self.label)
         #self.message_id = self.statusbar.push(0, self.label)
     
-    def on_startCSV_activate(self, menuitem, data=None):
-        if moCSV.isOpen():
-            moCSV.close()
-            # TODO maybe we should ask to close
+    def on_SetCSVTiming_activate(self, menuitem, data=None):
+        # dialog to set self.csvStep
+#        dialog = CsvTimeStepDialog(self,maxCsvStep)
+#        response = dialog.run()
+#
+#        if response == Gtk.ResponseType.OK:
+#            self.csvStep = dialog.get_value()
+#            print("CsvTimeStep ok clicked result: ", self.csvStep )
+#        elif response == Gtk.ResponseType.CANCEL:
+#            print("CsvTimeStep Cancel clicked")
+#
+#        dialog.destroy()
+#        pass
+        dialog = Gtk.MessageDialog(self.MainWindow, 0, Gtk.MessageType.WARNING,
+            Gtk.ButtonsType.OK_CANCEL, "Set CSV Time Step")
+        box = dialog.get_content_area()
+        label = Gtk.Label("Seconds between CSV row recording:")
+        box.add(label)
+        # adj = Gtk.Adjustment(timing, 1, this._maxRange, 1, 10)
+        self.csvStep = 1
+        self.maxCsvRange = 240
+        adj = Gtk.Adjustment (self.csvStep, 1.0, self.maxCsvRange, 1.0, 10.0);
+        #creates the spinbutton, with no decimal places
+        #  button = gtk_spin_button_new (adjustment, 1.0, 0);
+        spinbutton = Gtk.SpinButton (adjustment=adj, climb_rate=1, digits=0);
+        #button.set_adjustment(adjustment)
+        spinbutton.set_numeric(True)
+
+        box.add(spinbutton)
+        box.show_all()
+
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            result = spinbutton.get_value()
+            print("spin dialog result: ", result)
+        elif response == Gtk.ResponseType.CANCEL:
+            print("CsvTimeStep Cancel clicked")
+
+        dialog.destroy()
         
-        # select Time?
-        
-        # debugging message
-        log.debug('on_startCSV_activate')
+    def on_SetCSVFile_activate( self, menuitem, data=None):
+        # dialog to set self.csvFilename
         dialog=Gtk.FileChooserDialog(
-            title="Select CSV File",
+            #title="Select CSV File",
+            "Select CSV File", self.MainWindow,
             action=Gtk.FileChooserAction.SAVE,
             buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
-        dialog.set_current_name("modac.csv")
+                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+            )
+        dialog.set_current_name(self.csvFilename)
         dialog.set_default_response(Gtk.ResponseType.OK)
         dialog.set_current_folder(self.last_open_dir)
         filter_csv = Gtk.FileFilter()
@@ -165,14 +211,39 @@ class ModacAppWindow(object):
         filter_csv.add_pattern("*.csv")
         dialog.add_filter(filter_csv)
         response = dialog.run()
-
+        print("FileChooserDialog response: ",response)
         if response == Gtk.ResponseType.OK:
-            filename = dialog.get_filename()
-            self.last_open_dir = dialog.get_current_folder()
-            log.debug("*********Selected CSV file: "+filename)
-            moCSV.init(filename)
-        # enable stop?
+            self.csvFilename = dialog.get_filename()
+            self.last_open_dir = dialog.get_current_folder()        
         dialog.destroy()      
+        pass
+    
+    def on_startCSV_activate(self, menuitem, data=None):
+        if moCSV.isOpen():
+            # dialog to close?
+            dialog = Gtk.MessageDialog(self.MainWindow,0, Gtk.MessageType.WARNING, 
+                Gtk.ButtonsType.OK_CANCEL, "Cancel current recording?")
+            response = dialog.run()
+            dialog.destroy()
+            if response == Gtk.ResponseType.OK:
+                moCSV.close()
+            else:
+                print("Cancel startCSV")
+                return
+        
+        # dialog to confirm w/filename + timing
+        msg = "Record CSV every "+str(self.csvStep)+ " to file:"+self.csvFilename
+        
+        dialog = Gtk.MessageDialog(self.MainWindow, 0, Gtk.MessageType.WARNING,
+            Gtk.ButtonsType.OK_CANCEL, "Start CSV Recording?")
+        dialog.format_secondary_text(msg)
+        response = dialog.run()
+        dialog.destroy()
+        if response == Gtk.ResponseType.OK:
+            print("Start CSV Recording - CONFIRMED")
+            moCSV.init(self.csvFilename )
+        elif response == Gtk.ResponseType.CANCEL:
+            print("Start CSV Recording CANCEL button")
     
     def on_stopCSV_activate(self, menuitem, data=None):
         # debugging message
@@ -200,6 +271,16 @@ class ModacAppWindow(object):
             timestamp = "no data yet"
         #text = "Random number = " + str(random.randint(1,101))
         self.setStatus("Data Updated: #%d at "%self.dataCount +timestamp)
+        # do we need to do CSV row?       self.csvTime()
+        now = datetime.datetime.now()
+        if self.lastCsvStep == None:
+            moCSV.addRow()
+            self.lastCsvStep = now
+        timeDiff = now - self.lastCsvStep
+        if timeDiff.seconds > self.csvStep:
+            moCSV.addRow()
+            self.lastCsvStep = now
+  
         self.updatePanels()
         return True 
 
@@ -218,10 +299,7 @@ class ModacAppWindow(object):
         #moData.logData()
         return True
     
-    def updatePanels(self):
-        # should do this only on CSV schedule
-        moCSV.addRow()
-        
+    def updatePanels(self):        
         self.kilnPanel.update()
         self.enviroPanel.update()
         self.ktypePanel.update()
