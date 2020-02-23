@@ -25,53 +25,21 @@ __typeK = thermocouples['K']
 # kTypeIdx is indicies into AD24Bit array for k-type thermocouple
 # Note length must match moData value returned by
 #kTypeIdx= [0,1,2,3,4,5,6,7]
-#kTypeIdx= [2,3,4,5,6,7] 
+#kTypeIdx= [2,3,4,5,6,7]
 kTypeIdx= [3,4,5,6]
 kTypeIdx= [4,5,6]
 
+# mods to support data from 16bit AD instead
+_use16BitDA = True
+if _use16BitDA:
+    kTypeIdx = [0,1,2]
+
 ampGain = 122.4 # from ad8495 spec sheet
-# offset at Zero calculated by average of 3 sensors run over 1min
-offsetAt0C = 0.645016706666667
-offsetAt0C = 0.131  # value of shorted amp 
-offsetAt0C = 0.03331469 # kiln couple in ice Dec3
-adOffset = 0.012  #magic offset subtracted from adValue, based on roomtemp reading by ktype
-#adOffset = 0.0  #magic offset subtracted from adValue, based on roomtemp reading by ktype
-
-#offsetAt0C = 0.13412795
-#medianAtRoom = 0.23279848
-
-offsetAt0COverGain = offsetAt0C/ampGain
+adOffset = 0.0  #magic offset subtracted from adValue, based on roomtemp reading by ktype
 
 simulation = False
 simulator = None
 
-#def fnMagic(readMV):
-#    ### convert readMV into proper mV for mvToC
-#    # values from calibration runs.
-#    # noted significant variation by sensor and channel
-#    # but for simplicity now we use simple offset
-#    # median ad0-5 at 0C = 0.13412795V
-#    # median ad0-5 at room 25.539 = 0.23279848V
-#    mV = (readMV - offsetAt0C)/ ampGain
-#    #print("fnMagic %8.5f => %8.5f"%(readMV,mV))
-#    return mV
-
-    # vOut = T*5mV = T* 0.005V
-    # T = vOut / 0.005 + magic
-    # table says 0C is 0.000 (3deg is 0.119mV)
-    # table says 25 is 1.0000mV = 0.001V
-    #magicNumber = (0.001f)/0.23279848f
-    #print("fnMagic ", magicNumber)
-    
-
-#def mVToC(mV,tempRef=0, printIt=False):
-#    #_mV = fnMagic(mV)
-#    _mV = adOverGain(mV) *1000.0
-#    print("mVToC",mV, _mV)
-#    c = __typeK.inverse_CmV(_mV, 0)#Tref=tempRef)
-#    if printIt:
-#        print(mV, _mV, c)
-#    return c
 # only looking at kType thermocouples
 __kTypeLookup = thermocouples['K']
 
@@ -142,7 +110,11 @@ def asArray():
     assert not this.simulation
     ktypeData = []
     # retrieve the ad as 0-5V values
-    adArray = ad24.all0to5Array()
+    if _use16BitDA:
+        adArray = moData.getValue(keyForAD16())
+        print("adArray from 16bit ", adArray)
+    else:
+        adArray = ad24.all0to5Array()
     #print("adArray: ", adArray)
     
     # these are in 0-5v, need in mV range for use with conversion library
@@ -153,7 +125,7 @@ def asArray():
     for adIdx in kTypeIdx:
         try:
             t = this.adToC(adArray[adIdx])#roomTemp)
-#        #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
+            print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         except ValueError:
             log.error("Error converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]))
             t = 0
