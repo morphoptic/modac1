@@ -133,7 +133,7 @@ kilnTemps = [0.0,0.0,0.0,0.0] # 0 is avg, 1 lower, 2 middle, 3 upper
 def getTemperatures():
     ''' retrieve thermocouple values degC, avg the ones we want '''
     kTemps = moData.getValue(keyForKType())
-    print("Kiln ktypes read as: ", kTemps)
+    #print("Kiln ktypes read as: ", kTemps)
     sum = 0.0
     this.kilnTemps[1] = kTemps[kType_lower]
     this.kilnTemps[2] = kTemps[kType_middle]

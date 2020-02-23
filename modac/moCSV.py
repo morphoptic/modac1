@@ -44,7 +44,7 @@ def addRow():
     if this.isOpen():
         # gets everything in order
         row = moData.asArray()
-        print("csvRow:",row)
+        #print("csvRow:",row)
         this._csvWriter.writerow(row)
         this._csvFile.flush()
 

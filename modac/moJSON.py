@@ -32,7 +32,7 @@ def snapshot():
         return
     dataSnap = moData.asDict()
     tmpDict = { keyForModacCmd():dataSnap}
-    print("json.snapsot :" + json.dumps(tmpDict))
+    #print("json.snapsot :" + json.dumps(tmpDict))
     json.dump(tmpDict, this.__jsonFile)
     this.__jsonFile.write("\n")
     this.__jsonFile.flush()

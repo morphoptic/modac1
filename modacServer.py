@@ -68,10 +68,10 @@ async def modac_ReadPubishLoop():
         moServer.publish()
         #moData.logData()
         if csvActive == True:
-            print("call csvAddRow")
+            #print("call csvAddRow")
             moCSV.addRow()
         if jsonActive == True:
-            print("call moJSON.snapshot")
+            #print("call moJSON.snapshot")
             moJSON.snapshot()
             
         log.debug("\n*****bottom forever read-publish loop")
