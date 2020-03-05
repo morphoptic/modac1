@@ -17,6 +17,9 @@ import datetime, csv
 _csvFile = None
 _csvWriter = None
 
+timeKey = "time"
+timeFormat = "%I:%M:%S%p"
+
 def isOpen():
     if this._csvWriter == None:
         return False
@@ -26,7 +29,7 @@ def init(filename="modacDataLog.csv"):
     print("moCSV file: ",filename)
     this._csvFile = open(filename, "w")
     this._csvWriter = csv.writer(this._csvFile)
-    names = moData.arrayColNames() # arrayNameOnlyAD24
+    names = [timeKey] +  moData.arrayColNames() # arrayNameOnlyAD24
     #names = moData.arrayNameOnlyAD24()
     print("moCSV col Names", names)
     this._csvWriter.writerow(names)
@@ -40,15 +43,27 @@ def close():
     del this._csvFile
     this._csvFile = None
 
+def addTimeToRow(row):
+    ### add a time column formatted like KISS does its time
+    # strptime should be exact opposite of strftime given same format str
+    # but apparently it doesnt work on pi
+    # but does work later in decimate.csv.py on mac
+    dtStr = moData.getTimestamp()
+    dt = datetime.datetime.strptime(dtStr, moData.getTimeFormat())
+    timeStr = datetime.datetime.strftime(dt, timeFormat)
+    row[timeKey] = timeStr
+    
 def addRow():
     if this.isOpen():
         # gets everything in order
         row = moData.asArray()
+        #addTimeToRow(row)
         #print("csvRow:",row)
         this._csvWriter.writerow(row)
         this._csvFile.flush()
 
 ### start of a class that would write desired Named Data in moData to a csv
+# why do we have the methods above AND this class?
 class modacCSVWriter:
     csvFile = None
     csvWriter = None

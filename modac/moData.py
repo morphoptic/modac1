@@ -120,14 +120,20 @@ def setStatusRunning():
 
 def updateTimestamp():
     update(keyForTimeStamp(), datetime.datetime.now())
-    
+
+def getTimeFormat():
+    return "%Y-%m-%d %H:%M:%S%Z"
+
 def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(value, datetime.datetime):
-            value = value.strftime("%Y-%m-%d %H:%M:%S%Z")
+            value = value.strftime(getTimeFormat())
     this.__moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass
+
+def getTimestamp():
+    return getValue(keyForTimeStamp())
 
 def asDict():
     return __moDataDictionary
