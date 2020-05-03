@@ -2,7 +2,7 @@
 import sys
 import logging
 from time import sleep
-from modac import binaryOutputs, moData
+from ../modac import binaryOutputs, moData
 
 if __name__ == "__main__":
     moLogger.init()

@@ -38,7 +38,7 @@ publishRate = 60.0 # seconds for sleep at end of main loop
 publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
-jsonActive = True
+jsonActive = False
 startKilnOnStartup = True
 
 def modacExit():
@@ -46,8 +46,10 @@ def modacExit():
     kilnControl.kiln.endKiln()
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
-    moCSV.close()
-    moJSON.closeJsonLog()
+    if csvActive:
+        moCSV.close()
+    if jsonActive:
+        moJSON.closeJsonLog()
     moData.shutdown()
     moServer.shutdownServer()
     log.info("closed everything i think")

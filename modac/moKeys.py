@@ -91,5 +91,8 @@ def keyForKilnHeaters(): return 'KilnHeatersReported'
 def keyForKilnHeaterCmd(): return 'KilnHeaterCommanded'
 def keyForKilnTemps(): return 'KilnTemps'
 
+def keyForKilnHoldTime(): return 'KilnHoldTime'
+def keyForKilnTimeInHold(): return 'KilnTimeInHold'
+
 def keyForSimulate(): return 'KilnSimulate'
 def keyForEmergencyOff(): return 'EmergencyOff'

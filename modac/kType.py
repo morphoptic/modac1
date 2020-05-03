@@ -130,6 +130,7 @@ def asArray():
             log.error("Error converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]))
             t = 0
         ktypeData.append(t)
+    print ("KType as array", ktypeData)
     return ktypeData
 
 def asDict():
@@ -156,14 +157,16 @@ class SimulateKtypes:
         kilnState = kilnStatus[keyForState()]
         binOut = moData.getValue(keyForBinaryOut())
         sum = 0.0
+        print("update simulated ktypes, len ", len(self.ktypeData))
+        print("update simulated heaters, len ", len(heaters))
         for i in range(1,len(heaters)):
             heaterOn = binOut[heaters[i]]
+            print("Heater ",i, heaters[i], "is ", heaterOn)
             if heaterOn:
-                print("Heater ",i, heaters[i], "is On")
-                self.ktypeData[i] += self.increaseRate *random()
+                self.ktypeData[i-1] += self.increaseRate *random()
             if binOut[fan_exhaust]:
-                self.ktypeData[i] -= self.decreseRate *random()
-            sum += self.ktypeData[i]
+                self.ktypeData[i-1] -= self.decreseRate *random()
+            sum += self.ktypeData[i-1]
         self.ktypeData[0] = sum/3
 
         #post updated values to moData

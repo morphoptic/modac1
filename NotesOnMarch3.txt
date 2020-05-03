@@ -1,0 +1,96 @@
+Notes on March 3 test
+Start roughly noon:10
+
+using EtekCity infrared thermometer w/laser dot
+pointing thru top kiln window at black plate at bottom.
+
+laser temp reading in kiln = 21C
+front panel reading 20C
+
+program
+Temp	HoldTime
+23	15
+100	15
+33	10
+200	15
+33	15
+
+Plan is to open kiln during cool down to accelerate cooling
+
+Second test will use Joe's cook to 650 
+and will restart both MODAC and KISS
+
+12:17 T 25C laser 27C panel 
+
+12:24 - panel temp says 32C
+KISS status is not showing temps.
+Gonna kill it and restart
+
+stop'd using front panel Start/Stop
+oh so now KISS shows status Stopped
+start blower at 12:27
+laser temp 28C panel 33 kiss 32 moC 40
+
+12:38 panel 28 laser 27 kiss 28 moC 30
+12:39 start program run
+12:43 kiss reports Ramp2 temp 47C panel 49 moC 65 laser 41
+ramping to 100C
+12:55 laser 73C panel 88 kiss 88 moC 129
+
+13:01 in hold at 100
+panel 104 kiss 103 laser 86 moC 150
+enviro 25C laser on enviro 25C
+
+13:15 lifetd lid and ck temp w laser
+103 pointed at underside of ceramic plate (pizza under black p)
+so laser is reasonable
+
+13:21 in seg 3 cool down.
+panel 98 kiss 97 laser 70 moC 127
+
+
+open kiln, run fan
+ceramic plate reads 98
+
+13:44 panel 44C kiss 33C moC 41c laser 38 thru top
+laserpalte 35 near fan 45 further
+real slow going to get to 33C
+14:05 panel 37C kiss 37C moC 33C laser 29C
+14:12 enters seg 3 Hold at 33
+panel 32 kiss 32 moC 30 laser 28
+
+dont close kiln just yet as bricks will rise temp
+
+14:22 seg 4 reheat
+panel 56 kiss 56 moC 66
+
+14:34 panel 166 kiss 166 moC 238 laser 122
+
+14:42 hold segment
+panel 204 kiss 203 mo 283 l 133C
+
+14:53 Panel 200 kiss 199 moC 263 laser 133
+
+(note: Gui2 is MUCH more responsive to mouse clicks than Gui1. fewer panels to update and less memory?  profiling showed lots of array copies)
+
+14:57 begin seg 5 = cool down 
+panel 200 kiss 199 moC 258 L 133
+
+15:00 open kiln, start fan
+panel 195 kiss 194 moC 244 L 123
+
+15:11 panel 97 kiss 97 mo 103 L 86
+
+15:28 panel 63 kiss 63 mo 60 L 49
+
+15:50 panel 48 kiss 47 mo 43 L 37
+
+15:50 Close up, note temp starts rising
+15:53 panel 55 kiss 54 mo 49 
+
+15:54 stop run
+stop runs and records
+move logs to usb
+restart and run Joe's program
+
+

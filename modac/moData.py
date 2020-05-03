@@ -104,6 +104,9 @@ def init(client=False):
             keyForTargetDist(): 0,
             keyForKilnHeaters(): [False,False,False,False],
             keyForKilnHeaterCmd(): [False,False,False,False],
+            keyForKilnHoldTime(): 0,
+            keyForKilnTimeInHold(): 0,
+
         }
         update(keyForKilnStatus(), def_kiln)
 
