@@ -48,7 +48,7 @@ emergency_shutoff_temp = 800  # if kiln ever gets this hot, shutdown and vent
 default_holdTemp = 500
 default_targetDisplacement = 10
 default_maxTime = 1000 #minutes
-default_stepTime = 10
+default_stepTime = 2 # 10
 
 ###
 # this lets any watchers note end of run and reset gui, etc

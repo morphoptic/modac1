@@ -166,6 +166,8 @@ class SimulateKtypes:
                 self.ktypeData[i-1] += self.increaseRate *random()
             if binOut[fan_exhaust]:
                 self.ktypeData[i-1] -= self.decreseRate *random()
+                if self.ktypeData[i-1] < 0:
+                    self.ktypeData[i-1] = 0 # dont let it go below
             sum += self.ktypeData[i-1]
         self.ktypeData[0] = sum/3
 

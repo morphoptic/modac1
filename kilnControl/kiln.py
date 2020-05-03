@@ -229,7 +229,7 @@ class Kiln:
         moHardware.binaryCmd(heater_middle, HeaterOff)
         moHardware.binaryCmd(heater_upper, HeaterOff)
         self.reset()
-        self.runnable = False  # this should stop loop
+        #self.runnable = False  # this should stop loop & kill thread
         # turn off 12v Power
         setRelayPower(False)
         # and turn off simulation
@@ -334,6 +334,7 @@ class Kiln:
                 log.error("emergency!!! temperature too high, shutting down")
                 moHardware.EmergencyOff()
                 return
+            
         if (self.kilnTemps[0] < 0.0):
             # should never get below zero
             log.error("Kiln ERROR: average temp is below zero! "+str(self.kilnTemps[0]))
@@ -344,7 +345,8 @@ class Kiln:
         if self.state == KilnState.Idle:
             #print("Kiln idle step")
             return
-        log.info("kilnStep not Idle")
+        
+        log.info("kilnStep not Idle = " + str(self.state))
         
         # how long since last step?
         self.runtime = (currentTime - self.startTime).total_seconds()
@@ -359,6 +361,7 @@ class Kiln:
             # hold EndRun for a bit to let UI/monitors know
             if (self.runtime - self.endRunStart) >= endRunHoldTime:
                 self.state = KilnState.Idle
+                log.debug("Kiln state change EndRun > Idle")
                 #anything else need reset?
             return
         
@@ -367,6 +370,7 @@ class Kiln:
         if self.state == KilnState.Cooling :
             if self.kilnTemps[0] <= (self.kilnStartTemps[0]+0.1):
                 log.info("Cooling kiln has reached start temp, switch to EndRun")
+                log.debug("Kiln state change Cooling > EndRun")
                 self.state = KilnState.EndRun
                 self.endRunStart = self.runtime
                 self.kilnTemps = self.kilnStartTemps
@@ -377,7 +381,8 @@ class Kiln:
         if self.state == KilnState.Holding :
             # holding at target temp, how long we been here?
             # self.targetHoldTime = 0 # minutes to hold at target temp, default 0 = ignore
-            self.timeInHold = (currentTime - self.startHoldTime).total_seconds / 60.0
+            log.debug("Kiln HOLDING started at "+str(self.startHoldTime) +" cur:"+str(currentTime))
+            self.timeInHold = (currentTime - self.startHoldTime).total_seconds() #/ 60.0
             log.debug("Kiln Holding, target " +str(self.targetHoldTime)+ " In Hold" +str(self.timeInHold))
             
             if self.targetHoldTime > 0.0 and self.timeInHold > self.targetHoldTime :
@@ -390,7 +395,7 @@ class Kiln:
             # reached temp, state should be Hold
             self.state = KilnState.Holding
             self.startHoldTime = currentTime
-            log.debug("Kiln Switch to Holding State" +str(currentTime))
+            log.debug("Kiln Switch to Holding State "  +str(currentTime))
             
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway

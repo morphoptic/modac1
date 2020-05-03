@@ -127,6 +127,7 @@ class kilnPanel():
 
         widget = self.builder.get_object(keyForKilnTimeInHold())
         timeInHold = self.kilnStatus[keyForKilnTimeInHold()]
+        log.debug("KilnPanel update timeInHold "+ str(timeInHold))
         widget.set_text("{0} : {1:5.3f}".format(keyForKilnTimeInHold(),timeInHold) )
 
         widget = self.builder.get_object(keyForStartDist())
