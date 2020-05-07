@@ -391,7 +391,8 @@ class Kiln:
                 self.startCooling()
  
         # test if reached hold temp +- some epsilon
-        if self.state == KilnState.Heating and self.targetTemp <= self.kilnTemps[0] + self.tempertureEpsilon:
+        if self.state == KilnState.Heating and self.targetTemp <= self.kilnTemps[0] :
+            #+ self.tempertureEpsilon:
             # reached temp, state should be Hold
             self.state = KilnState.Holding
             self.startHoldTime = currentTime
