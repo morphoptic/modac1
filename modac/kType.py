@@ -137,7 +137,7 @@ def asDict():
     return {keyForKType(): asArray() }
 
 from kilnControl.kilnConfig import *
-from kilnControl.kiln import KilnState
+from kilnControl import kilnState
 from random import random
 
 class SimulateKtypes:

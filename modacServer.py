@@ -43,7 +43,7 @@ startKilnOnStartup = True
 
 def modacExit():
     log.info("modacExit shutting down")
-    kilnControl.kiln.endKiln()
+    kilnControl.killKilnControlProcess()
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     if csvActive:
@@ -118,7 +118,7 @@ async def modac_asyncServer():
         # Start kiln now or on reciept of StartKiln?
         # start the kiln control process
         if startKilnOnStartup == True:
-            await kilnControl.kiln.startKilnCmd(nursery)
+            await kilnControl.kiln.startKilnControlProcess(nursery)
         else:
             moData.update(moKeys.keyForKilnStatus(), moKeys.keyForNotStarted())
 

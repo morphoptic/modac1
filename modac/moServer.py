@@ -1,4 +1,7 @@
-# moServer - modac Server networking stuff  
+# moServer - modac Server networking stuff
+#   Publish puts out tagged JSON messages of encrypted key,data (clients subscribe)
+#       actually publishing is synchronous
+#   Listen Thread: async to listen for client commands and serverDispatch() them
 
 # cute hack to use module namespace this.fIO this.value should work
 import sys
@@ -58,8 +61,8 @@ def publishData(key, value):
 
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
-                                polyamorous=True,
-                                recv_timeout=moNetwork.rcvTimeout())
+                                polyamorous=True, # poly means we listen to many
+                                recv_timeout = moNetwork.rcvTimeout())
     print("Cmd Listener: ",this.__CmdListener)
     nursery.start_soon(cmdListenLoop)
 
@@ -126,7 +129,8 @@ def serverDispatch(topic,body):
     log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForEmergencyOff():
         log.debug("EmergencyOff Cmd dispatching")
-        moHardware.EmergencyOff()
+        moHardware.EmergencyOff() #patches thru to kiln.emergencyOff()
+        
     elif topic == keyForBinaryCmd():
         payload = body # json.loads(body)
         #print("serverDispatch payload")
@@ -136,34 +140,41 @@ def serverDispatch(topic,body):
         moHardware.allOffCmd()
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
+        
+    # kiln control commands: startProcess, kill process, runScript, stopScript
     elif topic == keyForStartKilnCmd():
-        startKiln() # spawn thread to run kiln
-    elif topic == keyForKilnAbortCmd():
-        print("\n====== doing Kiln Abort :", topic)
-        log.info("Received kilnAbort Command")
+        kiln.handleStartKilnProcessCmd() # spawn thread to run kiln
+    elif topic == keyForEndKilnProcess():
+        kiln.handleEndKilnProcessCmd() # spawn thread to run kiln
+        
+    elif topic == keyForStopKilnScript():
+        print("\n====== doing Kiln Abort script :", topic)
+        log.info("Received StopKilnScript Command")
         if kiln.kiln == None:
             log.info("no kiln object, ignore abort")
             return
-        kiln.kiln.end_run()
-    elif topic == keyForRunKilnCmd():
+        kiln.handleEndKilnScriptCmd()
+        
+    elif topic == keyForRunKilnScript():
         # where do we have the kiln stashed?
         print("\n====== doing Kiln RUN :", topic)
         if kiln.kiln == None:
-            log.error("No Kiln to run!")
+            log.error("run script, but No Kiln to run!")
         else:
-            print("\n\nload and run kiln, body == ", body)
+            print("\n\nload and run kiln script, body == ", body)
             if body == []:
                 log.error("No data on runKiln")
             else:
                 log.info("=== RunKiln param:", body)
                 # need to unpack body?
                 log.info("kiln cmd rcv with body: "+str(body))
-                kiln.runKilnCmd(body)
-    elif topic == keyForResetLeica():
-        leicaDistoAsync.reset()
+                kiln.handleRunKilnScriptCmd(body)
+            pass
+        pass
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
-    # handle other client messages   
+        pass
+        
 
 if __name__ == "__main__":
     print("moServer has no self test")

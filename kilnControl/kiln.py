@@ -4,15 +4,16 @@
 #  most configuration is in kilnControl.py
 #  kilnState.py defines enum class for stateMachine
 #
-#  currently only does single PID run defined as
+#  7may20- revaming for multi step sequence/scripts
+#  old: currently only does single PID run defined as
 #  Heat to Temp, hold till displacement, cool down
 #  single or 3 ktypes optional config, all heaters gang on/off
 #
 # External API:
-#  startKiln(nursery) creates Kiln obj, sets up thread
-#  endKiln() terminates thread
+#  startKilnControlProcess(nursery) creates Kiln obj, sets up thread
+#  endKilnControlProcess() terminates thread
 #  emergencyShutoff() shuts down kiln (12vrelay power)
-#  runKilnCmd(params): Cmd handler to run a kiln cycle. params is dictionary of Keys
+#  runKilnScript(params): Cmd handler to run a kiln cycle. params is Dict with array of KilnStep
 #
 
 import sys
@@ -32,11 +33,12 @@ from . import pidController
 from modac import moData, moHardware, moServer
 from modac.moKeys import *
 from .kilnConfig import *
-from .kilnState import KilnState
+from .kilnState import KilnState, KilnScriptState
+from .kilnScript import *
 
 #####################
 # singleton really
-kiln = None
+kilnInstance = None
 # are we allowing control
 #enableKilnControl = False
 enableKilnControl = True
@@ -61,45 +63,62 @@ def emergencyShutOff():
     # ring alarm bell (dont have one, yet)
     endKiln() #terminate thread
     # error state tells it we not running
-    this.kiln.state = KilnState.Error
-    this.kiln.runnable = False
+    this.kilnInstance.state = KilnState.Error
+    this.kilnInstance.runnable = False
 
 #####################
 # use command to start kiln process
-async def startKilnCmd(nursery=None):
-    if not this.kiln == None:
+async def startKilnControlProcess(nursery=None):
+    if not this.kilnInstance == None:
         log.error("StartKilnCmd but Kiln already instanced")
         return
     if nursery == None:
         nursery = moData.getNursery()
-    await startKiln(nursery)
         
-
-async def startKiln(nursery):
-    '''start kiln thread in nursery'''
     if enableKilnControl:
         log.debug("startKiln soon")
-        this.kiln = Kiln()#simulate=True)
-        nursery.start_soon(this.kiln.runKiln)
+        this.kilnInstance = Kiln() #simulate=True)
+        nursery.start_soon(this.kilnInstance.kilnControlProcess)
     else:
         log.debug("Kiln Control Disabled")
-
-def closeKiln():
-    endKiln()
-    kiln = None
-    log.debug("kiln closed")
-    
-def endKiln():
+        
+def endKilnControlProcess():
     '''terminate the kiln thread'''
-    if this.kiln == None:
+    if this.kilnInstance == None:
         log.debug("endKiln, no kiln")
         return
-    this.kiln.end_run() #stops run, doesnt terminate thread
-    this.kiln.runnable = False # this should terminate thread
-    this.kiln.state = KilnState.Closed
-    this.kiln.publishStatus() 
+    this.kilnInstance.terminateScript() #stops run, doesnt terminate thread
+    this.kilnInstance.runnable = False # this should terminate thread
+    this.kilnInstance.state = KilnState.Closed
+    this.kilnInstance.publishStatus() 
     # 
     log.debug("endKiln executed")
+
+def handleRunKilnScriptCmd(params):
+    '''handler for interprocess command to run a kiln cycle. params is dictionary of Keys'''
+    # in process of conversion - old one step run; new multi-step script
+    # each kilnStep has a TargetTemp, and two end conditions: HoldTime, SlumpDistance
+    print("\n\n*****runKilnScriptCmd", params)
+    if this.kilnInstance == None:
+        log.error("No Kiln found")
+        return
+    try:
+        simulate = params[keyForSimulate()]
+        # moHardware tells kTypes to simulate values and Kiln to use sim processing
+        moHardware.simulateKiln(simulate)
+        
+        targetT = params[keyForTargetTemp()]
+        displacement = params[keyForTargetDisplacement()]
+        maxTime = params[keyForMaxTime()]
+        timeStep = params[keyForTimeStep()]
+        holdTime = params[keyForKilnHoldTime()]
+        this.kilnInstance.startRun(targetT, displacement, maxTime, timeStep, holdTime)
+    except:
+        log.error("Bad Parameters: "+ params.ToString())
+
+def handleEndKilnScriptCmd():
+    # tell script to stop and set status back to KilnState.Idle
+    pass
 
 #####################
 
@@ -222,8 +241,8 @@ class Kiln:
         log.debug("Kiln reset")
         self.publishStatus()
 
-    def end_run(self):
-        log.info("kiln.end_run()")
+    def terminateScript(self):
+        log.info("kiln.terminateScript()")
         # should turn off all heaters
         moHardware.binaryCmd(heater_lower, HeaterOff)
         moHardware.binaryCmd(heater_middle, HeaterOff)
@@ -235,7 +254,7 @@ class Kiln:
         # and turn off simulation
         moHardware.simulateKiln(False)
         self.publishStatus()      
-        log.info("end_run")
+        log.info("terminateScript")
        
     def get_status(self):
         startTimeStr =" NotStarted"
@@ -282,9 +301,9 @@ class Kiln:
         moData.update(keyForKilnStatus(), self.get_status())
 #        moServer.publishData(keyForKilnStatus(), self.get_status())
     
-    async def runKiln(self):
+    async def kilnControlProcess(self):
         self.state = KilnState.Idle
-        log.info("\n\n****** RunKiln starting Kiln Status %r"%self.get_status())
+        log.info("\n\n****** kilnControlProcess starting Kiln Status %r"%self.get_status())
         self.runLoopStarted = True
         log.debug("runKiln")
         
@@ -353,7 +372,7 @@ class Kiln:
 
         if (self.runtime >= self.maxTimeSec):
             log.error("Max Time for run exceeded, abort run")
-            self.end_run()
+            self.terminateScript()
             return;
 
         # 
@@ -519,27 +538,7 @@ class Kiln:
         log.info("Starting Kiln run.. status:"+ str(self.get_status()))
         log.info("async kiln loop should pick this up")
         
-def runKilnCmd(params):
-    '''handler for interprocess command to run a kiln cycle. params is dictionary of Keys'''
-    print("\n\n*****runKilnCmd", params)
-    if this.kiln == None:
-        log.error("No Kiln found")
-        return
-    try:
-        simulate = params[keyForSimulate()]
-        # moHardware tells kTypes to simulate values and Kiln to use sim processing
-        moHardware.simulateKiln(simulate)
-        
-        targetT = params[keyForTargetTemp()]
-        displacement = params[keyForTargetDisplacement()]
-        maxTime = params[keyForMaxTime()]
-        timeStep = params[keyForTimeStep()]
-        holdTime = params[keyForKilnHoldTime()]
-        this.kiln.startRun(targetT, displacement, maxTime, timeStep, holdTime)
-    except:
-        log.error("Bad Parameters: "+ params.ToString())
-        
-    
+  
         
         
         
