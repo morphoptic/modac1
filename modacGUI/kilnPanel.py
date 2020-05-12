@@ -119,40 +119,40 @@ class kilnPanel():
         widget = self.builder.get_object(keyForState())
         widget.set_text(keyForState()+ " : "+ self.stateName)
 
-        widget = self.builder.get_object(keyForStartTime())
-        widget.set_text(keyForStartTime()+ " : "+ self.kilnStatus[keyForStartTime()])
+        widget = self.builder.get_object(KilnStartTime())
+        widget.set_text(KilnStartTime() + " : " + self.kilnStatus[KilnStartTime()])
 
         widget = self.builder.get_object(keyForRuntime())
         widget.set_text("{0} : {1:5.3f}".format(keyForRuntime(),self.kilnStatus[keyForRuntime()]) )
 
-        widget = self.builder.get_object(keyForKilnTimeInHold())
-        timeInHold = self.kilnStatus[keyForKilnTimeInHold()]
+        widget = self.builder.get_object(keyForKilnTimeInHoldMinutes())
+        timeInHold = self.kilnStatus[keyForKilnTimeInHoldMinutes()]
         log.debug("KilnPanel update timeInHold "+ str(timeInHold))
-        widget.set_text("{0} : {1:5.3f}".format(keyForKilnTimeInHold(),timeInHold) )
+        widget.set_text("{0} : {1:5.3f}".format(keyForKilnTimeInHoldMinutes(), timeInHold))
 
-        widget = self.builder.get_object(keyForStartDist())
-        widget.set_text("{0} : {1:5.3f}".format(keyForStartDist(),self.kilnStatus[keyForStartDist()]) )
+        widget = self.builder.get_object(keyForStartDistance())
+        widget.set_text("{0} : {1:5.3f}".format(keyForStartDistance(), self.kilnStatus[keyForStartDistance()]))
 
         widget = self.builder.get_object(keyForTargetDist())
         widget.set_text("{0} : {1:5.3f}".format(keyForTargetDist(),self.kilnStatus[keyForTargetDist()]) )
 
-        widget = self.builder.get_object(keyForCurrDisplacement())
-        widget.set_text("{0} : {1:5.3f}".format(keyForCurrDisplacement(),self.kilnStatus[keyForCurrDisplacement()]) )
+        widget = self.builder.get_object(keyForCurrentDisplacement())
+        widget.set_text("{0} : {1:5.3f}".format(keyForCurrentDisplacement(), self.kilnStatus[keyForCurrentDisplacement()]))
 
-        temps = self.kilnStatus[keyForKilnTemps()]
-        tempStr = keyForKilnTemps() +"(avg, low, mid, up):"
+        temps = self.kilnStatus[keyForKilnTemperatures()]
+        tempStr = keyForKilnTemperatures() + "(avg, low, mid, up):"
         for i in range(len(temps)):
             tempStr += "{0:5.2f}, ".format(temps[i])
-        widget = self.builder.get_object(keyForKilnTemps())
+        widget = self.builder.get_object(keyForKilnTemperatures())
         widget.set_text(tempStr)
 
         widget = self.builder.get_object(keyForKilnHeaters())
         s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaters()] ])
         widget.set_text(keyForKilnHeaters()+ " : " + s)
 
-        widget = self.builder.get_object(keyForKilnHeaterCmd())
-        s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaterCmd()] ])
-        widget.set_text(keyForKilnHeaterCmd()+ " : " + s)
+        widget = self.builder.get_object(keyForKilnHeaterCommanded())
+        s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaterCommanded()]])
+        widget.set_text(keyForKilnHeaterCommanded() + " : " + s)
 
         # Kiln Relay Status: get these direct from binary out
         from kilnControl import kilnConfig
@@ -204,7 +204,7 @@ class kilnPanel():
         self.abortBtn.set_sensitive(True)
 
         print("\n**** Send RunKiln: ", param)
-        moCommand.cmdRunKiln(param)
+        moCommand.cmdRunKilnScript(param)
         
     def onTerminateRun(self, button):
         log.debug("onTerminateRun")

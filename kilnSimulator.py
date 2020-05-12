@@ -42,7 +42,7 @@ def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     exit(0)
 
-secondsToRunTest = 20
+secondsToRunTest = 90
 
 async def simulateKiln():
     print("simulate kiln")

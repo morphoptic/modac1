@@ -33,8 +33,8 @@ def cmdRunKilnScript(param={}):
     # new kiln.startRun: takes holdTemp, deflectionDist, maxTime, stepTime
     # these could be fields in Kiln page
     # also should display Kiln.status
-    print("cmdRunscriptKiln key=" , keyForRunKilnScriptCmd())
-    moClient.sendCommand(keyForRunKilnScriptCmd(), param)
+    print("cmdRunscriptKiln key=" , keyForRunKilnScript())
+    moClient.sendCommand(keyForRunKilnScript(), param)
     
 def cmdAbortKiln():
     moClient.sendCommand(keyForKilnAbortCmd(),())

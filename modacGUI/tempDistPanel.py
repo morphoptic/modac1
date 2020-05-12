@@ -102,11 +102,11 @@ class tempDistPanel():
         self.timestamp = moData.getValue(keyForTimeStamp())
         kilnStatus = moData.getValue(keyForKilnStatus())
         
-        ktypes = kilnStatus[keyForKilnTemps()]
+        ktypes = kilnStatus[keyForKilnTemperatures()]
         #print("kTypes Update = ", ktypes)
         #lData = moData.getValue(keyForLeicaDisto())
         #distance = lData[keyForDistance()]
-        distance = kilnStatus[keyForCurrDisplacement()]
+        distance = kilnStatus[keyForCurrentDisplacement()]
         #print("leicaPanel.getData = ", lData)
         #self.timestamp = lData[keyForTimeStamp()]
 

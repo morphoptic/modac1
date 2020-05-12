@@ -8,10 +8,6 @@
 # if displacement is within this of target, start cooling
 distanceEpsilon = 0.001
 
-# temp target epsilon - if within this of target, its There
-# didnt work right so remove for now
-# tempertureEpsilon = 1.0
-
 # 12v power to driver side of relays is on BinaryOutput[0] (controlled power strip)
 relayPower = 0  # gpio controlled power strip
 
@@ -52,9 +48,11 @@ emergency_shutoff_temp = 800  # if kiln ever gets this hot, shutdown and vent
 #####################
 default_holdTemp = 500
 default_targetDisplacement = 10
-default_maxTime = ((60 * 24) * 3) # max minutes the system should run
-default_stepTime = 10 # time between PID control loop cycles; short for testing 10 for real
-
+default_maxTime = ((60 * 24) * 3) # max minutes the system should run (minutes in day) * days
+default_stepTime = 10 # time between PID control loop cycles; short for testing, 10sec for real
+idleStateTimeStep = 3 # while idle; kilnControlProcess needs to respond quick to commands (startScript, die)
+default_kilnTemperatures = [23, 23, 23, 23] # avg, bottom, middle, top
 ###
 # this lets any watchers note end of run and reset gui, etc
 endRunHoldTime = 60 # sec to wait after cool down before idle
+

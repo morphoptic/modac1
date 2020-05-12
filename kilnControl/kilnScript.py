@@ -18,6 +18,23 @@
 #
 
 from .kilnState import KilnState, KilnScriptState
+#from .kiln import  kilnInstance
+
+def parseKilnScript(params):
+    # JSON converted to dictionary
+# { kilnScript
+# }
+#
+    simulate = params[keyForSimulate()]
+    # moHardware tells kTypes to simulate values and Kiln to use sim processing
+    moHardware.simulateKiln(simulate)
+    targetT = params[keyForTargetTemp()]
+    displacement = params[keyForTargetDisplacement()]
+    maxTime = params[keyForMaxTime()]
+    timeStep = params[keyForTimeStep()]
+    holdTime = params[keyForKilnHoldTime()]
+
+    kilnInstance.startScript(targetT, displacement, maxTime, timeStep, holdTime)
 
 class KilnScriptSegment:
     stepIdx = -1 # index into Script[], maybe
@@ -26,6 +43,8 @@ class KilnScriptSegment:
     targetTemperature = 0 # deg C; temp the kiln should reach in this segment
     targetDistanceChange = 0 # if <=0 then ignore distance
     holdTimeMinutes = 0 # minutes to hold once targetTemperature is reached
+    exhaustFan = 0 # off or on
+    supportFan = 0 # off or on
     
     # these are locals for running the script
     segmentState = KilnScriptState.NoScriptStep
