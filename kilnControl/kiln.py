@@ -60,10 +60,11 @@ def emergencyShutOff():
     moHardware.binaryCmd(heater_upper, HeaterOff)
     moHardware.binaryCmd(fan_exhaust, True)
     # ring alarm bell (dont have one, yet)
-    endKiln() #terminate thread
-    # error state tells it we not running
     this.kilnInstance.state = KilnState.Error
     this.kilnInstance.processRunnable = False
+    endKilnControlProcess() #terminate thread
+    # error state tells it we not running
+
 
 #####################
 # use command to start kiln process
@@ -145,7 +146,6 @@ class Kiln:
         # simulation was removed for modac, need it for good testing
         self.processRunnable = False
         self.state = KilnState.Closed
-        self.processTimeStep = idleStateTimeStep
         self.reset()
         log.debug("Kiln initialized")
         self.state = KilnState.Starting
@@ -154,6 +154,7 @@ class Kiln:
         self.processStartTime = 0
         self.processRuntime = 0
         self.totaltime = 0
+        self.sleepThisStep = idleStateTimeStep
 
         self.state = KilnState.Idle
         self.scriptState = KilnScriptState.NoScriptStep
@@ -216,25 +217,25 @@ class Kiln:
             keyForTimeStamp():  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z"),
             #kiln state
             keyForState(): self.state.name,
-            keyForKilnScriptState: self.scriptState.name,
+            keyForKilnScriptState(): self.scriptState.name,
 
             # Script Segment Parameters
-            keyForSegmentIndex: self.scriptIndex,
+            keyForSegmentIndex(): self.scriptIndex,
             keyForTargetTemp(): self.targetTemperature,
             keyForKilnHoldTime(): self.targetHoldTime,
             keyForTargetDisplacement(): self.targetDisplacement,
-            keyForTimeStep(): self.time_step,
+            keyForTimeStep(): self.sleepThisStep,
             keyForMaxTime(): self.maxTimeMin,
 
             # Script Segment data
             keyForKilnTimeInHoldSeconds(): self.timeInHoldSeconds,
-            keyForKilnTimeInHoldMinutes(): self.timeInHoldinutes,
+            keyForKilnTimeInHoldMinutes(): self.timeInHoldMinutes,
             keyForKilnHoldStartTime(): self.startHoldTime,
             keyForKilnRuntime(): self.processRuntime,
             KilnStartTime(): startTimeStr,
             
             keyForStartDistance(): self.startDistance,
-            keyForTargetDist(): self.targetDisplacement,
+            keyForTargetDisplacement(): self.targetDisplacement,
             
             keyForCurrentDisplacement(): self.currentDisplacement,
             
@@ -247,9 +248,10 @@ class Kiln:
 
     def publishStatus(self):
         '''Put KilnStatus into moData, does NOT publish separate cmd'''
-        log.info("Publish Kiln Status %r" % self.collectStatus())
-        moData.update(keyForKilnStatus(), self.collectStatus())
-#        moServer.publishData(keyForKilnStatus(), self.get_status())
+        status = self.collectStatus()
+        log.info("Publish Kiln Status %r" % status)
+        moData.update(keyForKilnStatus(), status)
+        #moServer.publishData(keyForKilnStatus(), status) # separate publish? or as part of moData?
 
     # kilnControlProcess runs in an async Trio thread, mostly sits Idle, unless running a script
     async def kilnControlProcess(self):
@@ -267,7 +269,7 @@ class Kiln:
         self.state = KilnState.Idle
         while self.processRunnable:
             self.kilnStep()
-            self.sleepThisStep = self.time_step
+            #self.sleepThisStep = self.time_step   # TODO set this in KilnStep
             self.publishStatus()
             #print("bottom of forever loop sleep for",self.sleepThisStep)
             await trio.sleep(self.sleepThisStep)
@@ -476,15 +478,15 @@ class Kiln:
             # use only the lower (first) ktype = bottom
             self.kilnTemps[0] = self.kilnTemps[1]
 
-        tempStr = keyForKilnTemperatures() + ":"
-        for i in range(len(this.kilnTemps)):
-            tempStr += "{0:5.2f} ".format(this.kilnTemps[i])
-        log.debug("Kiln get temps = " + tempStr)
+        #tempStr = keyForKilnTemperatures() + ":"
+        #for i in range(len(self.kilnTemps)):
+        #    tempStr += "{0:5.2f} ".format(self.kilnTemps[i])
+        #log.debug("Kiln get temps = " + tempStr)
 
     def updateDistance(self):
         if this.simulation:
             slumpRate = 0.1 # mm per loop
-            if self.state == KilnState.Holding:
+            if self.state == KilnState.RunningScript and self.scriptState == KilnScriptState.Holding :
                 self.currentDistance += slumpRate
         else:
             lData = moData.getValue(keyForLeicaDisto())

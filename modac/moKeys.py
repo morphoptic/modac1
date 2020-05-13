@@ -106,6 +106,7 @@ def keyForCurrentDisplacement():return 'KilnCurrentDisplacement'
 
 def KilnStartTime():return 'KilnStartTime'
 def keyForKilnTimeInHoldMinutes(): return 'KilnTimeInHoldMinutes'
+def keyForKilnTimeInHoldSeconds(): return 'KilnTimeInHoldSeconds'
 def keyForKilnHoldStartTime(): return "KilnHoldStartTime"
 def keyForKilnHeaters(): return 'KilnHeatersReported'
 def keyForKilnHeaterCommanded(): return 'KilnHeaterCommanded'
