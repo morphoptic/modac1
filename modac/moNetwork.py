@@ -49,7 +49,7 @@ def cmdAddress():
 
 # timeout for cmd recieve.  CmdListener loop delays any checks this long
 def rcvTimeout():
-    return 10
+    return 100
 
 def sendTimeout():
     return 10

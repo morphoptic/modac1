@@ -1,5 +1,16 @@
 # moData = common data repo under mordac
 
+#### use this to get current and parent directories, and append parent to Python's import path
+import sys, os
+__dirName__ = os.path.dirname(os.path.abspath(__file__))
+__parentDirName__ = os.path.dirname(os.path.abspath(__dirName__))
+print("importing " + __dirName__)
+print("parentImport " + __parentDirName__)
+sys.path.append(__parentDirName__)
+#### now we can reference sibling folders
+
+from kilnControl import kilnState  # to get default, if works this is how hw should provide its default status
+
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
@@ -15,6 +26,7 @@ log.setLevel(logging.DEBUG)
 # TODO: set this with config shared with server (original concept of Channels)
 # num of entries should be matched in their init and raise error/assert if not same
 # really should come from some config file, with names too
+# perhaps these need to be in the config.py files? moConfig kilnConfig
 __numKType = 3
 def setNumKType(num):
     __numKType = num
@@ -26,6 +38,8 @@ def numAD24():
     return 8
 def numAD16():
     return 4
+
+logAsJSON = True
 
 if __name__ == "__main__":
     print("NumKtype: ", numKType())
@@ -87,23 +101,8 @@ def init(client=False):
         update(keyForKType(), [0.0]*this.numKType())
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
-        def_kiln = {
-            keyForTimeStamp(): "none yet" ,      
-            keyForState(): 'Closed',
-            keyForTimeStep(): 1,
-            keyForRuntime(): 0,
-            keyForKilnTemps(): [0.0,0.0,0.0,0.0],
-            keyForTargetTemp(): 0,
-            keyForStartTime(): "Not Started",
-            keyForTargetDisplacement(): -1,
-            keyForMaxTime(): 0,
-            keyForStartDist(): 0,
-            keyForCurrDisplacement(): 0,
-            keyForTargetDist(): 0,
-            keyForKilnHeaters(): [False,False,False,False],
-            keyForKilnHeaterCmd(): [False,False,False,False],
-        }
-        update(keyForKilnStatus(), def_kiln)
+        def_kilnStatus = kilnState.defaultStatus()
+        update(keyForKilnStatus(), def_kilnStatus)
 
         log.info("moData.init = "+asJson())
     
@@ -118,14 +117,20 @@ def setStatusRunning():
 
 def updateTimestamp():
     update(keyForTimeStamp(), datetime.datetime.now())
-    
+
+def getTimeFormat():
+    return "%Y-%m-%d %H:%M:%S%Z"
+
 def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(value, datetime.datetime):
-            value = value.strftime("%Y-%m-%d %H:%M:%S%Z")
+            value = value.strftime(getTimeFormat())
     this.__moDataDictionary[key] = value
     # modac_BLE_Laser.update()
     pass
+
+def getTimestamp():
+    return getValue(keyForTimeStamp())
 
 def asDict():
     return __moDataDictionary
@@ -154,8 +159,8 @@ def updateAllData(d):
     #print("Updated: ", asJson())
 
 def logData():
-    log.info(this.asJson())
-    
+    json = this.asJson()
+    log.info(json)    
 
 ######  for CSV
 __namesOfColumns = None

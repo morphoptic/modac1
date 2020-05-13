@@ -1,6 +1,8 @@
-# modac Kiln Controller, built on generic modac data acq & control
+# modac Kiln Simulator, built on generic modac data acq & control (modac_server)
+#  modac server but only for simulating kiln control, no other devices
+#  should work in place of modac_server for unit testing (unproven 7May2020)
 #
-#  this is based on Oven code found in several github projects.
+#  Orig Pid etc is based on Oven code found in several github projects.
 #  not sure which is the originator but these all seem to share very similar code
 #     https://github.com/apollo-ng/picoReflow
 #     https://github.com/jbruce12000/kiln-controller
@@ -33,22 +35,33 @@ from modac import moLogger, moData
 moLogger.init()
 
 from kilnControl import kiln
+
 print(" continue with kilnController")
 
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     exit(0)
 
+secondsToRunTest = 90
+
 async def simulateKiln():
     print("simulate kiln")
     async with trio.open_nursery() as nursery:
         moData.setNursery(nursery)
-        kiln.startKiln()
+        #kiln.simulation = True
+        await kiln.startKilnControlProcess()
+
+        kiln.setSimulation(True)
         print("after spawn kiln")
-        await kiln.spawnSchedule(5)
-        print("after spawnSchedule, sleep for while")
-        await trio.sleep(90)
-        kiln.endKiln()
+        
+        #await kiln.spawnSchedule(5)
+        
+        print("after spawnSchedule, sleep for ")
+        await trio.sleep(secondsToRunTest)
+        
+        # now end it
+        
+        kiln.endKilnControlProcess()
         #kiln.loadAndRun()#"kilnControl/testSchedule.csv")
         print("simulateKiln awaiting nursery")
     print("end of simulateKiln")
@@ -59,7 +72,7 @@ if __name__ == "__main__":
     print("kiln self test")
     log.info("kiln self test")
     signal.signal(signal.SIGINT, signalExit)
-    moData.init()
+    moData.init(True) # pretend we are a client to get moData initialized
     try:
         print ("try simulate kiln")
         trio.run(simulateKiln)

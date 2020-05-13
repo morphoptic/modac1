@@ -29,22 +29,27 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 # my stuff
-from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV
+from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moJSON
 import kilnControl
 
 runTests = False #True
 #publishRate = 0.25 # seconds for sleep at end of main loop
-publishRate = 0.5 # seconds for sleep at end of main loop
-#publishRate = 1.0 # seconds for sleep at end of main loop
+publishRate = 60.0 # seconds for sleep at end of main loop
+publishRate = 1.0 # seconds for sleep at end of main loop
 
 csvActive = True
+jsonActive = False
+startKilnOnStartup = True
 
 def modacExit():
     log.info("modacExit shutting down")
-    kilnControl.kiln.endKiln()
+    kilnControl.killKilnControlProcess()
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
-    moCSV.close()
+    if csvActive:
+        moCSV.close()
+    if jsonActive:
+        moJSON.closeJsonLog()
     moData.shutdown()
     moServer.shutdownServer()
     log.info("closed everything i think")
@@ -61,11 +66,16 @@ async def modac_ReadPubishLoop():
         moHardware.update()
         # any logging?
         #moData.logData() # log info as json to stdOut/console + logfile
-        if csvActive == True:
-            moCSV.addRow()
         # publish data
         moServer.publish()
         #moData.logData()
+        if csvActive == True:
+            #print("call csvAddRow")
+            moCSV.addRow()
+        if jsonActive == True:
+            #print("call moJSON.snapshot")
+            moJSON.snapshot()
+            
         log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(publishRate)
@@ -95,16 +105,23 @@ async def modac_asyncServer():
         if csvActive:
             now = datetime.datetime.now()
             nowStr = now.strftime("%Y%m%d_%H%M")
-            outName = "modacServerData_"+nowStr+".csv"
+            outName = "logs/modacServerData_"+nowStr+".csv"
             moCSV.init(outName)
         
+        if jsonActive:
+            moJSON.startJsonLog("logs/modacServer")
+            
         # we are The Server, theHub, theBroker
         # async so it can spawn CmdListener
         await moServer.startServer(nursery)
         
+        # Start kiln now or on reciept of StartKiln?
         # start the kiln control process
-        await kilnControl.kiln.startKiln(nursery)
-        
+        if startKilnOnStartup == True:
+            await kilnControl.kiln.startKilnControlProcess(nursery)
+        else:
+            moData.update(moKeys.keyForKilnStatus(), moKeys.keyForNotStarted())
+
         try:
             #   run event loop
             #print("modata:",moData.rawDict())
@@ -113,11 +130,13 @@ async def modac_asyncServer():
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
             log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
+            exc = traceback.format_exc()
+            log.error("Traceback is: "+exc)
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
-            print("Exception somewhere in modac_io_server event loop. see log files")
-            print("caught something", sys.exc_info()[0])
-            traceback.print_exc()#sys.exc_info()[2].print_tb()
+            print("Exception somewhere in modac_io_server event loop.")
+            print(exc)
+            #traceback.print_exc()#sys.exc_info()[2].print_tb()
     moData.setNursery(None)
     log.debug("nusery try died");
     log.error("Exception happened", exc_info=True)
@@ -153,6 +172,7 @@ def signalExit(*args):
 if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
     moLogger.init() # start logging (could use cmd line args config files)
+    log.info("that may be the 2nd logger init. not a problem")
     print("modac_io_server testbed for MODAC hardware server")
     signal.signal(signal.SIGINT, signalExit)
     try:

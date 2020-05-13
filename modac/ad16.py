@@ -183,6 +183,3 @@ def shutdown():
     this.__ad16dev = []
     this.__channels = []
     this.__values = []    
-
-
-    

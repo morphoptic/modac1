@@ -31,7 +31,7 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">     Target Temp (°C) </property>
+            <property name="label" translatable="yes">     Target Temp (°C)      </property>
             <attributes>
               <attribute name="weight" value="bold"/>
             </attributes>
@@ -109,16 +109,59 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox">
+      <object class="GtkBox" id="targetHoldBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">4</property>
         <property name="baseline_position">top</property>
         <child>
-          <object class="GtkLabel" id="MaxTimeBox">
+          <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes"> MaxTime (minutes) </property>
+            <property name="label" translatable="yes">Target Hold Time (minutes)</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="KilnHoldTime">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="text" translatable="yes">500</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="padding">1</property>
+            <property name="pack_type">end</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+        <property name="position">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="MaxTimeBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">4</property>
+        <property name="baseline_position">top</property>
+        <child>
+          <object class="GtkLabel" id="MaxTimeBox1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes"> MaxTime (minutes)       </property>
             <attributes>
               <attribute name="weight" value="bold"/>
             </attributes>
@@ -142,49 +185,6 @@
             <property name="fill">True</property>
             <property name="padding">1</property>
             <property name="pack_type">end</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">False</property>
-        <property name="position">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkBox" id="StepTimeBox">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">4</property>
-        <property name="margin_bottom">11</property>
-        <property name="baseline_position">top</property>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes"> Step Time (seconds)</property>
-            <attributes>
-              <attribute name="weight" value="bold"/>
-            </attributes>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkSpinButton" id="TimeStep">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="max_width_chars">3</property>
-            <property name="input_purpose">number</property>
-            <property name="numeric">True</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
@@ -268,6 +268,21 @@
       </packing>
     </child>
     <child>
+      <object class="GtkLabel" id="KilnTimeInHold">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">TimeInHold: </property>
+        <attributes>
+          <attribute name="weight" value="bold"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">10</property>
+      </packing>
+    </child>
+    <child>
       <object class="GtkLabel" id="KilnStartDistance">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -279,7 +294,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">10</property>
+        <property name="position">11</property>
       </packing>
     </child>
     <child>
@@ -294,7 +309,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">11</property>
+        <property name="position">12</property>
       </packing>
     </child>
     <child>
@@ -309,7 +324,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">12</property>
+        <property name="position">13</property>
       </packing>
     </child>
     <child>
@@ -324,7 +339,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">13</property>
+        <property name="position">14</property>
       </packing>
     </child>
     <child>
@@ -339,7 +354,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">14</property>
+        <property name="position">15</property>
       </packing>
     </child>
     <child>
@@ -354,7 +369,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">15</property>
+        <property name="position">16</property>
       </packing>
     </child>
     <child>
@@ -369,7 +384,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">16</property>
+        <property name="position">17</property>
       </packing>
     </child>
     <child>
@@ -384,7 +399,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">17</property>
+        <property name="position">18</property>
       </packing>
     </child>
     <child>
@@ -399,7 +414,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">18</property>
+        <property name="position">19</property>
       </packing>
     </child>
     <child>
@@ -414,7 +429,7 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">19</property>
+        <property name="position">20</property>
       </packing>
     </child>
     <child>
@@ -430,11 +445,51 @@
       <packing>
         <property name="expand">False</property>
         <property name="fill">True</property>
-        <property name="position">20</property>
+        <property name="position">21</property>
       </packing>
     </child>
-    <child type="center">
-      <placeholder/>
+    <child>
+      <object class="GtkBox" id="StepTimeBox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">4</property>
+        <property name="margin_bottom">11</property>
+        <property name="baseline_position">top</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes"> Step Time (seconds)</property>
+            <attributes>
+              <attribute name="weight" value="bold"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSpinButton" id="TimeStep">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="max_width_chars">3</property>
+            <property name="input_purpose">number</property>
+            <property name="numeric">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">False</property>
+        <property name="position">22</property>
+      </packing>
     </child>
   </object>
 </interface>

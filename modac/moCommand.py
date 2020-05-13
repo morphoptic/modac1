@@ -1,4 +1,5 @@
-# moCommand
+# moCommand: commands for moClient to send to moServer
+#
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
@@ -28,12 +29,12 @@ def cmdResetLeica():
     body = ()
     moClient.sendCommand(keyForResetLeica(), body)
 
-def cmdRunKiln(param={}):
+def cmdRunKilnScript(param={}):
     # new kiln.startRun: takes holdTemp, deflectionDist, maxTime, stepTime
     # these could be fields in Kiln page
     # also should display Kiln.status
-    print("cmdRunKiln key=" , keyForRunKilnCmd())
-    moClient.sendCommand(keyForRunKilnCmd(), param)
+    print("cmdRunscriptKiln key=" , keyForRunKilnScript())
+    moClient.sendCommand(keyForRunKilnScript(), param)
     
 def cmdAbortKiln():
     moClient.sendCommand(keyForKilnAbortCmd(),())

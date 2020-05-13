@@ -14,40 +14,56 @@ from . import moData
 # locally required for this module
 import datetime, csv
 
-__csvFile = None
-__csvWriter = None
+_csvFile = None
+_csvWriter = None
+
+timeKey = "time"
+timeFormat = "%I:%M:%S%p"
 
 def isOpen():
-    if this.__csvWriter == None:
+    if this._csvWriter == None:
         return False
     return True
 
 def init(filename="modacDataLog.csv"):
     print("moCSV file: ",filename)
-    this.__csvFile = open(filename, "w")
-    this.__csvWriter = csv.writer(this.__csvFile)
-    names = moData.arrayColNames() # arrayNameOnlyAD24
+    this._csvFile = open(filename, "w")
+    this._csvWriter = csv.writer(this._csvFile)
+    names = [timeKey] +  moData.arrayColNames() # arrayNameOnlyAD24
     #names = moData.arrayNameOnlyAD24()
     print("moCSV col Names", names)
-    this.__csvWriter.writerow(names)
+    this._csvWriter.writerow(names)
+    this._csvFile.flush()
     pass
 
 def close():
-    if this.__csvFile == None:
+    if this._csvFile == None:
         return
-    this.__csvFile.close()
-    del this.__csvFile
-    this.__csvFile = None
+    this._csvFile.close()
+    del this._csvFile
+    this._csvFile = None
 
+def addTimeToRow(row):
+    ### add a time column formatted like KISS does its time
+    # strptime should be exact opposite of strftime given same format str
+    # but apparently it doesnt work on pi
+    # but does work later in decimate.csv.py on mac
+    dtStr = moData.getTimestamp()
+    dt = datetime.datetime.strptime(dtStr, moData.getTimeFormat())
+    timeStr = datetime.datetime.strftime(dt, timeFormat)
+    row[timeKey] = timeStr
+    
 def addRow():
     if this.isOpen():
         # gets everything in order
         row = moData.asArray()
-        #print("logRow:",row)
-        this.__csvWriter.writerow(row)
-        this.__csvFile.flush()
+        #addTimeToRow(row)
+        #print("csvRow:",row)
+        this._csvWriter.writerow(row)
+        this._csvFile.flush()
 
 ### start of a class that would write desired Named Data in moData to a csv
+# why do we have the methods above AND this class?
 class modacCSVWriter:
     csvFile = None
     csvWriter = None
@@ -56,19 +72,19 @@ class modacCSVWriter:
     def __init__(self,filename="modacDataLog.csv",names=None):
         print("moCSV file: ",filename, " names:",names)
         self.csvFile = open(filename, "w")
-        self.csvWriter = csv.writer(this.__csvFile)
+        self.csvWriter = csv.writer(this._csvFile)
         if self.names == None:
             self.names = moData.arrayColNames()
         print("moCSV columNames ",filename, names)
-        self.__csvWriter.writerow(names)
+        self.csvWriter.writerow(names)
         pass
 
     def close(self):
-        if self.__csvFile == None:
+        if self._csvFile == None:
             return
-        self.__csvFile.close()
-        del self.__csvFile
-        self.__csvFile = None
+        self.csvFile.close()
+        del self._csvFile
+        self.csvFile = None
 
     def addRow(self):
         if self.isOpen():
@@ -77,6 +93,6 @@ class modacCSVWriter:
             # gotta be some commercial package that uses Channels
             row = moData.asArray()
             #print("logRow:",row)
-            self.__csvWriter.writerow(row)
-            self.__csvFile.flush()
+            self.csvWriter.writerow(row)
+            self.csvFile.flush()
         

@@ -12,11 +12,13 @@ import os
 import logging, logging.handlers, traceback
 
 __loggerInit = False
-def init(name="modac"):
+def init(name="modac", level=logging.DEBUG):
     print("setupLogging")
     if this.__loggerInit :
         logging.warn("Duplicate call to setupLogging()")
         return
+    # process any parameters ?
+    #
     maxLogSize = (1024 *1000)
     # setup logger
     now = datetime.datetime.now()
@@ -33,7 +35,7 @@ def init(name="modac"):
     logName = os.path.join(logDirName, logName)
     print("print Logging to stderr and " + logName)
     
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format=logFormatStr)
+    logging.basicConfig(stream=sys.stderr, level=level, format=logFormatStr)
     
     rootLogger = logging.getLogger()
     

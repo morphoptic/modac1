@@ -1,4 +1,7 @@
 # modacGUI panel showing K types and Leica Distance
+# derived from ktypePanel, no Glade design
+# but this divides panel down middle, with temp on left and Dist on right
+# should allow changing width of each side?
 
 # cute hack to use module namespace this.fIO this.value should work
 import sys
@@ -29,79 +32,96 @@ class tempDistPanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
     def __init__(self):
         
-        self.box = Gtk.VBox(homogeneous=False, spacing=8)
+        self.box = Gtk.HBox(homogeneous=False, spacing=8)
         self.label = Gtk.Label("Temp/Distance")
 
-        #n_col = moData.numKType() + 1 # + one for dist
-        n_col = numKTypeInKiln + 1 # + one for dist
-        #print("NumCol: ", n_col)
-        # initialized array of data of plotWidth
         self.count=0
         self.times = [0]*self.plotWidth
-        self.col = [ [0]*self.plotWidth ]*(n_col)
+        self.timestamp = moData.getValue(keyForTimeStamp())
+
+        self.initTemperatureBox()
+        self.initDistanceBox()
+        self.box.show()
+        
+    def initTemperatureBox(self):
+        self.temperatureBox = Gtk.VBox(homogeneous=False, spacing=8)
+        
+        #n_col = moData.numKType() + 1 # + one for dist
+        n_col = numKTypeInKiln # + one for dist
+        #print("NumCol: ", n_col)
+        # initialized array of data of plotWidth
+
+        self.temperatureBox.col = [ [0]*self.plotWidth ]*(n_col)
         #print("len self.col ", len(self.col))
         
-        self.columnNames = ["time"]+["AvgT"]+["Lower"]+["Middle"]+["Upper"] +["Dist"]
+        self.temperatureBox.columnNames = ["time"]+["AvgT"]+["Lower"]+["Middle"]+["Upper"]
         #print("Columns:", self.columnNames)
         ### setup Plot Data 
         
         ### setup Table (aka listStore) in a ScrollWindow
         colTypes = [str]*(n_col+1) # plus one for time
-        self.listStore = Gtk.ListStore()
-        self.listStore.set_column_types(colTypes)#str,str,str,str)
+        self.temperatureBox.listStore = Gtk.ListStore()
+        self.temperatureBox.listStore.set_column_types(colTypes)#str,str,str,str)
 
-        self.treeview = Gtk.TreeView(model=self.listStore)
+        self.temperatureBox.treeview = Gtk.TreeView(model=self.temperatureBox.listStore)
         # so why do we need to do this if listStore has types of columns already?
         # doesnt this add a column to the store as well?
-        for i in range( len(self.columnNames)) :
-            column = Gtk.TreeViewColumn(self.columnNames[i], Gtk.CellRendererText(),text=i)
+        for i in range( len(self.temperatureBox.columnNames)) :
+            column = Gtk.TreeViewColumn(self.temperatureBox.columnNames[i], Gtk.CellRendererText(),text=i)
             column.set_min_width(100)
             column.set_alignment(0.5)
             column.set_clickable(True)
-            column.connect("clicked", self.clickedColumn, i)
-            self.treeview.append_column(column)
-        self.treeview.show()
+            # connect to the click update function for this subpanel
+            column.connect("clicked", self.temperatureBox_clickedColumn, i)
+            self.temperatureBox.treeview.append_column(column)
+        self.temperatureBox.treeview.show()
         
         # get at least some data
-        self.getData() # put one item in local data
+        #self.getData() # cant do this 'cause Distance isnt set so
+        #init tempData
         
-        sw = self.upperScroll = Gtk.ScrolledWindow()
+        sw = self.temperatureBox.upperScroll = Gtk.ScrolledWindow()
         sw.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         sw.set_vexpand(True)
         viewport = Gtk.Viewport()
-        viewport.add(self.treeview)
+        viewport.add(self.temperatureBox.treeview)
         viewport.show()
         sw.add(viewport)
         #sw.add_with_viewport(self.treeview)
-        self.box.pack_start(sw, True, True, 0)
+        #self.box.pack_start(sw, True, True, 0)
+        self.temperatureBox.pack_start(sw, True, True, 0)
         
         ### Matplotlib stuff
-        self.fig = Figure(figsize=(6, 4))
+        self.temperatureBox.fig = Figure(figsize=(6, 4))
 
-        self.canvas = FigureCanvas(self.fig)  # a Gtk.DrawingArea
-        self.box.pack_end(self.canvas, True, True, 0)
+        self.temperatureBox.canvas = FigureCanvas(self.temperatureBox.fig)  # a Gtk.DrawingArea
+        self.temperatureBox.pack_end(self.temperatureBox.canvas, True, True, 0)
 
-        self.ax = self.fig.add_subplot(1,1,1)
+        self.temperatureBox.ax = self.fig.add_subplot(1,1,1)
         
-        self.plotColumn = 1 # use first column, 
-        self.line, = self.ax.plot(self.times, self.col[self.plotColumn-1])  # plot the first row
+        self.temperatureBox.plotColumn = 1 # use first column, 
+        self.temperatureBox.line, = self.ax.plot(self.times, self.temperatureBox.col[self.temperatureBox.plotColumn])  # plot the first row
         #self.lowerScroll.add_with_viewport(self.canvas)
         #print("canvas: ", self.canvas)
-        self.upperScroll.show()
-        self.canvas.show()
-        self.box.show()
+        self.temperatureBox.upperScroll.show()
+        self.temperatureBox.canvas.show()
+        
+        self.box.pack_start(self.temperatureBox, True, True, 0)
+        
+
+    def initDistanceBox(self):
+        self.distanceBox = Gtk.VBox(homogeneous=False, spacing=8)
         
     def getData(self):
-        # network got something - hopefully dispatched  already so moData is updated
-        # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
-        self.kilnStatus = moData.getValue(keyForKilnStatus())
-        if self.kilnStatus == keyForNotStarted():
-            self.stateName = keyForNotStarted()
-            return False
-        self.timestamp = moData.getValue(keyForTimeStamp())
-        kilnStatus = moData.getValue(keyForKilnStatus())
-        
+        # update with values
+#        self.kilnStatus = moData.getValue(keyForKilnStatus())
+#        if self.kilnStatus == keyForNotStarted():
+#            self.stateName = keyForNotStarted()
+#            return False
+#        self.timestamp = moData.getValue(keyForTimeStamp())
+#        kilnStatus = moData.getValue(keyForKilnStatus())      
+#        ktypes = kilnStatus[keyForKilnTemps()]
         ktypes = kilnStatus[keyForKilnTemperatures()]
         #print("kTypes Update = ", ktypes)
         #lData = moData.getValue(keyForLeicaDisto())
@@ -121,8 +141,8 @@ class tempDistPanel():
         #add values to data columns and row
         for i in range(len(ktypes)):
             v = ktypes[i]
-            self.col[i].append(v)
-            self.col[i] = self.col[i][-self.plotWidth:]
+            self.temperatureBox.col[i].append(v)
+            self.temperatureBox.col[i] = self.temperatureBox.col[i][-self.plotWidth:]
             row.append(str(v))
         
         distCol = len(ktypes)
@@ -132,12 +152,12 @@ class tempDistPanel():
         row.append(str(distance))
         
        # create strings for listStore and add them at top
-        it = self.listStore.prepend(row)
+        it = self.temperatureBox.listStore.prepend(row)
         # and limit the listStore
         try:
-            if len(self.listStore) > self.plotWidth:
-                it = self.listStore.iter_nth_child(None,self.plotWidth)
-                self.listStore.remove(it)
+            if len(self.temperatureBox.listStore) > self.plotWidth:
+                it = self.temperatureBox.listStore.iter_nth_child(None,self.plotWidth)
+                self.temperatureBox.listStore.remove(it)
         except :
             log.error("got an exception removing from listStore")
             log.error("Exception happened", exc_info=True)
@@ -178,7 +198,7 @@ class tempDistPanel():
         for row in self.listStore :
             print(row[:])
     
-    def clickedColumn(self, treeCol, idx):
+    def temperatureBox_clickedColumn(self, treeCol, idx):
         #print("clicked column ", idx, self.columnNames[idx])
         if idx == 0:
             log.error("Cant plot time")

@@ -1,10 +1,13 @@
 # MODAC keywords
-# common file to hold data name keys and convert them to topcis
+# common file to hold data name keys and convert them to topics and labeled JSON data, also ties to GUI builder
 
 # topics are UTF8 encoded arrays
 def moKeyToTopic(key):
     assert isinstance(key,str)
     return key.encode('utf8')
+
+def keyForNotStarted():
+    return "NotStarted"
 
 # at this point we are really only using AllData and Cmd for net comms
 # but other keys are used for getting data from the moData active data repository
@@ -13,11 +16,19 @@ def keyForAllData():
 def keyForShutdown():
     return "shutdown"
 
+# generic keys used by various components
 # timestamp key used for all data, enviro and leicaDisto
 def keyForTimeStamp():
     return "timestamp"
+# Generic key for State used by any state machine in its own context
+def keyForState():
+    return 'State'
 def keyForStatus():
-    return "status"
+    return "Status"
+def keyForScript():
+    return "Script"
+def keyForIndex():
+    return "Index"
 
 # these are data from Enviro Sensor (BMEchip)
 def keyForEnviro():
@@ -56,6 +67,7 @@ def keyForLeicaDisto():
 def keyForDistance():
     return "distance"
 
+#keys for commands from clients
 def keyForModacCmd():
     return "modac"
 def keyForBinaryCmd():
@@ -65,27 +77,43 @@ def keyForAllOffCmd():
 def keyForResetLeica():
     return "leicaReset"
 
-# kiln state stuff
+# kiln commands, status, state stuff
 ## start/abort cmd == btn name but be kinda explicit
-def keyForRunKiln(): return "RunKiln"
-def keyForAbortKiln(): return "AbortKiln"
-def keyForRunKilnCmd(): return keyForRunKiln()
-def keyForKilnAbortCmd(): return keyForAbortKiln()
+def keyForStartKilnProcess(): return "StartKilnProcess"
+def keyForEndKilnProcess(): return "EndKilnProcess"
+# start, end a script
+def keyForRunKilnScript(): return "RunKilnScript"
+def keyForStopKilnScript(): return "StopKilnScript"
 
-def keyForKilnStatus(): return "KilnStatus"
-def keyForRuntime(): return 'KilnRuntime'
+# kiln data
+def keyForKilnStatus(): return "KilnStatus"  # full status of kiln data, hierarchial dict
+# kilnState uses keyForState()
+def keyForKilnScriptState(): return "KilnScriptState";
+def keyForKilnRuntime(): return 'KilnProcessRuntime'
+
+# kiln Script controls
 def keyForTargetTemp(): return 'KilnTargetTemp'
-def keyForState(): return 'State'
-def keyForStartTime():return 'KilnStartTime'
+def keyForKilnHoldTime(): return 'KilnHoldTime'
 def keyForTargetDisplacement():return 'KilnTargetDisplacement'
 def keyForMaxTime():return 'KilnMaxTime'
-def keyForStartDist():return 'KilnStartDistance'
-def keyForCurrDisplacement():return 'KilnCurrentDisplacement'
-def keyForTargetDist():return 'KilnTargetDistance'
-def keyForTimeStep(): return 'TimeStep'
+def keyForTimeStep(): return "TimeStep"
+def keyForSegmentIndex(): return 'SegmentIndex'
+
+# kiln Script segment status entries
+def keyForStartDistance():return 'Kiln Start Distance'
+def keyForCurrentDistance(): return "Kiln Current Distance"
+def keyForCurrentDisplacement():return 'KilnCurrentDisplacement'
+
+def KilnStartTime():return 'KilnStartTime'
+def keyForKilnTimeInHoldMinutes(): return 'KilnTimeInHoldMinutes'
+def keyForKilnTimeInHoldSeconds(): return 'KilnTimeInHoldSeconds'
+def keyForKilnHoldStartTime(): return "KilnHoldStartTime"
 def keyForKilnHeaters(): return 'KilnHeatersReported'
-def keyForKilnHeaterCmd(): return 'KilnHeaterCommanded'
-def keyForKilnTemps(): return 'KilnTemps'
+def keyForKilnHeaterCommanded(): return 'KilnHeaterCommanded'
+def keyForKilnTemperatures(): return 'KilnTemps'
+
+def keyForKilnSupportFan() : return 'KilnSupportFan'
+def keyForKilnSupportFanCommanded() : return 'KilnSupportFan'
 
 def keyForSimulate(): return 'KilnSimulate'
 def keyForEmergencyOff(): return 'EmergencyOff'
