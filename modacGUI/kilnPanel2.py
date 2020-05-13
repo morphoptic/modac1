@@ -1,0 +1,221 @@
+# modacGUI kiln Panel 2
+# supports multi-step kiln control scripts
+# TODO properly connect Panel2.glade with this code
+#
+
+# cute hack to use module namespace this.fIO this.value should work
+import sys
+this = sys.modules[__name__]
+
+import logging, logging.handlers, traceback
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
+from gi.repository import GObject, Gio, Gdk, Gtk
+from gi.repository import GObject as Gobj
+
+from modac.moKeys import *
+from modac import moData, moLogger
+from modac import moCommand
+#import kilnControl
+#from kilnControl import kiln
+from kilnControl.kilnState import KilnState
+
+defaultTargetTemp = 100.0
+defaultDisplacement = 5.0
+defaultMaxTime = (60*24)
+defaultStepTime = 2
+
+class kilnPanel():
+    def __init__(self):        
+        self.lastState = KilnState.Closed
+        #print("initPanel")
+        self.label = Gtk.Label("Kiln Ctrl")
+        self.timestamp = "none yet"
+        self.dataCount = 0
+        self.builder = Gtk.Builder.new_from_file("modacGUI/kilnPanel2.glade")
+        self.builder.connect_signals(self)
+
+        # because i forgot to add one in Glade and its too painful to go back and edit
+        self.box = Gtk.VBox()
+        
+        self.panel = self.builder.get_object("Panel")
+        
+        # GtkSpinButton config(value, lower, upper, step_incr, page_incr, page_size)
+        self.targetTSpinner = self.builder.get_object(keyForTargetTemp())
+        adj = self.targetTSpinner.get_adjustment()
+        adj.configure(defaultTargetTemp, 20.0,800.0, 5, 10, 10)
+        
+        self.holdTimeSpinner = self.builder.get_object(keyForKilnHoldTime())
+        adj = self.holdTimeSpinner.get_adjustment()
+        adj.configure(5, 0.0, (30*60.0), 5, 10, 10) # max 30min hold
+        
+        self.displacementSpinner = self.builder.get_object(keyForTargetDisplacement())
+        adj = self.displacementSpinner.get_adjustment()
+        adj.configure(defaultDisplacement, 0,100.0, 0.1, 10, 10)
+
+        self.maxTimeSpinner = self.builder.get_object(keyForMaxTime())
+        adj = self.maxTimeSpinner.get_adjustment()
+        maxMaxTime = 2*24*60 # 2 days, 24 hr/day, 60 min/hr - later convert to sec 
+        adj.configure(defaultMaxTime, 1, maxMaxTime, 1, 10, 10)
+        
+        self.timeStepSpinner = self.builder.get_object(keyForTimeStep())
+        adj = self.timeStepSpinner.get_adjustment()
+        adj.configure(defaultStepTime, 1,100.0, 1, 10, 10)
+        
+        self.simulateBtn = self.builder.get_object(keyForSimulate())
+        self.simulateBtn.set_active(False) # for debugging start w simulated
+        
+        ## grab handles on some Buttons for later use
+        self.runBtn = self.builder.get_object(keyForRunKiln())
+        self.abortBtn = self.builder.get_object(keyForAbortKiln())
+        
+        # disable Abort until a run starts
+        self.abortBtn.set_sensitive(False)
+        self.runBtn.set_sensitive(True)
+        
+        # fill in the readOnly values
+        self.update()
+        self.box.add(self.panel)
+
+        self.panel.show()
+        self.box.show()
+
+    def update(self):
+        log.debug("KilnPanel Update")
+        self.setData()
+        
+    def getKilnStatus(self):
+        self.kilnStatus = moData.getValue(keyForKilnStatus())
+        if self.kilnStatus == keyForNotStarted():
+            self.stateName = keyForNotStarted()
+            return False
+        self.stateName = self.kilnStatus[keyForState()]
+        self.timestamp = self.kilnStatus[keyForTimeStamp()]
+        print("KilnStatus", self.kilnStatus)
+        return True
+        
+    def setData(self):
+        if not self.getKilnStatus():
+            log.debug("kiln not started")
+            widget = self.builder.get_object(keyForState())
+            widget.set_text(keyForState()+ " : "+ keyForNotStarted())
+            return
+        
+        # state is the name or string rep of KilnState
+        log.debug("KilnPanel setData state: "+self.stateName)
+
+        if self.stateName == KilnState.EndRun.name:
+            # transition noted, reset start/abort btns
+            log.info("\nEndRun detected\n")
+            self.resetRunAbort()    
+        
+        widget = self.builder.get_object(keyForTimeStamp())
+        widget.set_text(keyForTimeStamp()+ " : "+ self.timestamp)
+
+        widget = self.builder.get_object(keyForState())
+        widget.set_text(keyForState()+ " : "+ self.stateName)
+
+        widget = self.builder.get_object(KilnStartTime())
+        widget.set_text(KilnStartTime() + " : " + self.kilnStatus[KilnStartTime()])
+
+        widget = self.builder.get_object(keyForRuntime())
+        widget.set_text("{0} : {1:5.3f}".format(keyForRuntime(),self.kilnStatus[keyForRuntime()]) )
+
+        widget = self.builder.get_object(keyForKilnTimeInHoldMinutes())
+        timeInHold = self.kilnStatus[keyForKilnTimeInHoldMinutes()]
+        log.debug("KilnPanel update timeInHold "+ str(timeInHold))
+        widget.set_text("{0} : {1:5.3f}".format(keyForKilnTimeInHoldMinutes(), timeInHold))
+
+        widget = self.builder.get_object(keyForStartDistance())
+        widget.set_text("{0} : {1:5.3f}".format(keyForStartDistance(), self.kilnStatus[keyForStartDistance()]))
+
+        widget = self.builder.get_object(keyForTargetDist())
+        widget.set_text("{0} : {1:5.3f}".format(keyForTargetDist(),self.kilnStatus[keyForTargetDist()]) )
+
+        widget = self.builder.get_object(keyForCurrentDisplacement())
+        widget.set_text("{0} : {1:5.3f}".format(keyForCurrentDisplacement(), self.kilnStatus[keyForCurrentDisplacement()]))
+
+        temps = self.kilnStatus[keyForKilnTemperatures()]
+        tempStr = keyForKilnTemperatures() + "(avg, low, mid, up):"
+        for i in range(len(temps)):
+            tempStr += "{0:5.2f}, ".format(temps[i])
+        widget = self.builder.get_object(keyForKilnTemperatures())
+        widget.set_text(tempStr)
+
+        widget = self.builder.get_object(keyForKilnHeaters())
+        s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaters()] ])
+        widget.set_text(keyForKilnHeaters()+ " : " + s)
+
+        widget = self.builder.get_object(keyForKilnHeaterCommanded())
+        s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaterCommanded()]])
+        widget.set_text(keyForKilnHeaterCommanded() + " : " + s)
+
+        # Kiln Relay Status: get these direct from binary out
+        from kilnControl import kilnConfig
+        bouts = moData.getValue(keyForBinaryOut())
+
+        widget = self.builder.get_object("12vRelay")
+        widget.set_text("12vRelay: " + str(bouts[kilnConfig.relayPower]))
+
+        widget = self.builder.get_object("ExhaustFan")
+        widget.set_text("ExhaustFan: " + str(bouts[kilnConfig.fan_exhaust]))
+
+        widget = self.builder.get_object("SupportFan")
+        widget.set_text("ExhaustFan: " + str(bouts[kilnConfig.fan_support]))
+        
+    def onStartKiln(self, button):
+        # start kiln schedule
+        log.debug("onStartKiln")
+        # collect targetTemp, deflection, maxTime, startTime)
+        targetT = self.targetTSpinner.get_value()
+        
+#        widget = self.builder.get_object(keyForDeflectionDist())
+        deflection = self.displacementSpinner.get_value()
+        
+#        widget = self.builder.get_object(keyForMaxTime())
+        maxTime = self.maxTimeSpinner .get_value()
+        
+#        widget = self.builder.get_object(keyForTimeStep())
+        timeStep = self.timeStepSpinner.get_value_as_int()
+
+        simulate = self.simulateBtn.get_active()
+        
+        kilnHoldTime = self.holdTimeSpinner.get_value_as_int()
+
+        #def startRun(holdTemp=default_holdTemp,
+        #             deflectionDist=default_deflectionDist,
+        #             maxTime = default_maxTime,
+        #             stepTime= default_stepTime):
+        param = {
+            keyForTargetTemp(): targetT,
+            keyForTargetDisplacement(): deflection,
+            keyForMaxTime(): maxTime,
+            keyForTimeStep(): timeStep,
+            keyForSimulate(): simulate,
+            keyForKilnHoldTime(): kilnHoldTime,
+        }
+        
+        # Disable Run, Enable Terminate
+        self.runBtn.set_sensitive(False)
+        self.abortBtn.set_sensitive(True)
+
+        print("\n**** Send RunKiln: ", param)
+        moCommand.cmdRunKilnScript(param)
+        
+    def onTerminateRun(self, button):
+        log.debug("onTerminateRun")
+        self.resetRunAbort()
+        moCommand.cmdAbortKiln()
+
+    def resetRunAbort(self):
+        log.debug("Reset Abort/Run Buttons")
+        self.abortBtn.set_sensitive(False)
+        self.runBtn.set_sensitive(True)
+        
+    def onEmergencyOff(self, button):
+        log.warn("Emergency OFF clicked")
+        moCommand.cmdEmergencyOff()
