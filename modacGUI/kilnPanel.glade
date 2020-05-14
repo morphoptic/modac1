@@ -158,7 +158,7 @@
         <property name="margin_top">4</property>
         <property name="baseline_position">top</property>
         <child>
-          <object class="GtkLabel" id="MaxTimeBox1">
+          <object class="GtkLabel" id="MaxTimeLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes"> MaxTime (minutes)       </property>

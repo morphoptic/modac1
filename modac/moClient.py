@@ -26,6 +26,7 @@ def shutdownClient():
         this.__CmdSender.close()
     for s in this.__subscribers:
         s.close()
+    log.debug("end shutdownClient")
     pass
 
 def startClient():

@@ -16,7 +16,7 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Gdk', '3.0')
 from gi.repository import GObject, Gio, Gdk, Gtk
 from gi.repository import GObject as Gobj
-
+import json
 from modac.moKeys import *
 from modac import moData, moLogger
 from modac import moCommand
@@ -42,8 +42,11 @@ class kilnPanel():
         # because i forgot to add one in Glade and its too painful to go back and edit
         self.box = Gtk.VBox()
         
-        self.panel = self.builder.get_object("Panel")
-        
+        self.panel = self.builder.get_object("ScriptPanel")
+
+        self.scriptNameBox = self.builder.get_object(keyForScriptName())
+        self.scriptDescriptionBox = self.builder.get_object(keyForScriptDescription())
+
         # GtkSpinButton config(value, lower, upper, step_incr, page_incr, page_size)
         self.targetTSpinner = self.builder.get_object(keyForTargetTemp())
         adj = self.targetTSpinner.get_adjustment()
@@ -57,24 +60,36 @@ class kilnPanel():
         adj = self.displacementSpinner.get_adjustment()
         adj.configure(defaultDisplacement, 0,100.0, 0.1, 10, 10)
 
-        self.maxTimeSpinner = self.builder.get_object(keyForMaxTime())
-        adj = self.maxTimeSpinner.get_adjustment()
-        maxMaxTime = 2*24*60 # 2 days, 24 hr/day, 60 min/hr - later convert to sec 
-        adj.configure(defaultMaxTime, 1, maxMaxTime, 1, 10, 10)
+#        self.maxTimeSpinner = self.builder.get_object(keyForMaxTime())
+#        adj = self.maxTimeSpinner.get_adjustment()
+#        maxMaxTime = 2*24*60 # 2 days, 24 hr/day, 60 min/hr - later convert to sec
+#        adj.configure(defaultMaxTime, 1, maxMaxTime, 1, 10, 10)
         
-        self.timeStepSpinner = self.builder.get_object(keyForTimeStep())
+        self.timeStepSpinner = self.builder.get_object(keyForPIDStepTime())
         adj = self.timeStepSpinner.get_adjustment()
         adj.configure(defaultStepTime, 1,100.0, 1, 10, 10)
         
         self.simulateBtn = self.builder.get_object(keyForSimulate())
+        # TODO change checkbox label color - default white on gray is terrible
+        #   need function to find GTK.Label child and change color to black
         self.simulateBtn.set_active(False) # for debugging start w simulated
         
         ## grab handles on some Buttons for later use
-        self.runBtn = self.builder.get_object(keyForRunKiln())
-        self.abortBtn = self.builder.get_object(keyForAbortKiln())
-        
+        self.loadBtn = self.builder.get_object("LoadKilnScript")
+        self.saveBtn = self.builder.get_object("SaveKilnScript")
+        self.runBtn = self.builder.get_object(keyForRunKilnScript())
+        self.stopBtn = self.builder.get_object(keyForStopKilnScript())
+
+        self.addBeforeBtn = self.builder.get_object("AddBeforeButton")
+        self.addAfterBtn = self.builder.get_object("AddAfterButton")
+        self.removeBtn = self.builder.get_object("RemoveButton")
+
+        # and text area to display ScriptStatus
+        self.scriptStatusBox = self.builder.get_object(keyForKilnStatus())
+        self.scriptStatusBuffer = self.scriptStatusBox.get_buffer()
+
         # disable Abort until a run starts
-        self.abortBtn.set_sensitive(False)
+        self.stopBtn.set_sensitive(False)
         self.runBtn.set_sensitive(True)
         
         # fill in the readOnly values
@@ -99,6 +114,7 @@ class kilnPanel():
         return True
         
     def setData(self):
+        # TODO most of this (all?) becomes put JSON text into ScriptStatus box
         if not self.getKilnStatus():
             log.debug("kiln not started")
             widget = self.builder.get_object(keyForState())
@@ -108,78 +124,27 @@ class kilnPanel():
         # state is the name or string rep of KilnState
         log.debug("KilnPanel setData state: "+self.stateName)
 
-        if self.stateName == KilnState.EndRun.name:
-            # transition noted, reset start/abort btns
-            log.info("\nEndRun detected\n")
-            self.resetRunAbort()    
-        
-        widget = self.builder.get_object(keyForTimeStamp())
-        widget.set_text(keyForTimeStamp()+ " : "+ self.timestamp)
+        if not self.stateName== KilnState.RunningScript.name:
+            # not running script, reset start/abort btns
+            self.resetRunAbort()
 
-        widget = self.builder.get_object(keyForState())
-        widget.set_text(keyForState()+ " : "+ self.stateName)
+        textScriptStatus = json.dumps(self.kilnStatus, indent=4)
+        self.scriptStatusBuffer.set_text(textScriptStatus)
 
-        widget = self.builder.get_object(KilnStartTime())
-        widget.set_text(KilnStartTime() + " : " + self.kilnStatus[KilnStartTime()])
 
-        widget = self.builder.get_object(keyForRuntime())
-        widget.set_text("{0} : {1:5.3f}".format(keyForRuntime(),self.kilnStatus[keyForRuntime()]) )
-
-        widget = self.builder.get_object(keyForKilnTimeInHoldMinutes())
-        timeInHold = self.kilnStatus[keyForKilnTimeInHoldMinutes()]
-        log.debug("KilnPanel update timeInHold "+ str(timeInHold))
-        widget.set_text("{0} : {1:5.3f}".format(keyForKilnTimeInHoldMinutes(), timeInHold))
-
-        widget = self.builder.get_object(keyForStartDistance())
-        widget.set_text("{0} : {1:5.3f}".format(keyForStartDistance(), self.kilnStatus[keyForStartDistance()]))
-
-        widget = self.builder.get_object(keyForTargetDist())
-        widget.set_text("{0} : {1:5.3f}".format(keyForTargetDist(),self.kilnStatus[keyForTargetDist()]) )
-
-        widget = self.builder.get_object(keyForCurrentDisplacement())
-        widget.set_text("{0} : {1:5.3f}".format(keyForCurrentDisplacement(), self.kilnStatus[keyForCurrentDisplacement()]))
-
-        temps = self.kilnStatus[keyForKilnTemperatures()]
-        tempStr = keyForKilnTemperatures() + "(avg, low, mid, up):"
-        for i in range(len(temps)):
-            tempStr += "{0:5.2f}, ".format(temps[i])
-        widget = self.builder.get_object(keyForKilnTemperatures())
-        widget.set_text(tempStr)
-
-        widget = self.builder.get_object(keyForKilnHeaters())
-        s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaters()] ])
-        widget.set_text(keyForKilnHeaters()+ " : " + s)
-
-        widget = self.builder.get_object(keyForKilnHeaterCommanded())
-        s = ' '.join([str(item) for item in self.kilnStatus[keyForKilnHeaterCommanded()]])
-        widget.set_text(keyForKilnHeaterCommanded() + " : " + s)
-
-        # Kiln Relay Status: get these direct from binary out
-        from kilnControl import kilnConfig
-        bouts = moData.getValue(keyForBinaryOut())
-
-        widget = self.builder.get_object("12vRelay")
-        widget.set_text("12vRelay: " + str(bouts[kilnConfig.relayPower]))
-
-        widget = self.builder.get_object("ExhaustFan")
-        widget.set_text("ExhaustFan: " + str(bouts[kilnConfig.fan_exhaust]))
-
-        widget = self.builder.get_object("SupportFan")
-        widget.set_text("ExhaustFan: " + str(bouts[kilnConfig.fan_support]))
-        
-    def onStartKiln(self, button):
+    def on_RunKilnScript_clicked(self, button):
         # start kiln schedule
-        log.debug("onStartKiln")
+        log.debug("on_RunKilnScript_clicked")
+        scriptName = self.scriptNameBox.get_value()
+        scriptDescription = self.scriptNameBox.get_value()
+
         # collect targetTemp, deflection, maxTime, startTime)
         targetT = self.targetTSpinner.get_value()
         
-#        widget = self.builder.get_object(keyForDeflectionDist())
         deflection = self.displacementSpinner.get_value()
         
-#        widget = self.builder.get_object(keyForMaxTime())
-        maxTime = self.maxTimeSpinner .get_value()
+        maxTime = self.maxTimeSpinner.get_value()
         
-#        widget = self.builder.get_object(keyForTimeStep())
         timeStep = self.timeStepSpinner.get_value_as_int()
 
         simulate = self.simulateBtn.get_active()
@@ -191,6 +156,10 @@ class kilnPanel():
         #             maxTime = default_maxTime,
         #             stepTime= default_stepTime):
         param = {
+            keyforScriptName(): scriptName,
+            keyforScriptDescription():scriptDescripton(),
+
+            # TODO multiple steps
             keyForTargetTemp(): targetT,
             keyForTargetDisplacement(): deflection,
             keyForMaxTime(): maxTime,
@@ -206,16 +175,26 @@ class kilnPanel():
         print("\n**** Send RunKiln: ", param)
         moCommand.cmdRunKilnScript(param)
         
-    def onTerminateRun(self, button):
+    def on_StopKilnScript_clicked(self, button):
         log.debug("onTerminateRun")
         self.resetRunAbort()
-        moCommand.cmdAbortKiln()
+        moCommand.cmdStopKilnScript()
 
     def resetRunAbort(self):
         log.debug("Reset Abort/Run Buttons")
-        self.abortBtn.set_sensitive(False)
+        self.stopBtn.set_sensitive(False)
         self.runBtn.set_sensitive(True)
         
     def onEmergencyOff(self, button):
         log.warn("Emergency OFF clicked")
         moCommand.cmdEmergencyOff()
+
+    def on_LoadKilnScript_clicked(self, button):
+        pass
+
+    def on_SaveKilnScript_clicked(self, button):
+        pass
+
+    def on_LoadKilnScript_clicked(self, button):
+        pass
+

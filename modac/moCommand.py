@@ -36,8 +36,8 @@ def cmdRunKilnScript(param={}):
     print("cmdRunscriptKiln key=" , keyForRunKilnScript())
     moClient.sendCommand(keyForRunKilnScript(), param)
     
-def cmdAbortKiln():
-    moClient.sendCommand(keyForKilnAbortCmd(),())
+def cmdStopKilnScript():
+    moClient.sendCommand(keyForStopKilnScript(),())
     
 def cmdResetLeica():
     moClient.sendCommand(keyForResetLeica(),())

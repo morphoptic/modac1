@@ -209,7 +209,7 @@ class kilnPanel():
     def onTerminateRun(self, button):
         log.debug("onTerminateRun")
         self.resetRunAbort()
-        moCommand.cmdAbortKiln()
+        moCommand.cmdStopKilnScript()
 
     def resetRunAbort(self):
         log.debug("Reset Abort/Run Buttons")

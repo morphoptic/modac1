@@ -2,7 +2,8 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkBox" id="Panel">
+  <object class="GtkListStore" id="ScriptStepListStore"/>
+  <object class="GtkBox" id="ScriptPanel">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="orientation">vertical</property>
@@ -12,11 +13,11 @@
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkCheckButton" id="SimulateTempsCheckbox">
+          <object class="GtkCheckButton" id="KilnSimulate">
+            <property name="label" translatable="yes">Simulate Kiln</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
-            <property name="use_stock">True</property>
             <property name="draw_indicator">True</property>
           </object>
           <packing>
@@ -26,7 +27,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="upperBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -35,11 +36,12 @@
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkButton" id="LoadButton">
+                  <object class="GtkButton" id="LoadKilnScript">
                     <property name="label" translatable="yes">Load</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_LoadKilnScript_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -48,7 +50,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="SaveButton">
+                  <object class="GtkButton" id="SaveKilnScript">
                     <property name="label" translatable="yes">Save</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -61,7 +63,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="RunButton">
+                  <object class="GtkButton" id="RunKilnScript">
                     <property name="label" translatable="yes">Run Script</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -74,7 +76,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="StopScript">
+                  <object class="GtkButton" id="StopKilnScript">
                     <property name="label" translatable="yes">Stop Script</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -107,6 +109,9 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Name:</property>
+                        <attributes>
+                          <attribute name="foreground" value="#000000000000"/>
+                        </attributes>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -142,6 +147,9 @@
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Description</property>
+                        <attributes>
+                          <attribute name="foreground" value="#000000000000"/>
+                        </attributes>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -159,7 +167,7 @@
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkEntry" id="Description">
+                              <object class="GtkEntry" id="ScriptDescription">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="placeholder_text" translatable="yes">Script to run kiln</property>
@@ -203,37 +211,86 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="ScriptStepOuterBox">
+      <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkBox" id="ScriptStepDataBox">
+          <object class="GtkBox" id="ScriptStepLeftBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkBox" id="ScriptStepIndexBox">
+              <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Script Steps</property>
+                <attributes>
+                  <attribute name="foreground" value="#000000000000"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkLabel" id="ScriptIndexLabel">
+                  <object class="GtkViewport">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Script Index</property>
+                    <child>
+                      <object class="GtkTreeView" id="ScriptStepTreeView">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">ScriptStepListStore</property>
+                        <property name="headers_visible">False</property>
+                        <property name="headers_clickable">False</property>
+                        <property name="enable_search">False</property>
+                        <property name="show_expanders">False</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection"/>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="ScriptStepButtonBox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <property name="homogeneous">True</property>
+                <child>
+                  <object class="GtkButton" id="AddBeforeButton">
+                    <property name="label" translatable="yes">Add Before</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="StepIdxSpinner">
+                  <object class="GtkButton" id="AddAfterButton">
+                    <property name="label" translatable="yes">Add After</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="text" translatable="yes">0</property>
-                    <property name="input_purpose">number</property>
+                    <property name="receives_default">True</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -241,6 +298,47 @@
                     <property name="position">1</property>
                   </packing>
                 </child>
+                <child>
+                  <object class="GtkButton" id="RemoveButton">
+                    <property name="label" translatable="yes">Remove</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="ScriptStepDataBox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="ScriptIndexLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Step Index: </property>
+                <attributes>
+                  <attribute name="weight" value="bold"/>
+                  <attribute name="foreground" value="#000000000000"/>
+                </attributes>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -261,6 +359,7 @@
                     <property name="label" translatable="yes">     Target Temp (°C)      </property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
+                      <attribute name="foreground" value="#000000000000"/>
                     </attributes>
                   </object>
                   <packing>
@@ -270,7 +369,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="KilnTargetTemp1">
+                  <object class="GtkSpinButton" id="KilnTargetTemp">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">500</property>
@@ -303,6 +402,7 @@
                     <property name="label" translatable="yes">Target Displacement (mm)</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
+                      <attribute name="foreground" value="#000000000000"/>
                     </attributes>
                   </object>
                   <packing>
@@ -312,7 +412,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="KilnTargetDisplacement1">
+                  <object class="GtkSpinButton" id="KilnTargetDisplacement">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">0.00</property>
@@ -348,6 +448,7 @@
                     <property name="label" translatable="yes">Target Hold Time (minutes)</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
+                      <attribute name="foreground" value="#000000000000"/>
                     </attributes>
                   </object>
                   <packing>
@@ -357,7 +458,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="KilnHoldTime1">
+                  <object class="GtkSpinButton" id="KilnHoldTime">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">500</property>
@@ -379,7 +480,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="ExhaustFanCheckbox">
+              <object class="GtkCheckButton" id="ExhaustFan">
                 <property name="label" translatable="yes">Exhaust Fan</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -394,7 +495,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="SupportFanCheckbox">
+              <object class="GtkCheckButton" id="SupportFan">
                 <property name="label" translatable="yes">Support Fan</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -420,6 +521,7 @@
                     <property name="label" translatable="yes">PID Step Time (seconds)</property>
                     <attributes>
                       <attribute name="weight" value="bold"/>
+                      <attribute name="foreground" value="#000000000000"/>
                     </attributes>
                   </object>
                   <packing>
@@ -429,7 +531,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="PIDStepTimeSpinner">
+                  <object class="GtkSpinButton" id="PIDStepTime">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">500</property>
@@ -448,7 +550,7 @@
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="fill">False</property>
+                <property name="fill">True</property>
                 <property name="position">6</property>
               </packing>
             </child>
@@ -456,92 +558,39 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="ScriptStepButtonBox">
+          <object class="GtkScrolledWindow">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="homogeneous">True</property>
+            <property name="can_focus">True</property>
+            <property name="shadow_type">in</property>
             <child>
-              <object class="GtkButton" id="AddBeforeButton">
-                <property name="label" translatable="yes">Add Before</property>
+              <object class="GtkViewport">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkTextView" id="KilnStatus">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="editable">False</property>
+                  </object>
+                </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="AddAfterButton">
-                <property name="label" translatable="yes">Add After</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="RemoveButton">
-                <property name="label" translatable="yes">Remove</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
-              </packing>
             </child>
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
       <packing>
-        <property name="expand">False</property>
+        <property name="expand">True</property>
         <property name="fill">True</property>
         <property name="position">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkScrolledWindow">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="shadow_type">in</property>
-        <child>
-          <object class="GtkViewport">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkEntry" id="ScriptStatusTextbox">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="editable">False</property>
-                <property name="text" translatable="yes">script status JSON goes here</property>
-                <property name="caps_lock_warning">False</property>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">2</property>
       </packing>
     </child>
   </object>

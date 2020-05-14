@@ -24,6 +24,8 @@ from gi.repository import GObject, Gio, Gdk, Gtk
 from modac import moLogger
 from modac import kType
 
+this = sys.modules[__name__]
+
 if __name__ == "__main__":
     moLogger.init("modacKilnGUI")
     
@@ -53,7 +55,7 @@ class ModacApp(Gtk.Application):
 
     def shutdown(self, *args):
         log.debug("App Shutdown")
-        modacExit()
+        #modacExit()
 
 class ModacAppWindow(object):
     dataCount = 0
@@ -292,11 +294,17 @@ class ModacAppWindow(object):
         self.ad16Panel.update()
         self.kilnPanel.update()
 
+didExit = False
 def modacExit():
     log.info("modacExit")
+    if this.didExit == True:
+        return
+    this.didExit = True
+    log.debug("should only get here once")
     if moCSV.isOpen():
         moCSV.close()
     moClient.shutdownClient()
+    log.info("end modacExit")
     #sys.exit(0)
     
 if __name__ == "__main__":
@@ -312,12 +320,13 @@ if __name__ == "__main__":
         log.debug("start client gui")
         Application = ModacApp("com.mioat.modacGUI1", Gio.ApplicationFlags.FLAGS_NONE)
         Application.run()
+        log.debug("after Application Run")
     except Exception as e:
         log.debug("Exception somewhere in dataWindow. see log files")
         log.error("Exception happened", exc_info=True)
         log.exception("huh?")
     finally:
         log.debug("end main of moGTKclient")
-    modacExit()
+    #modacExit()
 
 

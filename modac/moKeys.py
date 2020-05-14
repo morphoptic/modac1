@@ -84,19 +84,29 @@ def keyForEndKilnProcess(): return "EndKilnProcess"
 # start, end a script
 def keyForRunKilnScript(): return "RunKilnScript"
 def keyForStopKilnScript(): return "StopKilnScript"
+# for kiln panel buttons
+def keyForLoadKilnScript(): return "LoadKilnScript"
+def keyForSaveKilnScript(): return "SaveKilnScript"
 
 # kiln data
 def keyForKilnStatus(): return "KilnStatus"  # full status of kiln data, hierarchial dict
+def keyForKilnScriptStatus(): return "KilnScriptStatus"  # full status of kiln data, hierarchial dict
 # kilnState uses keyForState()
 def keyForKilnScriptState(): return "KilnScriptState";
 def keyForKilnRuntime(): return 'KilnProcessRuntime'
+
+def keyForScriptName(): return "ScriptName"
+def keyForScriptDescription(): return "ScriptDescription"
 
 # kiln Script controls
 def keyForTargetTemp(): return 'KilnTargetTemp'
 def keyForKilnHoldTime(): return 'KilnHoldTime'
 def keyForTargetDisplacement():return 'KilnTargetDisplacement'
 def keyForMaxTime():return 'KilnMaxTime'
-def keyForTimeStep(): return "TimeStep"
+def keyForPIDStepTime(): return "PIDStepTime"
+def keyForExhaustFan(): return "ExhaustFan"
+def keyForSupportFan(): return "SupportFan"
+
 def keyForSegmentIndex(): return 'SegmentIndex'
 
 # kiln Script segment status entries

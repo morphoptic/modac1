@@ -42,7 +42,7 @@ def defaultStatus():
     def_kilnStatus = {
         keyForTimeStamp(): "none yet",
         keyForState(): 'Closed',
-        keyForTimeStep(): 1,
+        keyForPIDStepTime(): 10,
         keyForKilnRuntime(): 0,
         keyForKilnTemperatures(): [0.0, 0.0, 0.0, 0.0],
         keyForKilnHeaters(): [False, False, False, False],
