@@ -20,6 +20,9 @@
 import sys
 this = sys.modules[__name__]
 import logging
+
+if __name__ == "__main__":
+    moLogger.init("modacKilnSimulator")
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -40,7 +43,17 @@ print(" continue with kilnController")
 
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
-    exit(0)
+    # NO!! need clean shutdown
+    #exit(0)
+    log.error("signal exit! someone hit ctrl-C?")
+    with moData.getNursery() as nursery:
+        if nursery == None:
+            log.info("signal exit, no nursery")
+        else:
+            print("nursery still contains ", nursery.child_tasks)
+
+    modacExit()
+
 
 secondsToRunTest = 90
 

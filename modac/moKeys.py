@@ -98,18 +98,23 @@ def keyForKilnRuntime(): return 'KilnProcessRuntime'
 def keyForScriptName(): return "ScriptName"
 def keyForScriptDescription(): return "ScriptDescription"
 
-# kiln Script controls
+def keyForScriptSegments(): return "ScriptSegments"
+
+# kiln Script Segment Control Data
 def keyForTargetTemp(): return 'KilnTargetTemp'
 def keyForKilnHoldTime(): return 'KilnHoldTime'
 def keyForTargetDisplacement():return 'KilnTargetDisplacement'
-def keyForMaxTime():return 'KilnMaxTime'
 def keyForPIDStepTime(): return "PIDStepTime"
 def keyForExhaustFan(): return "ExhaustFan"
 def keyForSupportFan(): return "SupportFan"
-
 def keyForSegmentIndex(): return 'SegmentIndex'
 
-# kiln Script segment status entries
+# TODO not sure what this is anymore
+def keyForMaxTime():return 'KilnMaxTime'
+
+# kiln Script runtime data
+def keyForScriptRuntimeData() : "ScriptRuntimeData"
+def keyForScriptCurrentSegmentIdx(): "CurrentSegmentIdx"
 def keyForStartDistance():return 'Kiln Start Distance'
 def keyForCurrentDistance(): return "Kiln Current Distance"
 def keyForCurrentDisplacement():return 'KilnCurrentDisplacement'
@@ -122,8 +127,10 @@ def keyForKilnHeaters(): return 'KilnHeatersReported'
 def keyForKilnHeaterCommanded(): return 'KilnHeaterCommanded'
 def keyForKilnTemperatures(): return 'KilnTemps'
 
-def keyForKilnSupportFan() : return 'KilnSupportFan'
-def keyForKilnSupportFanCommanded() : return 'KilnSupportFan'
+def keyForKilnSupportFanActual() : return 'KilnSupportFanActual'
+def keyForKilnSupportFanCommanded() : return 'KilnSupportFanCommanded'
+def keyForKilnExhaustFanActual() : return 'KilnExhaustFanActual'
+def keyForKilnExhaustFanCommanded() : return 'KilnExhaustFanCommanded'
 
 def keyForSimulate(): return 'KilnSimulate'
 def keyForEmergencyOff(): return 'EmergencyOff'

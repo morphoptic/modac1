@@ -331,7 +331,7 @@
             <property name="can_focus">False</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkLabel" id="ScriptIndexLabel">
+              <object class="GtkLabel" id="CurrentSegmentIdx">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Step Index: </property>

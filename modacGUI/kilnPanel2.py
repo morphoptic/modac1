@@ -6,7 +6,7 @@
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
-
+import datetime
 import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -22,7 +22,7 @@ from modac import moData, moLogger
 from modac import moCommand
 #import kilnControl
 #from kilnControl import kiln
-from kilnControl.kilnState import KilnState
+from kilnControl import kilnState, kilnScript
 
 defaultTargetTemp = 100.0
 defaultDisplacement = 5.0
@@ -38,6 +38,8 @@ class kilnPanel():
         self.dataCount = 0
         self.builder = Gtk.Builder.new_from_file("modacGUI/kilnPanel2.glade")
         self.builder.connect_signals(self)
+        self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H.json")
+        self.kilnScript = KilnScript()
 
         # because i forgot to add one in Glade and its too painful to go back and edit
         self.box = Gtk.VBox()
@@ -46,6 +48,7 @@ class kilnPanel():
 
         self.scriptNameBox = self.builder.get_object(keyForScriptName())
         self.scriptDescriptionBox = self.builder.get_object(keyForScriptDescription())
+        self.currentSegmentIdxBox = self.builder.get_object(keyForScriptCurrentSegmentIdx())
 
         # GtkSpinButton config(value, lower, upper, step_incr, page_incr, page_size)
         self.targetTSpinner = self.builder.get_object(keyForTargetTemp())
@@ -99,6 +102,16 @@ class kilnPanel():
         self.panel.show()
         self.box.show()
 
+    def setFromScript(self):
+        # assuming kilnScript is a KilnScript object
+        self.scriptNameBox.set_value(self.kilnScript.name)
+        self.scriptDescriptionBox.set_value(self.kilnScript.description)
+        # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
+        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.kilnScript.curSegmentIdx))
+        curSeg = self.kilnScript.segments[self.kilnScript.curSegmentIdx]
+        # fill in for current segment: targetTime, dist, hold
+        pass
+
     def update(self):
         log.debug("KilnPanel Update")
         self.setData()
@@ -128,9 +141,11 @@ class kilnPanel():
             # not running script, reset start/abort btns
             self.resetRunAbort()
 
+        # extract kiln current step
+        # move display to that step if not already there
+
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
         self.scriptStatusBuffer.set_text(textScriptStatus)
-
 
     def on_RunKilnScript_clicked(self, button):
         # start kiln schedule
@@ -193,7 +208,30 @@ class kilnPanel():
         pass
 
     def on_SaveKilnScript_clicked(self, button):
-        pass
+        log.debug("on_SaveKilnScript_clicked")
+        # dialog to get filename
+        topLevel = button.get_toplevel()
+        dialog = Gtk.FileChooserDialog(
+            # title="Select CSV File",
+            "Save KilnScript File As:", topLevel,
+            action=Gtk.FileChooserAction.SAVE,
+            buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        )
+        dialog.set_current_name(self.filename)
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        #dialog.set_current_folder(self.last_open_dir)
+        filter_json = Gtk.FileFilter()
+        filter_json.set_name("JSON Files")
+        filter_json.add_pattern("*.json")
+        dialog.add_filter(filter_json)
+        response = dialog.run()
+        print("FileChooserDialog response: ", response)
+        if response == Gtk.ResponseType.OK:
+            jsonFilename = dialog.get_filename()
+            kilnScript.saveScript(jsonFilename)
+        dialog.destroy()
+
 
     def on_LoadKilnScript_clicked(self, button):
         pass

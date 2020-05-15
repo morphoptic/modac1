@@ -207,24 +207,22 @@ class Kiln:
             startTimeStr = self.processStartTime.strftime("%Y-%m-%d %H:%M:%S%Z")
         
         status = {
-            # a few with no shared keys - for debug purposes
+            # sha}red keys - for debug purposes
             # default values set in moData so not dependent on this file
-            "kilnProcessRunnable": self.processRunnable,
-            keyForSimulate(): this.simulation,
-            keyForCurrentDistance(): self.currentDistance,
-
             # record time we collected data
-            keyForTimeStamp():  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z"),
+            keyForTimeStamp(): datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z"),
+            "kilnProcessRunnable": self.processRunnable,
             #kiln state
             keyForState(): self.state.name,
             keyForKilnScriptState(): self.scriptState.name,
+            keyForSimulate(): this.simulation,
 
             # Script Segment Parameters
             keyForSegmentIndex(): self.scriptIndex,
             keyForTargetTemp(): self.targetTemperature,
             keyForKilnHoldTime(): self.targetHoldTime,
             keyForTargetDisplacement(): self.targetDisplacement,
-            keyForTimeStep(): self.sleepThisStep,
+            keyForPIDStepTime(): self.sleepThisStep,
             keyForMaxTime(): self.maxTimeMin,
 
             # Script Segment data
@@ -237,6 +235,7 @@ class Kiln:
             keyForStartDistance(): self.startDistance,
             keyForTargetDisplacement(): self.targetDisplacement,
             
+            keyForCurrentDistance(): self.currentDistance,
             keyForCurrentDisplacement(): self.currentDisplacement,
             
             keyForKilnHeaters(): self.reportedHeaterStates,
