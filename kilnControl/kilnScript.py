@@ -42,8 +42,10 @@ class KilnScript:
     # set of commands for KilnControl
     def __init__(self):
         self.name = "MODAC Kiln Script X"
-        self.description = "created " +datetime.now().strftime("%Y%m%d_%H_%s")
-        self.segments = [KilnScriptSegment()] # defaults to having one
+        self.description = "created " +datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
+        self.segments = [
+            KilnScriptSegment(),
+            ] # defaults to having one
         self.curSegmentIdx = 0 # used to indicate current segment
 
     def getSegment(self, idx):
@@ -75,17 +77,14 @@ class KilnScript:
         # write it
         # close file
         with open(filename, "w") as jsonFile:
-            asJason
-            startLine = "modac data " + filename + " started " + nowStr
-            jDict = {"_comment": startLine}
-            log.info("Start Json log " + json.dumps(jDict))
-
-            json.dumps(self.asJason(), jsonFile)
+            txt = self.asJson()
+            log.debug("write Script as Json" + txt +" toFile: "+filename)
+            json.dump(self.asDict(), jsonFile, indent=4)
             jsonFile.flush()
             jsonFile.close()
 
     def asJson(self):
-        return json.dumps(self.asDict())
+        return json.dumps(self.asDict(), indent=4)
 
     def asDict(self):
         d = {
@@ -100,6 +99,8 @@ class KilnScript:
         a = []
         for s in self.segments:
             a += s.asDict()
+        print("Segments array ",self.segments)
+        print("as array of dict ",a)
         return a
 
 
@@ -123,7 +124,7 @@ class KilnScriptSegment:
 
     def asDict(self):
         d = {
-            keyForSegmentIndex(): self.step.idx,
+            keyForSegmentIndex(): self.stepIdx,
             keyForTargetTemp(): self.targetTemperature,
             keyForSegmentIndex(): self.targetDistanceChange,
             keyForSegmentIndex(): self.holdTimeMinutes,
@@ -132,3 +133,13 @@ class KilnScriptSegment:
             keyForPIDStepTime(): self.stepTime,
         }
         return d
+
+    def defaultKilnScriptSegment(self):
+        defaultSegment = {
+            keyForIndex(): -1,
+            keyForTargetTemp(): 0,
+            keyForKilnHoldTime(): 0,
+            keyForTargetDisplacement(): 0,
+            keyForMaxTime(): 0,
+        }
+        return defaultSegment

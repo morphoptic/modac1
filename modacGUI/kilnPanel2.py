@@ -20,9 +20,9 @@ import json
 from modac.moKeys import *
 from modac import moData, moLogger
 from modac import moCommand
-#import kilnControl
-#from kilnControl import kiln
-from kilnControl import kilnState, kilnScript
+
+from kilnControl.kilnState  import *
+from kilnControl.kilnScript import *
 
 defaultTargetTemp = 100.0
 defaultDisplacement = 5.0
@@ -38,8 +38,9 @@ class kilnPanel():
         self.dataCount = 0
         self.builder = Gtk.Builder.new_from_file("modacGUI/kilnPanel2.glade")
         self.builder.connect_signals(self)
-        self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H.json")
+        self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
         self.kilnScript = KilnScript()
+        self.last_open_dir = "."
 
         # because i forgot to add one in Glade and its too painful to go back and edit
         self.box = Gtk.VBox()
@@ -48,7 +49,7 @@ class kilnPanel():
 
         self.scriptNameBox = self.builder.get_object(keyForScriptName())
         self.scriptDescriptionBox = self.builder.get_object(keyForScriptDescription())
-        self.currentSegmentIdxBox = self.builder.get_object(keyForScriptCurrentSegmentIdx())
+        self.currentSegmentIdxBox = self.builder.get_object(keyForSegmentIndex())
 
         # GtkSpinButton config(value, lower, upper, step_incr, page_incr, page_size)
         self.targetTSpinner = self.builder.get_object(keyForTargetTemp())
@@ -94,7 +95,9 @@ class kilnPanel():
         # disable Abort until a run starts
         self.stopBtn.set_sensitive(False)
         self.runBtn.set_sensitive(True)
-        
+
+        # fill in script from default values
+        self.setFromScript()
         # fill in the readOnly values
         self.update()
         self.box.add(self.panel)
@@ -104,10 +107,11 @@ class kilnPanel():
 
     def setFromScript(self):
         # assuming kilnScript is a KilnScript object
-        self.scriptNameBox.set_value(self.kilnScript.name)
-        self.scriptDescriptionBox.set_value(self.kilnScript.description)
+        self.scriptNameBox.set_text(self.kilnScript.name)
+        self.scriptDescriptionBox.set_text(self.kilnScript.description)
         # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
         self.currentSegmentIdxBox.set_text("Step Index: "+str(self.kilnScript.curSegmentIdx))
+
         curSeg = self.kilnScript.segments[self.kilnScript.curSegmentIdx]
         # fill in for current segment: targetTime, dist, hold
         pass
@@ -220,19 +224,22 @@ class kilnPanel():
         )
         dialog.set_current_name(self.filename)
         dialog.set_default_response(Gtk.ResponseType.OK)
-        #dialog.set_current_folder(self.last_open_dir)
+        dialog.set_do_overwrite_confirmation(True)
+        dialog.set_current_folder(self.last_open_dir)
+        dialog.set_create_folders(True)
         filter_json = Gtk.FileFilter()
         filter_json.set_name("JSON Files")
         filter_json.add_pattern("*.json")
         dialog.add_filter(filter_json)
         response = dialog.run()
-        print("FileChooserDialog response: ", response)
-        if response == Gtk.ResponseType.OK:
-            jsonFilename = dialog.get_filename()
-            kilnScript.saveScript(jsonFilename)
+        print("FileChooserDialog response: ", response, "OK=",Gtk.ResponseType.OK)
+        self.filename = dialog.get_filename()
+        self.last_open_dir = dialog.get_current_folder()
+        print("filename: ",dialog.get_filename(), " folder:", self.last_open_dir)
+
+        if response != Gtk.ResponseType.CANCEL:
+            self.kilnScript.saveScript(self.filename)
+            print("wrote file")
+
         dialog.destroy()
-
-
-    def on_LoadKilnScript_clicked(self, button):
-        pass
 

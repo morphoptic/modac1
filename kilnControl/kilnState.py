@@ -14,6 +14,7 @@ print("importing " + __dirName__)
 print("parentImport " + __parentDirName__)
 sys.path.append(__parentDirName__)
 #### now we can reference sibling folders
+
 # from modac import moKeys
 from modac.moKeys import *
 
@@ -38,7 +39,7 @@ class KilnScriptState(Enum):
     # IdleTimeStep for fairly quick response - does nothing but allow async Command to change State (startScript)
     # ScriptTimeStep - 10 sec minimum to keep PID from going crazy
 
-def defaultStatus():
+def defaultKilnRuntimeStatus():
     def_kilnStatus = {
         keyForTimeStamp(): "none yet",
         keyForState(): 'Closed',
@@ -61,13 +62,3 @@ def defaultStatus():
     }
     return def_kilnStatus
 
-
-def defaultKilnScriptSegment():
-    defaultSegment = {
-        keyForIndex(): -1,
-        keyForTargetTemp(): 0,
-        keyForKilnHoldTime(): 0,
-        keyForTargetDisplacement(): 0,
-        keyForMaxTime(): 0,
-    }
-    return defaultSegment

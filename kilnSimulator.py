@@ -20,6 +20,7 @@
 import sys
 this = sys.modules[__name__]
 import logging
+from modac import moLogger
 
 if __name__ == "__main__":
     moLogger.init("modacKilnSimulator")

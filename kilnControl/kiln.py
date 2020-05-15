@@ -33,7 +33,7 @@ from . import pidController
 from modac import moData, moHardware, moServer
 from modac.moKeys import *
 from .kilnConfig import *
-from .kilnState import KilnState, KilnScriptState
+from .kilnState import *
 from .kilnScript import *
 
 #####################

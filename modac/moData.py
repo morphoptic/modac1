@@ -101,7 +101,7 @@ def init(client=False):
         update(keyForKType(), [0.0]*this.numKType())
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
-        def_kilnStatus = kilnState.defaultStatus()
+        def_kilnStatus = kilnState.defaultKilnRuntimeStatus()
         update(keyForKilnStatus(), def_kilnStatus)
 
         log.info("moData.init = "+asJson())
