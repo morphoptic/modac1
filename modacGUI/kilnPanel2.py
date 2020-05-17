@@ -219,6 +219,7 @@ class kilnPanel():
         moCommand.cmdEmergencyOff()
 
     def on_LoadKilnScript_clicked(self, button):
+        # TODO implement loadScript dialog + parsing, dialog here, json to obj in kilnScript
         pass
 
     def on_SaveKilnScript_clicked(self, button):
@@ -230,7 +231,7 @@ class kilnPanel():
             "Save KilnScript File As:", topLevel,
             action=Gtk.FileChooserAction.SAVE,
             buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+                     Gtk.STOCK_SAVE, Gtk.ResponseType.OK)
         )
         # new name with current time
         self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
@@ -261,7 +262,7 @@ class kilnPanel():
         log.info("TargetTempChanged " + str(newV))
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.targetTemperature = newV
-        log.info("after set temp: "+str(self.curSeg))
+        log.info("after set temp: "+str(curSeg))
         pass
 
     def on_KilnTargetDisplacement_value_changed(self, button):
@@ -269,7 +270,7 @@ class kilnPanel():
         log.info("Target displacement Changed " + str(newV))
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.targetDistanceChange = newV
-        log.info("after set displace: "+str(self.curSeg))
+        log.info("after set displace: "+str(curSeg))
         pass
 
     def on_KilnHoldTime_value_changed(self, button):
@@ -297,9 +298,23 @@ class kilnPanel():
     def on_SupportFan_toggled(self,button):
         state = button.get_active()
         curSeg = self.kilnScript.getCurrentSegment()
-        curSeg.exhaustFan = state
-        log.info("after toggle support: ",+str(curSeg))
+        curSeg.supportFan = state
+        log.info("after toggle support: "+str(curSeg))
 
+    def on_AddButton_clicked(self, button):
+        # add one to end, update display
+        log.debug("before Add Segment script is: "+str(self.kilnScript))
+        self.kilnScript.addNewSegment()
+        self.setFromScript()
+        log.debug("after Add Segment script is: "+str(self.kilnScript))
+        pass
 
+    def on_RemoveButton_clicked(self, button):
+        # remove current, update display
+        log.debug("before Remove Segment script is: "+str(self.kilnScript))
+        self.kilnScript.removeCurrentSegment()
+        self.setFromScript()
+        log.debug("after Remove Segment script is: "+str(self.kilnScript))
+        pass
 
 
