@@ -14,6 +14,7 @@ log.setLevel(logging.DEBUG)
 #
 import time
 import datetime, json
+from collections import OrderedDict
 #
 from modac.moKeys import *
 from .kilnConfig import *
@@ -43,26 +44,41 @@ class KilnScript:
     def __init__(self):
         self.name = "MODAC Kiln Script X"
         self.description = "created " +datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
-        self.segments = [
-            KilnScriptSegment(),
-            ] # defaults to having one
+        self.segments = [] # defaults to having none
         self.curSegmentIdx = 0 # used to indicate current segment
+        self.addNewSegment() # for testing start with 2 segments
+        self.addNewSegment() # for testing start with 2 segments
+
+    def __str__(self):
+        return json.dumps(self.asDict(), indent=4)
+
+    def __repr__(self):
+        return json.dumps(self.asDict(), indent=4)
 
     def getSegment(self, idx):
         l = len(self.segments)
         if idx < 0 or idx >= l:
             log.error("kilnSeg requested outOfRange idx "+ str(l))
         else:
-            curSegmentIdx = idx
-        return self.segments[curSegmentIdx]
+            self.curSegmentIdx = idx
+        return self.segments[self.curSegmentIdx]
+
+    def getCurrentSegment(self):
+        return self.segments[self.curSegmentIdx]
 
     def addNewSegment(self):
-        self.segments.append(KilnScriptSegment())
-        self.curSegmentIdx = len(self.segments) -1
-        return self.segments[curSegmentIdx]
+        l = len(self.segments)
+        newSeg = KilnScriptSegment(l)
+        self.curSegmentIdx = l
+        newSeg.stepIdx = l
+        print("Created New segment idx "+str(l)+": "+str(newSeg))
+        self.segments.append(newSeg)
+        return newSeg
 
     def insertSegmentBefore(self,beforeIdx):
-        self.segments.insert(beforeIdx, KilnScriptSegment())
+        seg = KilnScriptSegment()
+        seg.stepIdx = beforeIdx
+        self.segments.insert(beforeIdx, seg)
         self.curSegmentIdx = beforeIdx
         return self.segments[curSegmentIdx]
 
@@ -87,59 +103,65 @@ class KilnScript:
         return json.dumps(self.asDict(), indent=4)
 
     def asDict(self):
-        d = {
-            keyForScriptName(): self.name,
-            keyForScriptDescription(): self.description,
-            keyForScriptCurrentSegmentIdx(): self.curSegmentIdx,
-            keyForScriptSegments(): self.segmentsAsDict(),
-        }
+        d = OrderedDict (
+            [
+                (keyForScriptName(), self.name),
+                (keyForScriptDescription(), self.description),
+                (keyForScriptCurrentSegmentIdx(), self.curSegmentIdx),
+                (keyForScriptSegments(), self.segmentsAsDict()),
+            ]
+        )
+        print (d)
+        print(str(d))
         return d
 
+#TODO Make this list of ScriptSegments into proper json
     def segmentsAsDict(self):
-        a = []
-        for s in self.segments:
-            a += s.asDict()
-        print("Segments array ",self.segments)
-        print("as array of dict ",a)
-        return a
-
+        sj = json.dumps(self.segments)
+        log.info(" segments: "+sj)
+        # a = OrderedDict()
+        # for s in self.segments:
+        #     log.info("segment s "+ " " + json.dumps(s.asDict()))
+        #     a[s. ](s.asDict())
+        # print("Segments array ",self.segments)
+        return sj
 
     def parseKilnScript(self,params):
         pass
 
 
 class KilnScriptSegment:
-    stepIdx = -1 # index into Script[], maybe
-    
-    # these are parameters you can program
-    targetTemperature = 0 # deg C; temp the kiln should reach in this segment
-    targetDistanceChange = 0 # if <=0 then ignore distance
-    holdTimeMinutes = 0 # minutes to hold once targetTemperature is reached
-    exhaustFan = 0 # off or on
-    supportFan = 0 # off or on
-    stepTime = default_stepTime # from kilnConfig.py
+    def __init__(self, idx = 0):
+        self.stepIdx = idx # index into Script[], maybe
+        # these are parameters you can program
+        self.targetTemperature = 0 # deg C; temp the kiln should reach in this segment
+        self.targetDistanceChange = 0 # if <=0 then ignore distance
+        self.holdTimeMinutes = 0 # minutes to hold once targetTemperature is reached
+        self.exhaustFan = 0 # off or on
+        self.supportFan = 0 # off or on
+        self.stepTime = default_stepTime # from kilnConfig.py
 
     # rest are locals for running the script
     # really only need  them for active segment so are now in the kiln object
 
-    def asDict(self):
-        d = {
-            keyForSegmentIndex(): self.stepIdx,
-            keyForTargetTemp(): self.targetTemperature,
-            keyForSegmentIndex(): self.targetDistanceChange,
-            keyForSegmentIndex(): self.holdTimeMinutes,
-            keyForExhaustFan(): self.exhaustFan,
-            keyForSupportFan(): self.supportFan,
-            keyForPIDStepTime(): self.stepTime,
-        }
-        return d
+    def __str__(self):
+        return json.dumps(self.asDict(), indent=4)
 
-    def defaultKilnScriptSegment(self):
-        defaultSegment = {
-            keyForIndex(): -1,
-            keyForTargetTemp(): 0,
-            keyForKilnHoldTime(): 0,
-            keyForTargetDisplacement(): 0,
-            keyForMaxTime(): 0,
-        }
-        return defaultSegment
+    def __repr__(self):
+        return json.dumps(self.asDict(), indent=4)
+
+    def asDict(self):
+        d = OrderedDict (
+            [
+                (keyForSegmentIndex(), self.stepIdx),
+                (keyForTargetTemp(), self.targetTemperature),
+                (keyForTargetDisplacement(), self.targetDistanceChange),
+                (keyForKilnHoldTime(), self.holdTimeMinutes),
+                (keyForExhaustFan(), self.exhaustFan),
+                (keyForSupportFan(), self.supportFan),
+                (keyForPIDStepTime(), self.stepTime),
+            ]
+        )
+        #
+        log.info("seg "+str(self.stepIdx)+ " " + json.dumps(d, indent=4))
+        return d

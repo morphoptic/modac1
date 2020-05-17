@@ -69,7 +69,7 @@ class ModacAppWindow(object):
         # Read GUI from file and retrieve objects from Gtk.Builder
         try:
             log.debug("load gui from file")
-            builder = Gtk.Builder.new_from_file("modacGUI/modac1.glade")
+            builder = Gtk.Builder.new_from_file("modacGUI/modac2.glade")
             builder.connect_signals(self)
             log.debug("signals connected")
         except GObject.GError:

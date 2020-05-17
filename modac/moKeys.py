@@ -113,8 +113,8 @@ def keyForSegmentIndex(): return 'SegmentIndex'
 def keyForMaxTime():return 'KilnMaxTime'
 
 # kiln Script runtime data
-def keyForScriptRuntimeData() : "ScriptRuntimeData"
-def keyForScriptCurrentSegmentIdx(): "CurrentSegmentIdx"
+def keyForScriptRuntimeData() : return "ScriptRuntimeData"
+def keyForScriptCurrentSegmentIdx(): return "CurrentSegmentIdx"
 def keyForStartDistance():return 'Kiln Start Distance'
 def keyForCurrentDistance(): return "Kiln Current Distance"
 def keyForCurrentDisplacement():return 'KilnCurrentDisplacement'

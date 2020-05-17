@@ -274,8 +274,8 @@
                 <property name="orientation">vertical</property>
                 <property name="homogeneous">True</property>
                 <child>
-                  <object class="GtkButton" id="AddBeforeButton">
-                    <property name="label" translatable="yes">Add Before</property>
+                  <object class="GtkButton" id="AddButton">
+                    <property name="label" translatable="yes">Add</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -284,19 +284,6 @@
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="AddAfterButton">
-                    <property name="label" translatable="yes">Add After</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -375,9 +362,10 @@
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">500</property>
                     <property name="numeric">True</property>
+                    <signal name="value-changed" handler="on_KilnTargetTemp_value_changed" swapped="no"/>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="padding">1</property>
                     <property name="pack_type">end</property>
@@ -420,9 +408,10 @@
                     <property name="climb_rate">2.2351741811588166e-10</property>
                     <property name="digits">2</property>
                     <property name="numeric">True</property>
+                    <signal name="value-changed" handler="on_KilnTargetDisplacement_value_changed" swapped="no"/>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="padding">1</property>
                     <property name="pack_type">end</property>
@@ -464,9 +453,10 @@
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">500</property>
                     <property name="numeric">True</property>
+                    <signal name="value-changed" handler="on_KilnHoldTime_value_changed" swapped="no"/>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="padding">1</property>
                     <property name="pack_type">end</property>
@@ -486,8 +476,8 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="image_position">right</property>
                 <property name="draw_indicator">True</property>
+                <signal name="toggled" handler="on_ExhaustFan_toggled" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -502,6 +492,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="draw_indicator">True</property>
+                <signal name="toggled" handler="on_SupportFan_toggled" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -539,9 +530,10 @@
                     <property name="climb_rate">1</property>
                     <property name="numeric">True</property>
                     <property name="value">10</property>
+                    <signal name="value-changed" handler="on_PIDStepTime_value_changed" swapped="no"/>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="padding">1</property>
                     <property name="pack_type">end</property>

@@ -32,7 +32,7 @@ defaultStepTime = 2
 class kilnPanel():
     def __init__(self):        
         self.lastState = KilnState.Closed
-        #print("initPanel")
+        print("init kilnPanel")
         self.label = Gtk.Label("Kiln Ctrl")
         self.timestamp = "none yet"
         self.dataCount = 0
@@ -77,15 +77,17 @@ class kilnPanel():
         # TODO change checkbox label color - default white on gray is terrible
         #   need function to find GTK.Label child and change color to black
         self.simulateBtn.set_active(False) # for debugging start w simulated
-        
+
+        self.exhaustFanBtn = self.builder.get_object(keyForExhaustFan())
+        self.supportFanBtn = self.builder.get_object(keyForSupportFan())
+
         ## grab handles on some Buttons for later use
         self.loadBtn = self.builder.get_object("LoadKilnScript")
         self.saveBtn = self.builder.get_object("SaveKilnScript")
         self.runBtn = self.builder.get_object(keyForRunKilnScript())
         self.stopBtn = self.builder.get_object(keyForStopKilnScript())
 
-        self.addBeforeBtn = self.builder.get_object("AddBeforeButton")
-        self.addAfterBtn = self.builder.get_object("AddAfterButton")
+        self.addBtn = self.builder.get_object("AddButton")
         self.removeBtn = self.builder.get_object("RemoveButton")
 
         # and text area to display ScriptStatus
@@ -112,8 +114,15 @@ class kilnPanel():
         # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
         self.currentSegmentIdxBox.set_text("Step Index: "+str(self.kilnScript.curSegmentIdx))
 
-        curSeg = self.kilnScript.segments[self.kilnScript.curSegmentIdx]
+        self.curSeg = self.kilnScript.segments[self.kilnScript.curSegmentIdx]
         # fill in for current segment: targetTime, dist, hold
+        self.targetTSpinner.set_value(self.curSeg.targetTemperature)
+        self.displacementSpinner.set_value(self.curSeg.targetDistanceChange)
+        self.holdTimeSpinner.set_value(self.curSeg.holdTimeMinutes)
+        self.timeStepSpinner.set_value(self.curSeg.stepTime)
+        self.exhaustFanBtn.set_active(self.curSeg.exhaustFan)
+        self.supportFanBtn.set_active(self.curSeg.supportFan)
+
         pass
 
     def update(self):
@@ -203,9 +212,10 @@ class kilnPanel():
         log.debug("Reset Abort/Run Buttons")
         self.stopBtn.set_sensitive(False)
         self.runBtn.set_sensitive(True)
+        # TODO reset editing of current step
         
     def onEmergencyOff(self, button):
-        log.warn("Emergency OFF clicked")
+        log.warning("Emergency OFF clicked")
         moCommand.cmdEmergencyOff()
 
     def on_LoadKilnScript_clicked(self, button):
@@ -222,6 +232,9 @@ class kilnPanel():
             buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                      Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
         )
+        # new name with current time
+        self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
+
         dialog.set_current_name(self.filename)
         dialog.set_default_response(Gtk.ResponseType.OK)
         dialog.set_do_overwrite_confirmation(True)
@@ -242,4 +255,51 @@ class kilnPanel():
             print("wrote file")
 
         dialog.destroy()
+
+    def on_KilnTargetTemp_value_changed(self, button):
+        newV = button.get_value()
+        log.info("TargetTempChanged " + str(newV))
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.targetTemperature = newV
+        log.info("after set temp: "+str(self.curSeg))
+        pass
+
+    def on_KilnTargetDisplacement_value_changed(self, button):
+        newV = button.get_value()
+        log.info("Target displacement Changed " + str(newV))
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.targetDistanceChange = newV
+        log.info("after set displace: "+str(self.curSeg))
+        pass
+
+    def on_KilnHoldTime_value_changed(self, button):
+        newV = button.get_value()
+        log.info("Hold Time Changed " + str(newV))
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.holdTimeMinutes = newV
+        log.info("after set hold: "+str(curSeg))
+        pass
+
+    def on_PIDStepTime_value_changed(self, button):
+        newV = button.get_value()
+        print("PIDStepTime Changed " + str(newV))
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.stepTime = newV
+        log.info("after set pid: "+str(curSeg))
+        pass
+
+    def on_ExhaustFan_toggled(self,button):
+        state = button.get_active()
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.exhaustFan = state
+        log.info("after toggle exhaust: "+str(curSeg))
+
+    def on_SupportFan_toggled(self,button):
+        state = button.get_active()
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.exhaustFan = state
+        log.info("after toggle support: ",+str(curSeg))
+
+
+
 

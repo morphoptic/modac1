@@ -58,6 +58,7 @@ class ModacAppWindow(object):
     dataCount = 0
     last_open_dir = "~"
     def __init__(self, application):
+
         self.Application = application
         builder = None
         now = datetime.datetime.now()
