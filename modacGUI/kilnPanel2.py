@@ -47,10 +47,20 @@ class kilnPanel():
         
         self.panel = self.builder.get_object("ScriptPanel")
 
+        # script data at the top
         self.scriptNameBox = self.builder.get_object(keyForScriptName())
         self.scriptDescriptionBox = self.builder.get_object(keyForScriptDescription())
         self.currentSegmentIdxBox = self.builder.get_object(keyForSegmentIndex())
 
+        # segment Selector
+        self.segmentSelector = self.builder.get_object("stepSelector")
+        self.segmentListModel = Gtk.ListStore(str) #self.builder.get_object("ScriptStepListStore")
+        self.segmentSelector.set_model(self.segmentListModel)
+        self.stepIdxCell = Gtk.CellRendererText()
+        self.segmentSelector.pack_start(self.stepIdxCell,True)
+        self.segmentSelector.add_attribute(self.stepIdxCell,'text',0)
+
+        # segment data
         # GtkSpinButton config(value, lower, upper, step_incr, page_incr, page_size)
         self.targetTSpinner = self.builder.get_object(keyForTargetTemp())
         adj = self.targetTSpinner.get_adjustment()
@@ -114,6 +124,14 @@ class kilnPanel():
         # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
         self.currentSegmentIdxBox.set_text("Step Index: "+str(self.kilnScript.curSegmentIdx))
 
+        # combo box
+        self.segmentListModel.clear()
+        for i in range(len(self.kilnScript.segments)):
+            s = [str(i)]
+            print("add idx to listModel "+ str(s))
+            self.segmentListModel.append(s)
+        self.segmentSelector.set_active(self.kilnScript.curSegmentIdx)
+
         self.curSeg = self.kilnScript.segments[self.kilnScript.curSegmentIdx]
         # fill in for current segment: targetTime, dist, hold
         self.targetTSpinner.set_value(self.curSeg.targetTemperature)
@@ -122,6 +140,8 @@ class kilnPanel():
         self.timeStepSpinner.set_value(self.curSeg.stepTime)
         self.exhaustFanBtn.set_active(self.curSeg.exhaustFan)
         self.supportFanBtn.set_active(self.curSeg.supportFan)
+
+        # update the StepSelector
 
         pass
 
@@ -317,4 +337,14 @@ class kilnPanel():
         log.debug("after Remove Segment script is: "+str(self.kilnScript))
         pass
 
+    def on_stepSelector_changed(self,selector):
+        # a step was selected... make that index current
+        curId = selector.get_active()
+        log.debug("stepSelector Changed")
+        if curId == self.kilnScript.curSegmentIdx:
+            log.debug("same as current, ignore")
+        else:
+            log.debug("new current, update")
+            self.kilnScript.getSegment(curId)
+            self.setFromScript()
 
