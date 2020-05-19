@@ -106,8 +106,7 @@ def handleRunKilnScriptCmd(params):
         log.error("No Kiln found")
         return
     try:
-        kilnScript.parseKilnScript(params);
-        parseKilnScript(params)
+        this.kilnInstance.runKilnScript(params)
     except:
         log.error("Bad Parameters: "+ params.ToString())
 
@@ -159,7 +158,9 @@ class Kiln:
         self.state = KilnState.Idle
         self.scriptState = KilnScriptState.NoScriptStep
 
+        self.kilnScript = None
         self.scriptIndex = -1
+
         self.targetTemperature = 0
         self.targetDisplacement= -1
         self.targetHoldTime = 0 # minutes to hold at target temp
@@ -192,8 +193,10 @@ class Kiln:
         moHardware.binaryCmd(heater_lower, HeaterOff)
         moHardware.binaryCmd(heater_middle, HeaterOff)
         moHardware.binaryCmd(heater_upper, HeaterOff)
-        self.reset()
-        #self.processRunnable = False  # this should stop loop & kill thread
+
+        self.reset() # clear everything
+        self.state = KilnScriptState.EndRun # hang out in this for lil bit to let clients know
+
         # turn off 12v Power
         setRelayPower(False)
         # and turn off simulation
@@ -342,19 +345,14 @@ class Kiln:
         ###################
         # now deal with Script Segment
 
-        # Cooling completes when kiln returns to avg start temp
-        # drop to EndRun state;
-        # TODO Cooling is old stuff. remove for new multi step Scripts
-        if self.state == KilnState.Cooling :
-            #if self.kilnTemps[0] <= (self.kilnStartTemps[0]+0.1):
-            #    log.info("Cooling kiln has reached start temp, switch to EndRun")
-            #    log.debug("Kiln state change Cooling > EndRun")
-            #    self.state = KilnState.EndRun
-            #    self.endRunStart = self.processRuntime
-            #    self.kilnTemps = self.kilnStartTemps
-            #    moHardware.simulateKiln(False) # regardless of current state, reset this and kType
-            # regardless, in cooling dont bother with PID
-            return
+        # displacement test - have we reached slump distance?
+
+        self.currentDisplacement = self.currentDistance - self.startDistance
+
+        # if displacement target reached got to next segment
+        # if our current is close enough to target, got to next segment
+        if (self.currentDisplacement + distanceEpsilon) >= self.targetDisplacement:
+            self.nextScriptSegment()
 
         if self.state == KilnState.Holding :
             # holding at target temp, how long we been here?
@@ -365,8 +363,8 @@ class Kiln:
             
             if self.targetHoldTime > 0.0 and self.timeInHold > self.targetHoldTime :
                 # hold time given and exceeded
-                log.info("Hold Time reached, begin Cooling")
-                self.startCooling()
+                log.info("Hold Time reached,next step")
+                self.nextScriptSegment()
  
         # test if reached hold temp +- some epsilon
         if self.state == KilnState.Heating and self.targetTemperature <= self.kilnTemps[0] :
@@ -416,15 +414,6 @@ class Kiln:
                     moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         # bottom of step
 
-        # displacement test - have we reached slump distance?
-
-        self.currentDisplacement = self.currentDistance - self.startDistance
-        
-        # if displacement target reached state = Cooling
-        # if our current is close enough to target, being cooling 
-        if (self.currentDisplacement + distanceEpsilon) >= self.targetDisplacement:
-            self.startCooling()
-            
         #log, publish and put in data blackboard
         #self.publishStatus()
         
@@ -491,38 +480,13 @@ class Kiln:
             lData = moData.getValue(keyForLeicaDisto())
             self.currentDistance = lData[keyForDistance()]
 
-    def startCooling(self):
-        # start cooling
-        self.state = KilnState.Cooling
-        self.commandedHeaterStates[0] = HeaterOff
-        self.commandedHeaterStates[1] = HeaterOff
-        self.commandedHeaterStates[2] = HeaterOff
-        self.commandedHeaterStates[3] = HeaterOff
-        self.commandHeaters()
-        #self.target = 0 # room temp, ignore?
-        # turn on exhaust and Support
-        # TODO these will be part of script command
-        self.commandExhaustFan(HeaterOn)
-        self.commandSupportFan(HeaterOn)
-
-
-    # TODO startRun is needs to become Start Script, given params, parse into script segment array
-    # and then change Process state to RunningScript
-    def startScript(self, holdTemp=default_holdTemp,
-                    targetDisplacement=default_targetDisplacement,
-                    maxTime = default_maxTime,
-                    stepTime= default_stepTime, holdTime=0):
-
-        self.targetTemperature = holdTemp
-        self.targetDisplacement= targetDisplacement
-        self.processStartTime = datetime.datetime.now()
-        self.maxTimeMin = maxTime
-        self.maxTimeSec = maxTime* 60
-        self.step_time =  stepTime
-        self.targetHoldTime = holdTime
-        
-        if this.simulation :
-            dist = 1000.0 # 1meter start dist in simulation
+    def runKilnScript(self, scriptAsJson):
+        log.debug("runKilnScript: "+str(scriptAsJson))
+        self.kilnScript = kilnScript.newScriptFromText(scriptAsJson)
+        self.scriptIndex = 0
+        self.loadScriptStep()
+        if this.simulation:
+            dist = 1000.0  # 1meter start dist in simulation
             print("Kiln Simulation start dist", dist)
         else:
             lData = moData.getValue(keyForLeicaDisto())
@@ -530,20 +494,51 @@ class Kiln:
             dist = lData[keyForDistance()]
 
         # test for no data
-        if dist <= 0 :
+        if dist <= 0:
             log.error("No data for Leica, Kiln run may not work")
             self.state = KilnState.Idle
-            #return;
+            # return;
         self.startDistance = dist
         self.currentDistance = dist
         self.targetDist = self.startDistance + self.targetDisplacement
-        
+
         setRelayPower(True)
 
         self.state = KilnState.Heating
         log.info("Starting Kiln run.. status:" + str(self.collectStatus()))
         log.info("async kiln loop should pick this up")
-        
+
+    def nextScriptSegment(self):
+        self.scriptIndex += 1
+        if self.scriptIndex > self.kilnScript.numSteps():
+            # ran off end of script.
+            # end of runScript
+            log.debug("NextStep for kilnScript")
+            self.terminateScript()
+            return
+        self.loadScriptStep()
+        pass
+
+    def loadScriptStep(self):
+        if self.kilnScript == None:
+            log.error("no kiln script for loading step")
+            return
+        curSeg = self.kilnScript.getSegment(self.scriptIndex)
+
+        # copy values from script to internals
+        # we use internals and duplicate curSeg/kilnScript to keep it pristine
+        # and also because the rest of this was written with local vars first
+        # and scriptSegments/steps added later
+        self.targetTemperature = curSeg.targetTemperature
+        self.targetDisplacement= curSeg.targetDistanceChange
+        self.segmentStartTime = datetime.datetime.now()
+        self.maxTimeMin = curSeg. maxTime
+        self.maxTimeSec =  curSeg.maxTime* 60
+        self.step_time = curSeg. stepTime
+        self.targetHoldTimeMin = curSeg.holdTimeMinutes
+        self.targetHoldTimeSec = self.targetHoldTimeMin * 60
+
+
   
         
         

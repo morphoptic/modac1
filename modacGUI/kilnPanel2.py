@@ -32,6 +32,8 @@ defaultStepTime = 2
 class kilnPanel():
     def __init__(self):        
         self.lastState = KilnState.Closed
+        self.updating = True # used when updating current script gui to avoid stack overflow
+
         print("init kilnPanel")
         self.label = Gtk.Label("Kiln Ctrl")
         self.timestamp = "none yet"
@@ -109,7 +111,7 @@ class kilnPanel():
         self.runBtn.set_sensitive(True)
 
         # fill in script from default values
-        self.setFromScript()
+        self.setFromScript() # coming back from this will have self.updating=False
         # fill in the readOnly values
         self.update()
         self.box.add(self.panel)
@@ -118,6 +120,7 @@ class kilnPanel():
         self.box.show()
 
     def setFromScript(self):
+        self.updating = True
         # assuming kilnScript is a KilnScript object
         self.scriptNameBox.set_text(self.kilnScript.name)
         self.scriptDescriptionBox.set_text(self.kilnScript.description)
@@ -142,6 +145,7 @@ class kilnPanel():
         self.supportFanBtn.set_active(self.curSeg.supportFan)
 
         # update the StepSelector
+        self.updating = False
 
         pass
 
@@ -150,6 +154,7 @@ class kilnPanel():
         self.setData()
         
     def getKilnStatus(self):
+        # status message recieved: update text and perhaps some others
         self.kilnStatus = moData.getValue(keyForKilnStatus())
         if self.kilnStatus == keyForNotStarted():
             self.stateName = keyForNotStarted()
@@ -181,41 +186,13 @@ class kilnPanel():
         self.scriptStatusBuffer.set_text(textScriptStatus)
 
     def on_RunKilnScript_clicked(self, button):
-        # start kiln schedule
+        # start kiln script
+        # collect data for command, send command
         log.debug("on_RunKilnScript_clicked")
-        scriptName = self.scriptNameBox.get_value()
-        scriptDescription = self.scriptNameBox.get_value()
 
-        # collect targetTemp, deflection, maxTime, startTime)
-        targetT = self.targetTSpinner.get_value()
-        
-        deflection = self.displacementSpinner.get_value()
-        
-        maxTime = self.maxTimeSpinner.get_value()
-        
-        timeStep = self.timeStepSpinner.get_value_as_int()
-
-        simulate = self.simulateBtn.get_active()
-        
-        kilnHoldTime = self.holdTimeSpinner.get_value_as_int()
-
-        #def startRun(holdTemp=default_holdTemp,
-        #             deflectionDist=default_deflectionDist,
-        #             maxTime = default_maxTime,
-        #             stepTime= default_stepTime):
-        param = {
-            keyforScriptName(): scriptName,
-            keyforScriptDescription():scriptDescripton(),
-
-            # TODO multiple steps
-            keyForTargetTemp(): targetT,
-            keyForTargetDisplacement(): deflection,
-            keyForMaxTime(): maxTime,
-            keyForTimeStep(): timeStep,
-            keyForSimulate(): simulate,
-            keyForKilnHoldTime(): kilnHoldTime,
-        }
-        
+        param = str()
+        # get JSON for of script
+        param = str(self.kilnScript)
         # Disable Run, Enable Terminate
         self.runBtn.set_sensitive(False)
         self.abortBtn.set_sensitive(True)
@@ -240,6 +217,41 @@ class kilnPanel():
 
     def on_LoadKilnScript_clicked(self, button):
         # TODO implement loadScript dialog + parsing, dialog here, json to obj in kilnScript
+        log.debug("on_LoadKilnScript_clicked")
+        # dialog to get filename
+        topLevel = button.get_toplevel()
+        dialog = Gtk.FileChooserDialog(
+            # title="Select CSV File",
+            "Open KilnScript File :", topLevel,
+            action=Gtk.FileChooserAction.OPEN,
+            buttons=(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                     Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        )
+
+        dialog.set_default_response(Gtk.ResponseType.CANCEL)
+        dialog.set_current_folder(self.last_open_dir)
+        filter_json = Gtk.FileFilter()
+        filter_json.set_name("JSON Files")
+        filter_json.add_pattern("*.json")
+        dialog.add_filter(filter_json)
+        response = dialog.run()
+        print("FileChooserDialog response: ", response, "OK=",Gtk.ResponseType.OK)
+        self.filename = dialog.get_filename()
+        self.last_open_dir = dialog.get_current_folder()
+        print("filename: ",dialog.get_filename(), " folder:", self.last_open_dir)
+
+        if response != Gtk.ResponseType.CANCEL:
+            # load script is in kilnScript
+            retVal = loadScriptFromFile(self.filename)
+            print("loaded file? ", str(retVal))
+            if retVal == None:
+                log.error("on_LoadScript failed, file: " + self.filename )
+            else:
+                log.debug("on_LoadScript  succeeded file: " + self.filename )
+                self.kilnScript = retVal
+                self.setFromScript()
+
+        dialog.destroy()
         pass
 
     def on_SaveKilnScript_clicked(self, button):
@@ -278,6 +290,7 @@ class kilnPanel():
         dialog.destroy()
 
     def on_KilnTargetTemp_value_changed(self, button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         newV = button.get_value()
         log.info("TargetTempChanged " + str(newV))
         curSeg = self.kilnScript.getCurrentSegment()
@@ -286,6 +299,7 @@ class kilnPanel():
         pass
 
     def on_KilnTargetDisplacement_value_changed(self, button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         newV = button.get_value()
         log.info("Target displacement Changed " + str(newV))
         curSeg = self.kilnScript.getCurrentSegment()
@@ -294,6 +308,7 @@ class kilnPanel():
         pass
 
     def on_KilnHoldTime_value_changed(self, button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         newV = button.get_value()
         log.info("Hold Time Changed " + str(newV))
         curSeg = self.kilnScript.getCurrentSegment()
@@ -302,6 +317,7 @@ class kilnPanel():
         pass
 
     def on_PIDStepTime_value_changed(self, button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         newV = button.get_value()
         print("PIDStepTime Changed " + str(newV))
         curSeg = self.kilnScript.getCurrentSegment()
@@ -310,12 +326,14 @@ class kilnPanel():
         pass
 
     def on_ExhaustFan_toggled(self,button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         state = button.get_active()
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.exhaustFan = state
         log.info("after toggle exhaust: "+str(curSeg))
 
     def on_SupportFan_toggled(self,button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         state = button.get_active()
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.supportFan = state
@@ -338,6 +356,7 @@ class kilnPanel():
         pass
 
     def on_stepSelector_changed(self,selector):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
         # a step was selected... make that index current
         curId = selector.get_active()
         log.debug("stepSelector Changed")

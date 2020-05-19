@@ -42,15 +42,46 @@ from .kilnState import KilnState, KilnScriptState
 #
 # kilnInstance.startScript(targetT, displacement, maxTime, timeStep, holdTime)
 
+# given a file, try to load it as Json save of KilnScript
+def loadScriptFromFile( filename):
+    with open(filename, "r") as jsonFile:
+        dict = json.load(jsonFile)
+        log.debug("Read jsonDict from file: " + filename )
+        return KilnScript(dict)
+    return None
+
+def newScriptFromText(text):
+    dict = json.loads(text)
+    log.debug("Read jsonDict from text: " + text )
+    return KilnScript(dict)
+
 class KilnScript:
     # set of commands for KilnControl
-    def __init__(self):
+    def __init__(self, dict= None):
         self.name = "MODAC Kiln Script X"
         self.description = "created " + datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
         self.segments = []  # defaults to having none
         self.curSegmentIdx = 0  # used to indicate current segment
-        self.addNewSegment()  # for testing start with 2 segments
-        self.addNewSegment()  # for testing start with 2 segments
+        if dict == None:
+            # create a new empty one
+            self.addNewSegment()  # for testing start with 2 segments
+            self.addNewSegment()  # for testing start with 2 segments
+        else:
+            # parse the dictionary
+            #log.debug("init kilnScript from dict " + str(dict))
+            self.name = dict[keyForScriptName()]
+            self.description= dict[ keyForScriptDescription()]
+            self.curSegmentIdx = dict [keyForScriptCurrentSegmentIdx()]
+            segmentDict = dict [keyForScriptSegments()]
+            # how to parse out this array?
+            #log.debug("init kilnScript from dict " + str(self))
+            #log.debug("do segments "+ str(segmentDict))
+            for segAsDict in segmentDict:
+                # create new segment from dict and add it to array - insure index is correct
+                s = KilnScriptSegment()
+                s.updateFromDict(segAsDict)
+                self.segments.append(s)
+            log.debug("initialized kilnScript from dict " + str(self))
 
     def __str__(self):
         return json.dumps(self.asDict(), indent=4)
@@ -74,7 +105,7 @@ class KilnScript:
         newSeg = KilnScriptSegment(l)
         self.curSegmentIdx = l
         newSeg.stepIdx = l
-        log.debug("Created New segment idx " + str(l) + ": " + str(newSeg))
+        #log.debug("Created New segment idx " + str(l) + ": " + str(newSeg))
         self.segments.append(newSeg)
         return newSeg
 
@@ -83,18 +114,15 @@ class KilnScript:
         self.curSegmentIdx -= 1
         if self.curSegmentIdx < 0:
             self.addNewSegment()  # cant have it empty
-
-        pass
+        # TODO - renumber segments
 
     def insertSegmentBefore(self, beforeIdx):
+        #TODO not tested
         seg = KilnScriptSegment()
         seg.stepIdx = beforeIdx
         self.segments.insert(beforeIdx, seg)
         self.curSegmentIdx = beforeIdx
         return self.segments[curSegmentIdx]
-
-    def loadScript(self, filename):
-        pass
 
     def saveScript(self, filename):
         # saves this script as JSON file
@@ -132,21 +160,8 @@ class KilnScript:
         for s in self.segments:
             # log.info("segment s "+ " " + json.dumps(s.asDict()))
             a.append(s.asDict())
-        log.info("array of segments: " + str(a))
+        #log.info("array of segments: " + str(a))
         return a
-        #
-        # sj = json.dumps(self.segments.asDict))
-        r  # eturn sj
-        # log.info(" segments: "+sj)
-        # Tried as orderedDict but it not work for json later
-        #a = OrderedDict()
-        # for s in self.segments:
-        #     log.info("segment s "+ " " + json.dumps(s.asDict()))
-        #     a[s. ](s.asDict())
-        # print("Segments array ",self.segments)
-
-    def parseKilnScript(self, params):
-        pass
 
 
 class KilnScriptSegment:
@@ -159,6 +174,7 @@ class KilnScriptSegment:
         self.exhaustFan = 0  # off or on
         self.supportFan = 0  # off or on
         self.stepTime = default_stepTime  # from kilnConfig.py
+        #log.debug("new empty segment:"+ str(self))
 
     # rest are locals for running the script
     # really only need  them for active segment so are now in the kiln object
@@ -185,3 +201,19 @@ class KilnScriptSegment:
         #
         # log.info("seg "+str(self.stepIdx)+ " " + json.dumps(d, indent=4))
         return d
+
+    def updateFromDict(self, d):
+        if d == None:
+            log.error("update from Dict given None")
+            return
+        self.stepIdx = d[keyForSegmentIndex()]
+        self.targetTemperature = d[keyForTargetTemp()]
+        self.targetDistanceChange = d[keyForTargetDisplacement()]
+        self.holdTimeMinutes = d[keyForKilnHoldTime()]
+        self.exhaustFan = d[keyForExhaustFan()]
+        self.supportFan = d[keyForSupportFan()]
+        self.stepTime = d[keyForPIDStepTime()]
+        #log.debug("update from Dict: "+ json.dumps(d, indent=4) + "\n yields: "+ str(self))
+
+
+
