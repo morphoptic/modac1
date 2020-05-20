@@ -63,20 +63,21 @@ async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
                                 polyamorous=True, # poly means we listen to many
                                 recv_timeout = moNetwork.rcvTimeout())
-    print("Cmd Listener: ",this.__CmdListener)
+    print("Cmd Listener: ",this.__CmdListener,moNetwork.rcvTimeout())
     nursery.start_soon(cmdListenLoop)
 
 __killCmdListener = False
 async def cmdListenLoop():
     # async forever loop
-    # sorta semiphore to signal we are shutting down 
+    # sorta semiphore to signal we are shutting down
+    log.debug("Start cmdListenLoop")
     while not this.__killCmdListener:
         try:
             await this.serverReceive()
         except trio.Cancelled:
             log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
-    log.error("***cmdListenLoop Not Running")
+    log.error("***cmdListenLoop Stiooed Running")
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None
@@ -89,6 +90,7 @@ async def serverReceive():
         return False
     msg = None
     try:
+        log.debug("serverReceive await msg")
         msgObj = await this.__CmdListener.arecv_msg()
         # async read will block here
         #msgObj is a pyNNG Message with gives info on sender
@@ -97,7 +99,7 @@ async def serverReceive():
         # most of the guts of encrypt/decrypt is in moNetwork
         # by the time it gets back here as topic/body
         # it should be a string key and Object body (converted from json text)
-        #print("Server Receive msgObj", msgObj)
+        print("Server Receive msgObj", msgObj)
         source_addr = str(msgObj.pipe.remote_address)
         # do we need to verify the source address?
         msgStr = msgObj.bytes.decode('utf8')
@@ -116,7 +118,7 @@ async def serverReceive():
         return True
     except Timeout:
         # be quiet about it
-        #log.debug("serverReceive() receive timeout")
+        log.debug("serverReceive() receive timeout")
         return True
     except :
         log.error("serverReceive() caught exception %s"%sys.exc_info()[0])
@@ -124,6 +126,8 @@ async def serverReceive():
         #log.exception("Some other exeption! on sub%d "%(i))
         this.__killCmdListener = True
         return False
+    log.error("server receive end")
+    return True
 
 def serverDispatch(topic,body):
     log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
@@ -141,12 +145,7 @@ def serverDispatch(topic,body):
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
         
-    # kiln control commands: startProcess, kill process, runScript, stopScript
-    elif topic == keyForStartKilnCmd():
-        kiln.handleStartKilnProcessCmd() # spawn thread to run kiln
-    elif topic == keyForEndKilnProcess():
-        kiln.handleEndKilnProcessCmd() # spawn thread to run kiln
-        
+    # kiln control commands: runScript, stopScript
     elif topic == keyForStopKilnScript():
         print("\n====== doing Kiln Abort script :", topic)
         log.info("Received StopKilnScript Command")
@@ -171,6 +170,8 @@ def serverDispatch(topic,body):
                 kiln.handleRunKilnScriptCmd(body)
             pass
         pass
+    elif topic == keyForHello():
+        log.info("Received Hello from Client ")
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
         pass

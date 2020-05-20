@@ -74,7 +74,7 @@ async def startKilnControlProcess(nursery=None):
         return
     if nursery == None:
         nursery = moData.getNursery()
-        
+
     if enableKilnControl:
         log.debug("startKiln soon")
         this.kilnInstance = Kiln() #simulate=True)
@@ -82,7 +82,7 @@ async def startKilnControlProcess(nursery=None):
         # ugh how to kill off Kiln object. Singleton?
     else:
         log.debug("Kiln Control Disabled")
-        
+
 def endKilnControlProcess():
     '''terminate the kiln thread'''
     if this.kilnInstance == None:
@@ -98,9 +98,6 @@ def endKilnControlProcess():
 
 def handleRunKilnScriptCmd(params):
     '''handler for interprocess command to run a kiln script. params is dictionary of Keys'''
-    # TODO in process of conversion - old one step run; new multi-step script
-    # each kilnStep has a TargetTemp, and two end conditions: HoldTime, SlumpDistance
-    # REVISING: multiple steps in kilnScript now
     print("\n\n*****runKilnScriptCmd", params)
     if this.kilnInstance == None:
         log.error("No Kiln found")
@@ -112,6 +109,15 @@ def handleRunKilnScriptCmd(params):
 
 def handleEndKilnScriptCmd():
     # tell script to stop and set status back to KilnState.Idle
+    print("\n\n*****handleEndKilnScriptCmd")
+    if this.kilnInstance == None:
+        log.error("No Kiln found")
+        return
+    try:
+        this.kilnInstance.terminateScript()
+    except:
+        log.error("Bad Parameters: "+ params.ToString())
+
     pass
 
 #####################

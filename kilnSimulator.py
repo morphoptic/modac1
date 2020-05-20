@@ -36,6 +36,7 @@ import trio
 
 #import kilnControl.config as config
 from modac import moLogger, moData
+from modac import  moServer
 moLogger.init()
 
 from kilnControl import kiln
@@ -56,13 +57,21 @@ def signalExit(*args):
     modacExit()
 
 
-secondsToRunTest = 90
+secondsToRunTest = 120
 
 async def simulateKiln():
     print("simulate kiln")
     async with trio.open_nursery() as nursery:
         moData.setNursery(nursery)
+
+        # if we want to hear from gui, then we need to start these
+        # TODO: serverReceive cmdListenLoop, doesnt wait, why?
+        # we are The Server, theHub, theBroker
+        # async so it can spawn CmdListener
+        await moServer.startServer(nursery)
+
         #kiln.simulation = True
+
         await kiln.startKilnControlProcess()
 
         kiln.setSimulation(True)

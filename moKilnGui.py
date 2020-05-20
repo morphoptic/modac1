@@ -62,6 +62,7 @@ class ModacAppWindow(object):
     last_open_dir = "~"
     def __init__(self, application):
         log.debug("ModacAppWindow init")
+        self.saidHello = None
         self.Application = application
         builder = None
         now = datetime.datetime.now()
@@ -252,6 +253,18 @@ class ModacAppWindow(object):
         self.aboutdialog.hide()
         
     def on_handle_timer(self):
+        now = datetime.datetime.now()
+        if self.saidHello == None:
+            # havent said hello to server yet
+            moCommand.cmdHello()
+            self.saidHello = now
+        else:
+            sinceHello = (now-self.saidHello).total_seconds()
+            if sinceHello >(1*60):
+                # say hello again
+                moCommand.cmdHello()
+                self.saidHello = now
+
         # Update status bar
         if not self.getData():
             # no data received

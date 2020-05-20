@@ -43,7 +43,7 @@ startKilnOnStartup = True
 
 def modacExit():
     log.info("modacExit shutting down")
-    kilnControl.killKilnControlProcess()
+    kilnControl.endKilnControlProcess()
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     if csvActive:

@@ -107,8 +107,9 @@ class kilnPanel():
         self.scriptStatusBuffer = self.scriptStatusBox.get_buffer()
 
         # disable Abort until a run starts
-        self.stopBtn.set_sensitive(False)
-        self.runBtn.set_sensitive(True)
+        self.resetRunStop()
+        #self.stopBtn.set_sensitive(False)
+        #self.runBtn.set_sensitive(True)
 
         # fill in script from default values
         self.setFromScript() # coming back from this will have self.updating=False
@@ -177,7 +178,7 @@ class kilnPanel():
 
         if not self.stateName== KilnState.RunningScript.name:
             # not running script, reset start/abort btns
-            self.resetRunAbort()
+            self.resetRunStop()
 
         # extract kiln current step
         # move display to that step if not already there
@@ -193,19 +194,25 @@ class kilnPanel():
         param = str()
         # get JSON for of script
         param = str(self.kilnScript)
+
         # Disable Run, Enable Terminate
-        self.runBtn.set_sensitive(False)
-        self.abortBtn.set_sensitive(True)
+        self.setRunStop()
 
         print("\n**** Send RunKiln: ", param)
         moCommand.cmdRunKilnScript(param)
         
     def on_StopKilnScript_clicked(self, button):
         log.debug("onTerminateRun")
-        self.resetRunAbort()
+        self.resetRunStop()
         moCommand.cmdStopKilnScript()
 
-    def resetRunAbort(self):
+    def setRunStop(self):
+        self.runBtn.set_sensitive(False)
+        self.stopBtn.set_sensitive(True)
+        # TODO may also want to disable editing script entirely at this point
+        # perhaps something akin to the resetBtn stuff
+
+    def resetRunStop(self):
         log.debug("Reset Abort/Run Buttons")
         self.stopBtn.set_sensitive(False)
         self.runBtn.set_sensitive(True)

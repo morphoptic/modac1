@@ -65,6 +65,7 @@ LeicaDisto Module holds singleton State and methods to talk with BLE Device
 '''
 # moHardware usual init() and update() are here usage questionable
 # 
+useLeica = False # flag to say we are using or not using Leica distance sensor
 
 import sys
 this = sys.modules[__name__]
@@ -349,6 +350,9 @@ def init():
     }
     moData.update(keyForLeicaDisto(), d)
 
+    if not useLeica == True:
+        return
+
     if not this._state == LeicaState.Closed:
         log.error("trying to Init Leica when not Closed, needs Reset")
         return
@@ -377,6 +381,9 @@ async def runLoop():
         enter innerloop of measure/post/sleep until error or stop signal
         after innerloop, release gattProcess and continue outter loop '''
     #
+
+    if not useLeica == True:
+        return
     log.debug("starting runLoop")
     dumpDebug()
     while this._state == LeicaState.Looping:

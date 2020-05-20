@@ -112,7 +112,7 @@ def asArray():
     # retrieve the ad as 0-5V values
     if _use16BitDA:
         adArray = moData.getValue(keyForAD16())
-        print("adArray from 16bit ", adArray)
+        #print("adArray from 16bit ", adArray)
     else:
         adArray = ad24.all0to5Array()
     #print("adArray: ", adArray)
@@ -125,12 +125,12 @@ def asArray():
     for adIdx in kTypeIdx:
         try:
             t = this.adToC(adArray[adIdx])#roomTemp)
-            print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
+            #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         except ValueError:
             log.error("Error converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]))
             t = 0
         ktypeData.append(t)
-    print ("KType as array", ktypeData)
+    #print ("KType as array", ktypeData)
     return ktypeData
 
 def asDict():

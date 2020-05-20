@@ -243,6 +243,8 @@ class ModacAppWindow(object):
         self.aboutdialog.hide()
         
     def on_handle_timer(self):
+        now = datetime.datetime.now()
+
         # Update status bar
         if not self.getData():
             # no data received
@@ -253,7 +255,6 @@ class ModacAppWindow(object):
         #text = "Random number = " + str(random.randint(1,101))
         self.setStatus("Data Updated: #%d at "%self.dataCount +timestamp)
         # do we need to do CSV row?       self.csvTime()
-        now = datetime.datetime.now()
         if self.lastCsvStep == None:
             moCSV.addRow()
             self.lastCsvStep = now
