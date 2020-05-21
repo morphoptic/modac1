@@ -97,7 +97,7 @@ def endKilnControlProcess():
 
 def handleRunKilnScriptCmd(params):
     '''handler for interprocess command to run a kiln script. params is dictionary of Keys'''
-    print("\n\n*****runKilnScriptCmd", params)
+    log.info("\n\n*****runKilnScriptCmd" +params)
     if this.kilnInstance == None:
         log.error("No Kiln found")
         return
@@ -108,7 +108,7 @@ def handleRunKilnScriptCmd(params):
 
 def handleEndKilnScriptCmd():
     # tell script to stop and set status back to KilnState.Idle
-    print("\n\n*****handleEndKilnScriptCmd")
+    log.info("\n*****handleEndKilnScriptCmd")
     if this.kilnInstance == None:
         log.error("No Kiln found")
         return
@@ -148,6 +148,7 @@ class Kiln:
     
     def __init__(self, time_step=default_stepTime):#, nursery=None):
         # simulation was removed for modac, need it for good testing
+        self.processStartTime = datetime.datetime.now() # record start time,
         self.processRunnable = False
         self.state = KilnState.Closed
         self.reset()
@@ -155,7 +156,6 @@ class Kiln:
         self.state = KilnState.Starting
 
     def reset(self):
-        self.processStartTime = 0
         self.processRuntime = 0
         self.totaltime = 0
         self.sleepThisStep = idleStateTimeStep
@@ -163,8 +163,9 @@ class Kiln:
         self.state = KilnState.Idle
         self.scriptState = KilnScriptState.NoScriptStep
 
-        self.kilnScript = None
+        self.myScript = None
         self.scriptIndex = -1
+        self.scriptStartTime = None
 
         self.targetTemperature = 0
         self.targetDisplacement= -1
@@ -210,9 +211,9 @@ class Kiln:
         log.info("terminateScript")
        
     def collectStatus(self):
-        startTimeStr =" NotStarted"
-        if isinstance(self.processStartTime, datetime.datetime):
-            startTimeStr = self.processStartTime.strftime("%Y-%m-%d %H:%M:%S%Z")
+        #startTimeStr =" NotStarted"
+        #if isinstance(self.processStartTime, datetime.datetime):
+        startTimeStr = self.processStartTime.strftime("%Y-%m-%d %H:%M:%S%Z")
         
         status = {
             # sha}red keys - for debug purposes
@@ -249,6 +250,7 @@ class Kiln:
             keyForKilnHeaters(): self.reportedHeaterStates,
             keyForKilnHeaterCommanded(): self.commandedHeaterStates,
             keyForKilnTemperatures(): self.kilnTemps,
+            keyForScript(): str(self.myScript),
         }
         #print("KilnStatus:", status)
         return status
@@ -265,7 +267,6 @@ class Kiln:
         # setup basic self/instance variables, much of that delegated to self.reset()
         self.processStartTime = datetime.datetime.now() # record start time,
         self.state = KilnState.Starting # set the initial state
-        # record temps at start of process - was used to return in Cooling but new multiStep scripts should not use
 
         log.info("\n\n****** kilnControlProcess starting Kiln Status %r" % self.collectStatus())
 
@@ -299,6 +300,7 @@ class Kiln:
         # update Times
         currentTime = datetime.datetime.now()
         self.processRuntime = (currentTime - self.processStartTime).total_seconds()
+
         if self.state == KilnState.RunningScript:
             self.scriptRuntime = (currentTime - self.scriptStartTime).total_seconds()
             if self.scriptState == KilnScriptState.Holding:
@@ -339,7 +341,7 @@ class Kiln:
             return;
 
         # 
-        if self.state == KilnState.EndRun:
+        if self.scriptState == KilnScriptState.EndRun:
             # hold EndRun for a bit to let UI/monitors know
             if (self.processRuntime - self.endRunStart) >= endRunHoldTime:
                 self.state = KilnState.Idle
@@ -354,12 +356,14 @@ class Kiln:
 
         self.currentDisplacement = self.currentDistance - self.startDistance
 
+        # if there is a targetDisplacement
         # if displacement target reached got to next segment
         # if our current is close enough to target, got to next segment
-        if (self.currentDisplacement + distanceEpsilon) >= self.targetDisplacement:
+        if self.targetDisplacement >0 and (self.currentDisplacement + distanceEpsilon) >= self.targetDisplacement:
+            log.info("target displacement reached. next segment")
             self.nextScriptSegment()
 
-        if self.state == KilnState.Holding :
+        if self.scriptState == KilnScriptState.Holding :
             # holding at target temp, how long we been here?
             # self.targetHoldTime = 0 # minutes to hold at target temp, default 0 = ignore
             log.debug("Kiln HOLDING started at "+str(self.startHoldTime) +" cur:"+str(currentTime))
@@ -372,7 +376,7 @@ class Kiln:
                 self.nextScriptSegment()
  
         # test if reached hold temp +- some epsilon
-        if self.state == KilnState.Heating and self.targetTemperature <= self.kilnTemps[0] :
+        if self.scriptState == KilnScriptState.Heating and self.targetTemperature <= self.kilnTemps[0] :
             #+ self.tempertureEpsilon:
             # reached temp, state should be Hold
             self.state = KilnState.Holding
@@ -381,7 +385,7 @@ class Kiln:
             
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway
-        if self.state == KilnState.Heating or self.state == KilnState.Holding:
+        if self.scriptState == KilnScriptState.Heating or self.scriptState == KilnScriptState.Holding:
             # update PIDs
             self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
             if self.useSinglePID:
@@ -486,8 +490,8 @@ class Kiln:
             self.currentDistance = lData[keyForDistance()]
 
     def runKilnScript(self, scriptAsJson):
-        log.debug("runKilnScript: "+str(scriptAsJson))
-        self.kilnScript = kilnScript.newScriptFromText(scriptAsJson)
+        #log.debug("runKilnScript: "+str(scriptAsJson))
+        self.myScript = newScriptFromText(scriptAsJson)
         self.scriptIndex = 0
         self.loadScriptStep()
         if this.simulation:
@@ -495,27 +499,27 @@ class Kiln:
             print("Kiln Simulation start dist", dist)
         else:
             lData = moData.getValue(keyForLeicaDisto())
-            print("startKiln Run leicaPanel.getData = ", lData)
+            #print("startKiln Run leicaPanel.getData = ", lData)
             dist = lData[keyForDistance()]
 
-        # test for no data
+        # test for no distance data
         if dist <= 0:
-            log.error("No data for Leica, Kiln run may not work")
-            self.state = KilnState.Idle
-            # return;
+            log.warn("No distance data for Leica, Kiln run may not work")
+            #self.state = KilnState.Idle
         self.startDistance = dist
         self.currentDistance = dist
         self.targetDist = self.startDistance + self.targetDisplacement
 
         setRelayPower(True)
 
-        self.state = KilnState.Heating
-        log.info("Starting Kiln run.. status:" + str(self.collectStatus()))
+        self.state = KilnState.RunningScript
+        self.scriptStartTime = datetime.datetime.now()
+        log.info("Starting Kiln Script .. status:" + str(self.collectStatus()))
         log.info("async kiln loop should pick this up")
 
     def nextScriptSegment(self):
         self.scriptIndex += 1
-        if self.scriptIndex > self.kilnScript.numSteps():
+        if self.scriptIndex > self.myScript.numSteps():
             # ran off end of script.
             # end of runScript
             log.debug("NextStep for kilnScript")
@@ -525,10 +529,10 @@ class Kiln:
         pass
 
     def loadScriptStep(self):
-        if self.kilnScript == None:
+        if self.myScript == None:
             log.error("no kiln script for loading step")
             return
-        curSeg = self.kilnScript.getSegment(self.scriptIndex)
+        curSeg = self.myScript.getSegment(self.scriptIndex)
 
         # copy values from script to internals
         # we use internals and duplicate curSeg/kilnScript to keep it pristine
@@ -537,9 +541,9 @@ class Kiln:
         self.targetTemperature = curSeg.targetTemperature
         self.targetDisplacement= curSeg.targetDistanceChange
         self.segmentStartTime = datetime.datetime.now()
-        self.maxTimeMin = curSeg. maxTime
-        self.maxTimeSec =  curSeg.maxTime* 60
-        self.step_time = curSeg. stepTime
+        self.maxTimeMin = default_maxTime # curSeg.maxTime
+        self.maxTimeSec =  default_maxTime* 60 # curSeg.maxTime* 60
+        self.step_time = curSeg.stepTime
         self.targetHoldTimeMin = curSeg.holdTimeMinutes
         self.targetHoldTimeSec = self.targetHoldTimeMin * 60
 

@@ -64,8 +64,7 @@ class KilnScript:
         self.curSegmentIdx = 0  # used to indicate current segment
         if dict == None:
             # create a new empty one
-            self.addNewSegment()  # for testing start with 2 segments
-            self.addNewSegment()  # for testing start with 2 segments
+            self.addNewSegment()
         else:
             # parse the dictionary
             #log.debug("init kilnScript from dict " + str(dict))
@@ -89,8 +88,11 @@ class KilnScript:
     def __repr__(self):
         return json.dumps(self.asDict(), indent=4)
 
+    def numSteps(self):
+        return len(self.segments)
+
     def getSegment(self, idx):
-        l = len(self.segments)
+        l = self.numSteps()
         if idx < 0 or idx >= l:
             log.error("kilnSeg requested outOfRange idx " + str(l))
         else:
@@ -170,10 +172,11 @@ class KilnScriptSegment:
         # these are parameters you can program
         self.targetTemperature = 0  # deg C; temp the kiln should reach in this segment
         self.targetDistanceChange = 0  # if <=0 then ignore distance
-        self.holdTimeMinutes = 0  # minutes to hold once targetTemperature is reached
+        self.holdTimeMinutes = 1  # minutes to hold once targetTemperature is reached
         self.exhaustFan = 0  # off or on
         self.supportFan = 0  # off or on
         self.stepTime = default_stepTime  # from kilnConfig.py
+        self.maxTimeMin = default_maxTime
         #log.debug("new empty segment:"+ str(self))
 
     # rest are locals for running the script
@@ -196,6 +199,7 @@ class KilnScriptSegment:
                 (keyForExhaustFan(), self.exhaustFan),
                 (keyForSupportFan(), self.supportFan),
                 (keyForPIDStepTime(), self.stepTime),
+                (keyForMaxTime(), self.maxTimeMin),
             ]
         )
         #

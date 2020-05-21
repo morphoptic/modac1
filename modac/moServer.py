@@ -77,10 +77,12 @@ async def cmdListenLoop():
     log.debug("Start cmdListenLoop")
     while not this.__killCmdListener:
         try:
-            await this.serverReceive()
+            retval = await this.serverReceive()
         except trio.Cancelled:
             log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
+        if not retval:
+            this.__killCmdListener = True
     log.error("***cmdListenLoop stopping")
     if not this.__CmdListener == None:
         this.__CmdListener.close()
@@ -119,11 +121,19 @@ async def serverReceive():
         # ok... body should hold modac encrypted command
         serverDispatch(topic,body)
         return True
+    except trio.Cancelled:
+        log.debug("trio canclled exception")
+        this.__killCmdListener = True
+        return False
     except Timeout:
         # be quiet about it
-        log.debug("serverReceive() receive timeout")
+        #log.debug("serverReceive() receive timeout")
         return True
-    except :
+    except AttributeError as e:
+        log.error("AttributeError while handling command " + topic)
+        log.exception(e)
+        return True
+    except:
         log.error("serverReceive() caught exception %s"%sys.exc_info()[0])
         traceback.print_exc()#sys.exc_info()[2].print_tb()
         #log.exception("Some other exeption! on sub%d "%(i))
@@ -133,7 +143,7 @@ async def serverReceive():
     return True
 
 def serverDispatch(topic,body):
-    log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    log.info("\n*******serverDispatch: Topic:'%s' Obj:'%s'"%(topic,body))
     if topic == keyForEmergencyOff():
         log.debug("EmergencyOff Cmd dispatching")
         moHardware.EmergencyOff() #patches thru to kiln.emergencyOff()
@@ -152,27 +162,22 @@ def serverDispatch(topic,body):
     elif topic == keyForStopKilnScript():
         print("\n====== doing Kiln Abort script :", topic)
         log.info("Received StopKilnScript Command")
-        if kiln.kiln == None:
+        if kiln.kilnInstance == None:
             log.info("no kiln object, ignore abort")
             return
         kiln.handleEndKilnScriptCmd()
         
     elif topic == keyForRunKilnScript():
         # where do we have the kiln stashed?
-        print("\n====== doing Kiln RUN :", topic)
-        if kiln.kiln == None:
-            log.error("run script, but No Kiln to run!")
+        # print("\n====== doing Kiln RUN :", topic)
+        # print("\n\nload and run kiln script, body == ", body)
+        if body == []:
+            log.error("No data on runKiln")
         else:
-            print("\n\nload and run kiln script, body == ", body)
-            if body == []:
-                log.error("No data on runKiln")
-            else:
-                log.info("=== RunKiln param:", body)
-                # need to unpack body?
-                log.info("kiln cmd rcv with body: "+str(body))
-                kiln.handleRunKilnScriptCmd(body)
-            pass
-        pass
+            log.info("=== RunKiln param:"+ body)
+            # need to unpack body?
+            log.info("kiln cmd rcv with body: "+str(body))
+            kiln.handleRunKilnScriptCmd(body)
     elif topic == keyForHello():
         log.info("Received Hello from Client ")
     else:

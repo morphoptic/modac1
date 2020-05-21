@@ -89,6 +89,7 @@ class kilnPanel():
         # TODO change checkbox label color - default white on gray is terrible
         #   need function to find GTK.Label child and change color to black
         self.simulateBtn.set_active(False) # for debugging start w simulated
+        self.simulateBtn.set_active(True) # for debugging start w simulated
 
         self.exhaustFanBtn = self.builder.get_object(keyForExhaustFan())
         self.supportFanBtn = self.builder.get_object(keyForSupportFan())
@@ -174,11 +175,12 @@ class kilnPanel():
             return
         
         # state is the name or string rep of KilnState
-        log.debug("KilnPanel setData state: "+self.stateName)
+        log.debug("KilnPanel setData Reported state: "+self.stateName)
 
-        if not self.stateName== KilnState.RunningScript.name:
-            # not running script, reset start/abort btns
-            self.resetRunStop()
+        # may not have gotten the state from this - and Running script is wtf
+        # if not self.stateName == KilnState.RunningScript.name:
+        #     # not running script, reset start/abort btns
+        #     self.resetRunStop()
 
         # extract kiln current step
         # move display to that step if not already there

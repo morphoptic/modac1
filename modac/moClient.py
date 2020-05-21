@@ -64,6 +64,8 @@ def clientReceive():
                 topic, body = moNetwork.splitTopicStr(msg)
                 clientDispatch(topic,body)
                 msgReceived = True
+        except trio.Cancelled:
+            log.warn("trio cancelled")
         except Timeout:
             log.debug("receive timeout on subsciber %d"%(i))
         except :
@@ -95,6 +97,8 @@ def sendCommand(key, value):
    #decryptCommand(msg)
     try:
         this.__CmdSender.send(bmsg)
+    except trio.Cancelled:
+        log.warn("trio cancelled")
     except Timeout:
         log.warn("Timeout sending message "+key)
     # for testing
