@@ -47,9 +47,9 @@ def cmdAddress():
         this.__cmdAddress = this.__myIPAddress +':21212'
     return this.__cmdAddress
 
-# timeout for cmd recieve.  CmdListener loop delays any checks this long
-def rcvTimeout():    return 100
-def sendTimeout():    return 10
+# ms timeout for cmd recieve. CmdListener loop delays any checks this long
+def rcvTimeout(): return 2*1000
+def sendTimeout(): return 10
 
 #################################
 # parts for composing/decomposing network messages    

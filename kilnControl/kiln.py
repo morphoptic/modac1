@@ -93,7 +93,6 @@ def endKilnControlProcess():
     this.kilnInstance.state = KilnState.Closed
     this.kilnInstance.publishStatus() # one last time
     this.kilnInstance = None # can we throw it away now?
-    #
     log.debug("endKiln executed")
 
 def handleRunKilnScriptCmd(params):

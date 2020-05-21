@@ -14,6 +14,7 @@ log.setLevel(logging.DEBUG)
 import json
 #from simplecrypt import encrypt, decrypt
 from binascii import hexlify, unhexlify
+import trio #adding async functions use the Trio package
 
 #import rest of modac
 from .moKeys import *
@@ -26,9 +27,11 @@ from pynng import Pub0, Sub0, Pair1, Timeout
 # pub sub messages
 __Publisher = None
 __CmdListener = None 
+__killCmdListener = False
 
 def shutdownServer():
-    __killCmdListener = True
+    log.debug("try to kill moServer")
+    this.__killCmdListener = True # this should stop the serverReceive() from pair1
     if not this.__Publisher == None:
         this.publish() # one last time
         this.publishData(keyForShutdown(), keyForShutdown())
@@ -61,7 +64,8 @@ def publishData(key, value):
 
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
-                                polyamorous=True, # poly means we listen to many
+                                # poly means we listen to many
+                                polyamorous=True,
                                 recv_timeout = moNetwork.rcvTimeout())
     print("Cmd Listener: ",this.__CmdListener,moNetwork.rcvTimeout())
     nursery.start_soon(cmdListenLoop)
@@ -77,13 +81,12 @@ async def cmdListenLoop():
         except trio.Cancelled:
             log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
-    log.error("***cmdListenLoop Stiooed Running")
+    log.error("***cmdListenLoop stopping")
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None
 
 async def serverReceive():
-    #not sure yet what this might become
     if this.__CmdListener == None:
         log.error("aserverReceive() but CmdListener not initialized")
         this.__killCmdListener = True

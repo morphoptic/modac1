@@ -7,6 +7,7 @@
 # Trio provides async data handling
 # Some hardware, notably blutooth Leica Distance Sensor, require separate threads or processes
 import sys
+this = sys.modules[__name__]
 import os
 import logging, logging.handlers, traceback
 import argparse
@@ -40,10 +41,12 @@ publishRate = 1.0 # seconds for sleep at end of main loop
 csvActive = True
 jsonActive = False
 startKilnOnStartup = True
+okToRunMainLoop = False
 
 def modacExit():
     log.info("modacExit shutting down")
-    kilnControl.endKilnControlProcess()
+    this.okToRunMainLoop = False
+    kilnControl.kiln.endKilnControlProcess()
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     if csvActive:
@@ -60,7 +63,8 @@ async def modac_ReadPubishLoop():
     log.info("\n\nEnter Modac ReadPublish Loop")
     #for i in range(300):
     moData.setStatusRunning()
-    while True: # hopefully CtrlC will kill it
+    this.okToRunMainLoop = True
+    while this.okToRunMainLoop: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
         moHardware.update()
@@ -161,11 +165,11 @@ def modac_loadConfig():
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     log.error("signal exit! someone hit ctrl-C?")
-    with moData.getNursery() as nursery:
-        if nursery == None:
-            log.info("signal exit, no nursery")
-        else:
-            print("nursery still contains ", nursery.child_tasks)
+    # with moData.getNursery() as nursery:
+    #     if nursery == None:
+    #         log.info("signal exit, no nursery")
+    #     else:
+    #         print("nursery still contains ", nursery.child_tasks)
             
     modacExit()
     
@@ -177,6 +181,8 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signalExit)
     try:
         trio.run(modac_asyncServer)
+    except trio.Cancelled:
+        log.warning("Trio Cancelled - ending server")
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
         log.error("Exception happened", exc_info=True)

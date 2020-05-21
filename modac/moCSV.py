@@ -42,6 +42,8 @@ def close():
     this._csvFile.close()
     del this._csvFile
     this._csvFile = None
+    this._csvWriter = None
+
 
 def addTimeToRow(row):
     ### add a time column formatted like KISS does its time

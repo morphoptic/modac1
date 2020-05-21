@@ -18,6 +18,8 @@ from modac import leicaDistoAsync as leicaDisto
 import trio
 import datetime
 
+__initialized = False # : return
+
 __nursery = None
 async def init(nursery):
     this.__nursery = nursery
@@ -35,6 +37,8 @@ async def init(nursery):
 
 
 def update():
+    if not __initialized == True: return
+
     # get our own timestamp
     moData.updateTimestamp()
     enviro.update()
@@ -55,6 +59,7 @@ def shutdown():
     ad16.shutdown()
     binaryOutputs.shutdown()
     leicaDisto.shutdown()
+    __initialized = False
     log.debug("shutdown hardware")
 
 # TODO should not have two of these!
