@@ -1,4 +1,5 @@
-# moClient - client side of modac networking
+# moClient - client side of modac networking using PyNNG Pair1 style polyamorous
+# https://github.com/codypiersall/pynng
 
 # cute hack to use module namespace this.fIO this.value should work
 import sys
@@ -16,6 +17,7 @@ from . import moData, moNetwork
 #from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
+import trio # adding Trio package to handle Cancelled
 
 __CmdSender = None
 #

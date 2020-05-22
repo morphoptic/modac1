@@ -30,6 +30,7 @@ async def init(nursery):
     kType.init()
     leicaDisto.init()
     nursery.start_soon(leicaDisto.runLoop)
+    this.__initialized = True  # : return
     moData.setStatusInitialized()
     # force at least one update so moData is populated
     update()

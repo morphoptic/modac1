@@ -62,6 +62,8 @@ class KilnScript:
         self.description = "created " + datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
         self.segments = []  # defaults to having none
         self.curSegmentIdx = 0  # used to indicate current segment
+        #self.simulate = False
+        self.simulate = True
         if dict == None:
             # create a new empty one
             self.addNewSegment()
@@ -71,6 +73,7 @@ class KilnScript:
             self.name = dict[keyForScriptName()]
             self.description= dict[ keyForScriptDescription()]
             self.curSegmentIdx = dict [keyForScriptCurrentSegmentIdx()]
+            self.simulate = dict [keyForSimulate()]
             segmentDict = dict [keyForScriptSegments()]
             # how to parse out this array?
             #log.debug("init kilnScript from dict " + str(self))
@@ -149,6 +152,7 @@ class KilnScript:
                 (keyForScriptName(), self.name),
                 (keyForScriptDescription(), self.description),
                 (keyForScriptCurrentSegmentIdx(), self.curSegmentIdx),
+                (keyForSimulate(), self.simulate),
                 (keyForScriptSegments(), self.segmentsAsDict()),
             ]
         )
@@ -170,7 +174,7 @@ class KilnScriptSegment:
     def __init__(self, idx=0):
         self.stepIdx = idx  # index into Script[], maybe
         # these are parameters you can program
-        self.targetTemperature = 0  # deg C; temp the kiln should reach in this segment
+        self.targetTemperature = 100  # deg C; temp the kiln should reach in this segment
         self.targetDistanceChange = 0  # if <=0 then ignore distance
         self.holdTimeMinutes = 1  # minutes to hold once targetTemperature is reached
         self.exhaustFan = 0  # off or on

@@ -109,15 +109,10 @@ def handleRunKilnScriptCmd(params):
 def handleEndKilnScriptCmd():
     # tell script to stop and set status back to KilnState.Idle
     log.info("\n*****handleEndKilnScriptCmd")
-    if this.kilnInstance == None:
+    if this.kilnInstance is None:
         log.error("No Kiln found")
         return
-    try:
-        this.kilnInstance.terminateScript()
-    except:
-        log.error("Bad Parameters: "+ params.ToString())
-
-    pass
+    this.kilnInstance.terminateScript()
 
 #####################
 
@@ -147,10 +142,10 @@ class Kiln:
     commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
     
     def __init__(self, time_step=default_stepTime):#, nursery=None):
-        # simulation was removed for modac, need it for good testing
         self.processStartTime = datetime.datetime.now() # record start time,
         self.processRunnable = False
         self.state = KilnState.Closed
+        self.simulation = False
         self.reset()
         log.debug("Kiln initialized")
         self.state = KilnState.Starting
@@ -172,6 +167,7 @@ class Kiln:
         self.targetHoldTime = 0 # minutes to hold at target temp
 
         self.startHoldTime = 0  # begin of hold state
+        self.startHoldTimeStr = "notHolding"
         self.timeInHoldSeconds = 0
         self.timeInHoldMinutes = 0
 
@@ -206,7 +202,7 @@ class Kiln:
         # turn off 12v Power
         setRelayPower(False)
         # and turn off simulation
-        moHardware.simulateKiln(False)
+        moHardware.simulateKiln(False) # also calls this.setSimulation
         self.publishStatus()      
         log.info("terminateScript")
        
@@ -215,43 +211,44 @@ class Kiln:
         #if isinstance(self.processStartTime, datetime.datetime):
         startTimeStr = self.processStartTime.strftime("%Y-%m-%d %H:%M:%S%Z")
         
-        status = {
-            # sha}red keys - for debug purposes
+        status = [ # use an array instead of dict to keep order
+            # shared keys - for debug purposes
             # default values set in moData so not dependent on this file
             # record time we collected data
-            keyForTimeStamp(): datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z"),
-            "kilnProcessRunnable": self.processRunnable,
+            (keyForTimeStamp(), datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z")),
+            ("kilnProcessRunnable", self.processRunnable),
+            
             #kiln state
-            keyForState(): self.state.name,
-            keyForKilnScriptState(): self.scriptState.name,
-            keyForSimulate(): this.simulation,
+            (keyForState(), self.state.name),
+            (keyForKilnScriptState(), self.scriptState.name),
+            (keyForSimulate(), this.simulation),
 
             # Script Segment Parameters
-            keyForSegmentIndex(): self.scriptIndex,
-            keyForTargetTemp(): self.targetTemperature,
-            keyForKilnHoldTime(): self.targetHoldTime,
-            keyForTargetDisplacement(): self.targetDisplacement,
-            keyForPIDStepTime(): self.sleepThisStep,
-            keyForMaxTime(): self.maxTimeMin,
+            (keyForSegmentIndex(), self.scriptIndex),
+            (keyForTargetTemp(), self.targetTemperature),
+            (keyForKilnHoldTime(), self.targetHoldTime),
+            (keyForTargetDisplacement(), self.targetDisplacement),
+            (keyForPIDStepTime(), self.sleepThisStep),
+            (keyForMaxTime(), self.maxTimeMin),
 
             # Script Segment data
-            keyForKilnTimeInHoldSeconds(): self.timeInHoldSeconds,
-            keyForKilnTimeInHoldMinutes(): self.timeInHoldMinutes,
-            keyForKilnHoldStartTime(): self.startHoldTime,
-            keyForKilnRuntime(): self.processRuntime,
-            KilnStartTime(): startTimeStr,
+            (keyForKilnTimeInHoldSeconds(), self.timeInHoldSeconds),
+            (keyForKilnTimeInHoldMinutes(), self.timeInHoldMinutes),
+            (keyForKilnHoldStartTime(), self.startHoldTimeStr),
+            (keyForKilnRuntime(), self.processRuntime),
+            (keyForKilnStartTime(), startTimeStr),
             
-            keyForStartDistance(): self.startDistance,
-            keyForTargetDisplacement(): self.targetDisplacement,
+            (keyForStartDistance(), self.startDistance),
+            (keyForTargetDisplacement(), self.targetDisplacement),
             
-            keyForCurrentDistance(): self.currentDistance,
-            keyForCurrentDisplacement(): self.currentDisplacement,
+            (keyForCurrentDistance(), self.currentDistance),
+            (keyForCurrentDisplacement(), self.currentDisplacement),
             
-            keyForKilnHeaters(): self.reportedHeaterStates,
-            keyForKilnHeaterCommanded(): self.commandedHeaterStates,
-            keyForKilnTemperatures(): self.kilnTemps,
-            keyForScript(): str(self.myScript),
-        }
+            (keyForKilnHeaters(), self.reportedHeaterStates),
+            (keyForKilnHeaterCommanded(), self.commandedHeaterStates),
+            (keyForKilnTemperatures(), self.kilnTemps),
+            (keyForScript(), str(self.myScript)),
+        ]
         #print("KilnStatus:", status)
         return status
 
@@ -259,6 +256,7 @@ class Kiln:
         '''Put KilnStatus into moData, does NOT publish separate cmd'''
         status = self.collectStatus()
         log.info("Publish Kiln Status %r" % status)
+        #log.info("Publish Kiln Status %s" % json.dumps(status,indent=4))
         moData.update(keyForKilnStatus(), status)
         #moServer.publishData(keyForKilnStatus(), status) # separate publish? or as part of moData?
 
@@ -351,6 +349,7 @@ class Kiln:
 
         ###################
         # now deal with Script Segment
+        log.debug("deal with Script Segment status: "+self.scriptState.name )
 
         # displacement test - have we reached slump distance?
 
@@ -376,50 +375,55 @@ class Kiln:
                 self.nextScriptSegment()
  
         # test if reached hold temp +- some epsilon
+        log.debug("test if switch to hold")
         if self.scriptState == KilnScriptState.Heating and self.targetTemperature <= self.kilnTemps[0] :
             #+ self.tempertureEpsilon:
             # reached temp, state should be Hold
-            self.state = KilnState.Holding
+            self.scriptState = KilnScriptState.Holding
             self.startHoldTime = currentTime
+            self.startHoldTimeStr = currentTime.strftime("%Y-%m-%d %H,%M,%S%Z")
             log.debug("Kiln Switch to Holding State "  +str(currentTime))
-            
+
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway
         if self.scriptState == KilnScriptState.Heating or self.scriptState == KilnScriptState.Holding:
+            log.debug("Do PID ")
             # update PIDs
             self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
             if self.useSinglePID:
                 #using only the 0 index wich may be avg or paritular ktype to control PID
                 self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
-                log.debug("======")
-                print("PID 0: ", self.pidOut[0], self.targetTemperature, self.kilnTemps[0])
-                if (self.pidOut[0] > 0):
+                log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
+                #print("PID 0: ", self.pidOut[0], self.targetTemperature, self.kilnTemps[0])
+                if self.pidOut[0] > 0:
                     # turn heaters on
                     self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
+                else: # shouldnt have to do this but
+                    self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
             else:
                 # compute individual pidOuts
                 # pidOut[0] true if any true
                 self.pidOut[1] = self.pids[1].compute(self.targetTemperature, self.kilnTemps[1])
-                if (self.pidOut[1] > 0):
+                if self.pidOut[1] > 0:
                     # turn heaters on
                     self.commandedHeaterStates[0] = HeaterOn
                     self.commandedHeaterStates[1] = HeaterOn
                 self.pidOut[2] = self.pids[2].compute(self.targetTemperature, self.kilnTemps[2])
-                if (self.pidOut[2] > 0):
+                if self.pidOut[2] > 0:
                     # turn heaters on
                     self.commandedHeaterStates[0] = HeaterOn
                     self.commandedHeaterStates[2] = HeaterOn
                 self.pidOut[3] = self.pids[3].compute(self.targetTemperature, self.kilnTemps[3])
-                if (self.pidOut[3] > 0):
+                if self.pidOut[3] > 0:
                     # turn heaters on
                     self.commandedHeaterStates[0] = HeaterOn
                     self.commandedHeaterStates[3] = HeaterOn
             # common code to command heaters to change, but only if needed
             self.commandHeaters()
 
-            for i in range(1,4):
+            for i in range(1,4): # should use len heaters?
                 if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
-                    log.info("kiln cmd heater change %d"%i)
+                    log.info("loop kiln cmd heater change %d"%i)
                     moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         # bottom of step
 
@@ -494,6 +498,10 @@ class Kiln:
         self.myScript = newScriptFromText(scriptAsJson)
         self.scriptIndex = 0
         self.loadScriptStep()
+        self.simulation = self.myScript.simulate
+        moHardware.simulateKiln(self.simulation)
+        # moHardware should call this.setSimulation(self.simulation) # because it is in both places
+
         if this.simulation:
             dist = 1000.0  # 1meter start dist in simulation
             print("Kiln Simulation start dist", dist)
@@ -513,8 +521,10 @@ class Kiln:
         setRelayPower(True)
 
         self.state = KilnState.RunningScript
+        self.scriptState = KilnScriptState.Heating # figure we always start by heating
+
         self.scriptStartTime = datetime.datetime.now()
-        log.info("Starting Kiln Script .. status:" + str(self.collectStatus()))
+        log.info("Starting Kiln Script .. status:" + json.dumps(self.collectStatus(), indent=4))
         log.info("async kiln loop should pick this up")
 
     def nextScriptSegment(self):
@@ -546,7 +556,9 @@ class Kiln:
         self.step_time = curSeg.stepTime
         self.targetHoldTimeMin = curSeg.holdTimeMinutes
         self.targetHoldTimeSec = self.targetHoldTimeMin * 60
-
+        # set exhaust/support fans? command_X
+        self.commandExhaustFan(curSeg.exhaustFan)
+        self.commandSupportFan(curSeg.supportFan)
 
   
         

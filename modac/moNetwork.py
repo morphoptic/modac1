@@ -1,5 +1,7 @@
 # moNetwork - modac common networking methods and data
 # IP addresses, encode/decode messages w/encryption etc
+# actual send/receive connection setup using PyNNG is in moServer moClient
+# https://github.com/codypiersall/pynng
 
 # cute hack to use module namespace this.fIO this.value should work
 import sys

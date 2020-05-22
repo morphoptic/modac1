@@ -1,4 +1,5 @@
-# moServer - modac Server networking stuff
+# moServer - modac Server networking stuff using PyNNG
+# https://github.com/codypiersall/pynng
 #   Publish puts out tagged JSON messages of encrypted key,data (clients subscribe)
 #       actually publishing is synchronous
 #   Listen Thread: async to listen for client commands and serverDispatch() them

@@ -101,7 +101,7 @@ def update():
     else:
         assert not this.simulator == None
         print("\n\n************\n")
-        print("SIMULATED KTYPE")
+        log.info("SIMULATED KTYPE")
         print("************\n")
         this.simulator.update()
     pass
@@ -154,10 +154,10 @@ class SimulateKtypes:
         '''simulate KType temps: if heat on/off incr/decr
             by rates * random() '''
         kilnStatus = moData.getValue(keyForKilnStatus())
-        kilnState = kilnStatus[keyForState()]
+        # TODO This should be a KilnState. kilnStatus doent index keyForState; because it became an array not dictj  kilnState = kilnStatus[keyForState()]
         binOut = moData.getValue(keyForBinaryOut())
         sum = 0.0
-        print("update simulated ktypes, len ", len(self.ktypeData))
+        log.info("update simulated ktypes, len " + str(len(self.ktypeData)))
         print("update simulated heaters, len ", len(heaters))
         for i in range(1,len(heaters)):
             heaterOn = binOut[heaters[i]]
@@ -172,7 +172,7 @@ class SimulateKtypes:
         self.ktypeData[0] = sum/3
 
         #post updated values to moData
-        log.debug("Simulated KType data: "+ str( self.ktypeData))
+        log.debug("updated Simulated KType data: "+ str( self.ktypeData))
         moData.update(keyForKType(), self.ktypeData)
         
 def setSimulate(onOff = True):

@@ -289,7 +289,8 @@ class ModacAppWindow(object):
 
     def setStatus(self, status):
         self.statusbar.pop(self.context_id)
-        self.statusbar.push(self.context_id, status)           
+        self.statusbar.push(self.context_id, status)
+        log.debug("Set Window Status bar: "+status)
     
     def getData(self):
         # update from network

@@ -71,6 +71,7 @@ def keyForKilnScriptStatus(): return "KilnScriptStatus"  # full status of kiln d
 # kilnState uses keyForState()
 def keyForKilnScriptState(): return "KilnScriptState";
 def keyForKilnRuntime(): return 'KilnProcessRuntime'
+def keyForKilnStartTime(): return 'KilnScriptStartTime'
 
 def keyForScriptName(): return "ScriptName"
 def keyForScriptDescription(): return "ScriptDescription"

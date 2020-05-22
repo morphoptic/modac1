@@ -128,7 +128,7 @@ class kilnPanel():
         self.scriptDescriptionBox.set_text(self.kilnScript.description)
         # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
         self.currentSegmentIdxBox.set_text("Step Index: "+str(self.kilnScript.curSegmentIdx))
-
+        self.simulateBtn.set_active(self.kilnScript.simulate)
         # combo box
         self.segmentListModel.clear()
         for i in range(len(self.kilnScript.segments)):
@@ -293,10 +293,18 @@ class kilnPanel():
         print("filename: ",dialog.get_filename(), " folder:", self.last_open_dir)
 
         if response != Gtk.ResponseType.CANCEL:
+            self.gatherValues()
             self.kilnScript.saveScript(self.filename)
             print("wrote file")
 
         dialog.destroy()
+
+    def gatherValues(self):
+        # grab values, should have set using on_...
+        # simulate
+        # exhaust
+        # support
+        pass
 
     def on_KilnTargetTemp_value_changed(self, button):
         if self.updating == True: return # avoid repeated triggers and stack overflow
@@ -333,6 +341,12 @@ class kilnPanel():
         curSeg.stepTime = newV
         log.info("after set pid: "+str(curSeg))
         pass
+
+    def on_KilnSimulate_toggled(self,button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
+        state = button.get_active()
+        self.kilnScript.simulate = state
+        log.info("after toggle simulate: "+str(self.kilnScript.simulate ))
 
     def on_ExhaustFan_toggled(self,button):
         if self.updating == True: return # avoid repeated triggers and stack overflow
