@@ -1,5 +1,5 @@
 """
-moGui_1: 2nd experiment with GTK for MODAC
+moGui_4: stripped down GTK GUI for MODAC, using only kiln+ad16+ktype+
 """
 timer_interval = 1
 
@@ -31,10 +31,8 @@ log.setLevel(logging.DEBUG)
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
-from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
-from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
-from modacGUI import kilnPanel
-#from modacGUI import CsvStartDialog, CsvTimeStepDialog
+from modacGUI import ktypePanel, ad16Panel
+from modacGUI import kilnPanel2, leicaPanel
 
 maxCsvStep = 240
 
@@ -60,6 +58,7 @@ class ModacAppWindow(object):
     dataCount = 0
     last_open_dir = "~"
     def __init__(self, application):
+
         self.Application = application
         builder = None
         now = datetime.datetime.now()
@@ -100,27 +99,15 @@ class ModacAppWindow(object):
         self.notebook.remove_page(0)
         
         #####
-        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
+
+        self.kilnPanel = kilnPanel2.kilnPanel() # Panel to be tested
         self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
 
-        self.tempDistPanel= tempDistPanel.tempDistPanel()
-        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
-        
-        self.leicaPanel = leicaPanel.leicaPanel()
-        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
-        
-        self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
-        self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
-        
         self.ktypePanel = ktypePanel.ktypePanel()
         self.notebook.append_page(self.ktypePanel.box, self.ktypePanel.label)
         
-        self.ad24Panel = ad24Panel.ad24Panel()
-        self.notebook.append_page(self.ad24Panel.box, self.ad24Panel.label)
-        
-        self.ad16Panel = ad16Panel.ad16Panel()
-        self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
-        
+        self.leicaPanel = leicaPanel.leicaPanel()
+        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
 
         #  add here and then in updatePanels
         
@@ -297,14 +284,9 @@ class ModacAppWindow(object):
         return True
     
     def updatePanels(self):        
-        self.kilnPanel.update()
-        self.enviroPanel.update()
-        self.ktypePanel.update()
-        self.ad24Panel.update()
-        self.ad16Panel.update()
         self.leicaPanel.update()
-        self.binaryOutPanel.update()
-        self.tempDistPanel.update()
+        self.ktypePanel.update()
+        self.kilnPanel.update()
 
 def modacExit():
     log.info("modacExit")

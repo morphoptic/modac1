@@ -199,7 +199,7 @@ class KilnScriptSegment:
                 (keyForSegmentIndex(), self.stepIdx),
                 (keyForTargetTemp(), self.targetTemperature),
                 (keyForTargetDisplacement(), self.targetDistanceChange),
-                (keyForKilnHoldTime(), self.holdTimeMinutes),
+                (keyForKilnHoldTimeMin(), self.holdTimeMinutes),
                 (keyForExhaustFan(), self.exhaustFan),
                 (keyForSupportFan(), self.supportFan),
                 (keyForPIDStepTime(), self.stepTime),
@@ -217,7 +217,7 @@ class KilnScriptSegment:
         self.stepIdx = d[keyForSegmentIndex()]
         self.targetTemperature = d[keyForTargetTemp()]
         self.targetDistanceChange = d[keyForTargetDisplacement()]
-        self.holdTimeMinutes = d[keyForKilnHoldTime()]
+        self.holdTimeMinutes = d[keyForKilnHoldTimeMin()]
         self.exhaustFan = d[keyForExhaustFan()]
         self.supportFan = d[keyForSupportFan()]
         self.stepTime = d[keyForPIDStepTime()]

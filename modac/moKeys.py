@@ -49,6 +49,8 @@ def keyForDistance(): return "distance"
 
 #keys for commands from clients
 def keyForHello() : return "Hello"
+def keyForGoodbye() : return "Goodbye"
+
 def keyForModacCmd(): return "modac"
 def keyForBinaryCmd(): return "binaryCmd"
 def keyForAllOffCmd(): return "allOff"
@@ -61,6 +63,7 @@ def keyForEndKilnProcess(): return "EndKilnProcess"
 # start, end a script
 def keyForRunKilnScript(): return "RunKilnScript"
 def keyForStopKilnScript(): return "StopKilnScript"
+def keyForKilnScriptEnded(): return "KilnScriptEnded"
 # for kiln panel buttons
 def keyForLoadKilnScript(): return "LoadKilnScript"
 def keyForSaveKilnScript(): return "SaveKilnScript"
@@ -80,7 +83,8 @@ def keyForScriptSegments(): return "ScriptSegments"
 
 # kiln Script Segment Control Data
 def keyForTargetTemp(): return 'KilnTargetTemp'
-def keyForKilnHoldTime(): return 'KilnHoldTime'
+def keyForKilnHoldTimeMin(): return 'KilnHoldTimeMin'
+def keyForKilnHoldTimeSec(): return 'KilnHoldTimeSec'
 def keyForTargetDisplacement():return 'KilnTargetDisplacement'
 def keyForPIDStepTime(): return "PIDStepTime"
 def keyForExhaustFan(): return "ExhaustFan"

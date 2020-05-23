@@ -17,9 +17,11 @@ gi.require_version('Gdk', '3.0')
 from gi.repository import GObject, Gio, Gdk, Gtk
 from gi.repository import GObject as Gobj
 import json
+from collections import OrderedDict
+
 from modac.moKeys import *
 from modac import moData, moLogger
-from modac import moCommand
+from modac import moCommand, moClient
 
 from kilnControl.kilnState  import *
 from kilnControl.kilnScript import *
@@ -33,7 +35,6 @@ class kilnPanel():
     def __init__(self):        
         self.lastState = KilnState.Closed
         self.updating = True # used when updating current script gui to avoid stack overflow
-
         print("init kilnPanel")
         self.label = Gtk.Label("Kiln Ctrl")
         self.timestamp = "none yet"
@@ -68,7 +69,7 @@ class kilnPanel():
         adj = self.targetTSpinner.get_adjustment()
         adj.configure(defaultTargetTemp, 20.0,800.0, 5, 10, 10)
         
-        self.holdTimeSpinner = self.builder.get_object(keyForKilnHoldTime())
+        self.holdTimeSpinner = self.builder.get_object(keyForKilnHoldTimeMin())
         adj = self.holdTimeSpinner.get_adjustment()
         adj.configure(5, 0.0, (30*60.0), 5, 10, 10) # max 30min hold
         
@@ -112,6 +113,8 @@ class kilnPanel():
         #self.stopBtn.set_sensitive(False)
         #self.runBtn.set_sensitive(True)
 
+        moClient.setKilnCallback(self.kilncallback)
+
         # fill in script from default values
         self.setFromScript() # coming back from this will have self.updating=False
         # fill in the readOnly values
@@ -149,41 +152,24 @@ class kilnPanel():
         # update the StepSelector
         self.updating = False
 
-        pass
-
     def update(self):
         log.debug("KilnPanel Update")
         self.setData()
         
     def getKilnStatus(self):
         # status message recieved: update text and perhaps some others
-        self.kilnStatus = moData.getValue(keyForKilnStatus())
-        if self.kilnStatus == keyForNotStarted():
-            self.stateName = keyForNotStarted()
-            return False
+        self.kilnStatus = OrderedDict(moData.getValue(keyForKilnStatus()))
         self.stateName = self.kilnStatus[keyForState()]
         self.timestamp = self.kilnStatus[keyForTimeStamp()]
-        print("KilnStatus", self.kilnStatus)
+        #print("KilnStatus", self.kilnStatus)
         return True
         
     def setData(self):
-        # TODO most of this (all?) becomes put JSON text into ScriptStatus box
-        if not self.getKilnStatus():
-            log.debug("kiln not started")
-            widget = self.builder.get_object(keyForState())
-            widget.set_text(keyForState()+ " : "+ keyForNotStarted())
-            return
+        # most of kilnStatus (all?) becomes put JSON text into ScriptStatus box
+        self.getKilnStatus()
         
         # state is the name or string rep of KilnState
         log.debug("KilnPanel setData Reported state: "+self.stateName)
-
-        # may not have gotten the state from this - and Running script is wtf
-        # if not self.stateName == KilnState.RunningScript.name:
-        #     # not running script, reset start/abort btns
-        #     self.resetRunStop()
-
-        # extract kiln current step
-        # move display to that step if not already there
 
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
         self.scriptStatusBuffer.set_text(textScriptStatus)
@@ -390,3 +376,7 @@ class kilnPanel():
             self.kilnScript.getSegment(curId)
             self.setFromScript()
 
+    def kilncallback(self,topic, body):
+        log.debug("KilnCallback with topic: "+topic+" body:"+body)
+        if topic == keyForKilnScriptEnded():
+            self.resetRunStop()

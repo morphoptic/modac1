@@ -57,7 +57,7 @@ def defaultKilnRuntimeStatus():
         keyForMaxTime(): 0,
         keyForStartDistance(): 0,
         keyForCurrentDisplacement(): 0,
-        keyForKilnHoldTime(): 0,
+        keyForKilnHoldTimeMin(): 0,
         keyForKilnTimeInHoldMinutes(): 0,
     }
     return def_kilnStatus

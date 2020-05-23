@@ -164,7 +164,8 @@ class Kiln:
 
         self.targetTemperature = 0
         self.targetDisplacement= -1
-        self.targetHoldTime = 0 # minutes to hold at target temp
+        self.targetHoldTimeMin = 0 # minutes to hold at target temp
+        self.targetHoldTimeSec = self.targetHoldTimeMin * 60 # seconds for compare with timeDelta.seconds
 
         self.startHoldTime = 0  # begin of hold state
         self.startHoldTimeStr = "notHolding"
@@ -197,12 +198,15 @@ class Kiln:
         moHardware.binaryCmd(heater_upper, HeaterOff)
 
         self.reset() # clear everything
-        self.state = KilnScriptState.EndRun # hang out in this for lil bit to let clients know
+
+        # were using this but not anymore so comment out
+        #self.state = KilnScriptState.EndRun # hang out in this for lil bit to let clients know
 
         # turn off 12v Power
         setRelayPower(False)
         # and turn off simulation
         moHardware.simulateKiln(False) # also calls this.setSimulation
+        moServer.publishKilnScriptEnded()
         self.publishStatus()      
         log.info("terminateScript")
        
@@ -226,7 +230,8 @@ class Kiln:
             # Script Segment Parameters
             (keyForSegmentIndex(), self.scriptIndex),
             (keyForTargetTemp(), self.targetTemperature),
-            (keyForKilnHoldTime(), self.targetHoldTime),
+            (keyForKilnHoldTimeMin(), self.targetHoldTimeMin),
+            (keyForKilnHoldTimeSec(), self.targetHoldTimeSec),
             (keyForTargetDisplacement(), self.targetDisplacement),
             (keyForPIDStepTime(), self.sleepThisStep),
             (keyForMaxTime(), self.maxTimeMin),
@@ -339,13 +344,13 @@ class Kiln:
             return;
 
         # 
-        if self.scriptState == KilnScriptState.EndRun:
-            # hold EndRun for a bit to let UI/monitors know
-            if (self.processRuntime - self.endRunStart) >= endRunHoldTime:
-                self.state = KilnState.Idle
-                log.debug("Kiln state change EndRun > Idle")
-                #anything else need reset?
-            return
+        # if self.scriptState == KilnScriptState.EndRun:
+        #     # hold EndRun for a bit to let UI/monitors know
+        #     if (self.processRuntime - self.endRunStart) >= endRunHoldTime:
+        #         self.state = KilnState.Idle
+        #         log.debug("Kiln state change EndRun > Idle")
+        #         #anything else need reset?
+        #     return
 
         ###################
         # now deal with Script Segment
@@ -364,12 +369,12 @@ class Kiln:
 
         if self.scriptState == KilnScriptState.Holding :
             # holding at target temp, how long we been here?
-            # self.targetHoldTime = 0 # minutes to hold at target temp, default 0 = ignore
+            # self.targetHoldTimeSec = 0 # seconds to hold at target temp, default 0 = ignore
             log.debug("Kiln HOLDING started at "+str(self.startHoldTime) +" cur:"+str(currentTime))
-            self.timeInHold = (currentTime - self.startHoldTime).total_seconds() #/ 60.0
-            log.debug("Kiln Holding, target " +str(self.targetHoldTime)+ " In Hold" +str(self.timeInHold))
+            self.timeInHoldSeconds = (currentTime - self.startHoldTime).total_seconds()
+            log.debug("Kiln Holding, target " + str(self.targetHoldTimeSec) + " In Hold" + str(self.timeInHoldSeconds))
             
-            if self.targetHoldTime > 0.0 and self.timeInHold > self.targetHoldTime :
+            if self.targetHoldTimeSec > 0.0 and self.timeInHoldSeconds > self.targetHoldTimeSec :
                 # hold time given and exceeded
                 log.info("Hold Time reached,next step")
                 self.nextScriptSegment()
@@ -529,10 +534,11 @@ class Kiln:
 
     def nextScriptSegment(self):
         self.scriptIndex += 1
+        log.debug("nextScriptSegment for kilnScript")
         if self.scriptIndex > self.myScript.numSteps():
             # ran off end of script.
             # end of runScript
-            log.debug("NextStep for kilnScript")
+            log.debug("reached end - terminateScript")
             self.terminateScript()
             return
         self.loadScriptStep()

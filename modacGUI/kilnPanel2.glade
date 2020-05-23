@@ -432,7 +432,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton" id="KilnHoldTime">
+                  <object class="GtkSpinButton" id="KilnHoldTimeMin">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">500</property>

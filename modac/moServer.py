@@ -63,6 +63,16 @@ def publishData(key, value):
     this.__Publisher.send(eMsg)
     #log.debug("sendTopic %s"%msg)
 
+def publishKilnScriptEnded():
+    if this.__Publisher == None:
+        log.debug("publisher offline publishKilnScriptEnded")
+        return
+    print("publish: publishKilnScriptEnded")
+    msg = moNetwork.mergeTopicBody(keyForKilnScriptEnded(), " ")
+    eMsg = msg.encode('utf8')
+    this.__Publisher.send(eMsg)
+
+
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
                                 # poly means we listen to many

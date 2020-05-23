@@ -49,7 +49,7 @@ class kilnPanel():
         adj = self.targetTSpinner.get_adjustment()
         adj.configure(defaultTargetTemp, 20.0,800.0, 5, 10, 10)
         
-        self.holdTimeSpinner = self.builder.get_object(keyForKilnHoldTime())
+        self.holdTimeSpinner = self.builder.get_object(keyForKilnHoldTimeMin())
         adj = self.holdTimeSpinner.get_adjustment()
         adj.configure(5, 0.0, (30*60.0), 5, 10, 10) # max 30min hold
         
@@ -196,7 +196,7 @@ class kilnPanel():
             keyForMaxTime(): maxTime,
             keyForTimeStep(): timeStep,
             keyForSimulate(): simulate,
-            keyForKilnHoldTime(): kilnHoldTime,
+            keyForKilnHoldTimeMin(): kilnHoldTime,
         }
         
         # Disable Run, Enable Terminate

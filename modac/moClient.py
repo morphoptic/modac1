@@ -23,6 +23,11 @@ __CmdSender = None
 #
 __subscribers = [] # array of all subscribers on PubSub in this process
 
+__kilnCallback = None
+def setKilnCallback(function):
+    log.info("Set KilnCallback: " + repr(function))
+    this.__kilnCallback = function
+
 def shutdownClient():
     if not this.__CmdSender == None:
         this.__CmdSender.close()
@@ -41,7 +46,8 @@ def startCmdSender():
     pass
 
 # start PyNNG subscriber for Modac Server
-def startSubscriber(keys=[keyForAllData(), keyForKilnStatus()]):
+#need to register for whatever published keys you want to receive
+def startSubscriber(keys=[keyForAllData(), keyForKilnStatus(), keyForKilnScriptEnded()]):
     #topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
@@ -80,6 +86,15 @@ def clientDispatch(topic,body):
         moData.updateAllData(body)
     elif topic == keyForKilnStatus():
         moData.update(keyForKilnStatus(), body)
+    elif topic == keyForKilnScriptEnded():
+        # TODO how signal this
+        log.debug("try calling kilnCallback")
+        if not this.__kilnCallback == None:
+            log.info("yep one set, call it")
+            this.__kilnCallback(topic, body)
+        else:
+            log.error("Ooops - no callback for kilnCallback")
+        pass
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
