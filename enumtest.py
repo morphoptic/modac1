@@ -62,6 +62,13 @@ if __name__ == "__main__":
     v = KilnScriptState[sname]
     print("this too         state name: ", v.name, " value: ", v.value)
 
+    state = KilnState.Closed
+    stateName = state.name
+    print("state should be close : ", repr(state),state.name, stateName)
+    #this works using square brackets
+    dupeState = KilnState[stateName]
+    # but function method doesnt
+    dupState = KilnState(stateName)
 
 
 

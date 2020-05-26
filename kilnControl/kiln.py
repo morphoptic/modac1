@@ -196,14 +196,14 @@ class Kiln:
         moHardware.binaryCmd(heater_lower, HeaterOff)
         moHardware.binaryCmd(heater_middle, HeaterOff)
         moHardware.binaryCmd(heater_upper, HeaterOff)
-
+        # turn off fans
+        self.commandExhaustFan(False)
+        self.commandSupportFan(False)
         self.reset() # clear everything
 
         # were using this but not anymore so comment out
         #self.state = KilnScriptState.EndRun # hang out in this for lil bit to let clients know
 
-        # turn off 12v Power
-        setRelayPower(False)
         # and turn off simulation
         moHardware.simulateKiln(False) # also calls this.setSimulation
         moServer.publishKilnScriptEnded()
@@ -215,7 +215,7 @@ class Kiln:
         #if isinstance(self.processStartTime, datetime.datetime):
         startTimeStr = self.processStartTime.strftime("%Y-%m-%d %H:%M:%S%Z")
         
-        status = [ # use an array instead of dict to keep order
+        asArray = [ # build w array instead of dict to keep order
             # shared keys - for debug purposes
             # default values set in moData so not dependent on this file
             # record time we collected data
@@ -254,6 +254,7 @@ class Kiln:
             (keyForKilnTemperatures(), self.kilnTemps),
             (keyForScript(), str(self.myScript)),
         ]
+        status = OrderedDict(asArray)
         #print("KilnStatus:", status)
         return status
 

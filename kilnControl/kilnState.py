@@ -42,7 +42,7 @@ class KilnScriptState(Enum):
 def defaultKilnRuntimeStatus():
     def_kilnStatus = {
         keyForTimeStamp(): "none yet",
-        keyForState(): 'Closed',
+        keyForState(): KilnState.Closed.name,
         keyForPIDStepTime(): 10,
         keyForKilnRuntime(): 0,
         keyForKilnTemperatures(): [0.0, 0.0, 0.0, 0.0],

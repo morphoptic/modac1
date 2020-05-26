@@ -130,7 +130,8 @@ class kilnPanel():
         self.scriptNameBox.set_text(self.kilnScript.name)
         self.scriptDescriptionBox.set_text(self.kilnScript.description)
         # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
-        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.kilnScript.curSegmentIdx))
+        self.curSegIdx = self.kilnScript.curSegmentIdx
+        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx))
         self.simulateBtn.set_active(self.kilnScript.simulate)
         # combo box
         self.segmentListModel.clear()
@@ -138,9 +139,17 @@ class kilnPanel():
             s = [str(i)]
             print("add idx to listModel "+ str(s))
             self.segmentListModel.append(s)
-        self.segmentSelector.set_active(self.kilnScript.curSegmentIdx)
+        self.setCurSegDisplay()
 
-        self.curSeg = self.kilnScript.segments[self.kilnScript.curSegmentIdx]
+        # update the StepSelector
+        self.updating = False
+
+    def setCurSegDisplay(self):
+        if self.curSegIdx < 0 or self.curSegIdx >= self.kilnScript.numSteps():
+            log.error("curSegIdx " + str(self.curSegIdx) + " out of range max "+ str(self.kilnScript.numSteps()))
+        self.updating = True
+        self.segmentSelector.set_active(self.curSegIdx)
+        self.curSeg = self.kilnScript.segments[self.curSegIdx]
         # fill in for current segment: targetTime, dist, hold
         self.targetTSpinner.set_value(self.curSeg.targetTemperature)
         self.displacementSpinner.set_value(self.curSeg.targetDistanceChange)
@@ -148,8 +157,6 @@ class kilnPanel():
         self.timeStepSpinner.set_value(self.curSeg.stepTime)
         self.exhaustFanBtn.set_active(self.curSeg.exhaustFan)
         self.supportFanBtn.set_active(self.curSeg.supportFan)
-
-        # update the StepSelector
         self.updating = False
 
     def update(self):
@@ -160,7 +167,14 @@ class kilnPanel():
         # status message recieved: update text and perhaps some others
         self.kilnStatus = OrderedDict(moData.getValue(keyForKilnStatus()))
         self.stateName = self.kilnStatus[keyForState()]
+        self.kilnState = KilnState[self.stateName]
+        if self.kilnState == KilnState.RunningScript:
+            # kiln thinks it is running, so lock out edits and up date display from values
+            self.scriptStateName = self.kilnStatus[keyForKilnScriptState()]
+            self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
+            self.setCurSegDisplay()
         self.timestamp = self.kilnStatus[keyForTimeStamp()]
+
         #print("KilnStatus", self.kilnStatus)
         return True
         
