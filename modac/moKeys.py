@@ -71,7 +71,8 @@ def keyForSaveKilnScript(): return "SaveKilnScript"
 # kiln data
 def keyForKilnStatus(): return "KilnStatus"  # full status of kiln data, hierarchial dict
 def keyForKilnScriptStatus(): return "KilnScriptStatus"  # full status of kiln data, hierarchial dict
-# kilnState uses keyForState()
+# kilnState uses keyForState() but add special so we can CSV easy
+def keyForKilnState(): return "KilnState";
 def keyForKilnScriptState(): return "KilnScriptState";
 def keyForKilnRuntime(): return 'KilnProcessRuntime'
 def keyForKilnStartTime(): return 'KilnScriptStartTime'

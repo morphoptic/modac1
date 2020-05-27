@@ -95,10 +95,14 @@ def init(client=False):
         update(keyForKType(), [0.0]*this.numKType())
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
-        def_kilnStatus = kilnState.defaultKilnRuntimeStatus()
-        update(keyForKilnStatus(), def_kilnStatus)
 
-        log.info("moData.init = "+asJson())
+    def_kilnStatus = kilnState.defaultKilnRuntimeStatus()
+    update(keyForKilnState(),def_kilnStatus[keyForState()])
+    update(keyForKilnScriptState(), def_kilnStatus[keyForKilnScriptState()])
+
+    update(keyForKilnStatus(), def_kilnStatus)
+
+    log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass
@@ -149,9 +153,18 @@ def rawDict():
 # validity of keys is left to update function (if at all)
 def updateAllData(d):
     assert isinstance(d, dict)
+    #log.debug("updateAllData")
     for key, value in d.items():
-        update(key,value)
-    #print("Updated: ", asJson())
+        if key == keyForKilnStatus():
+            # step thru kilnStatus values to keep order in OrderedDict
+            kstatus = this.getValue(keyForKilnStatus())
+            #log.debug("updating KilnStatus")
+            for kkey in kstatus.keys():
+                kstatus[kkey]=value[kkey]
+        else:
+            update(key,value)
+    #this.logData()
+    pass
 
 def logData():
     json = this.asJson()
@@ -190,9 +203,10 @@ def asArray():
         a += this.getValue(keyForKType())
     if isValidKey(keyForBinaryOut()):
         a += this.getValue(keyForBinaryOut())
-    # if isValidKey(keyForKilnStatus()):
-    #     a += this.getValue(keyForKilnStatus()+"."+keyForState())
-    #     a += this.getValue(keyForKilnStatus()+"."+keyForKilnScriptState())
+    if isValidKey(keyForKilnState()):
+        a += this.getValue(keyForKilnState())
+    if isValidKey(keyForKilnScriptState()):
+        a += this.getValue(keyForKilnScriptState())
     return a
 
 def __appendAName(key):
@@ -236,9 +250,9 @@ def arrayColNames():
         this.__appendAName(keyForKType())
     if isValidKey(keyForBinaryOut()):
         this.__appendAName(keyForBinaryOut())
-    # if isValidKey(keyForKilnStatus()):
-    #     this.__namesOfColumns.append(keyForKilnStatus()+"."+keyForState())
-    #     this.__namesOfColumns.append(keyForKilnStatus()+"."+keyForKilnScriptState())
+    if isValidKey(keyForKilnStatus()):
+        this.__namesOfColumns.append(keyForKilnState())
+        this.__namesOfColumns.append(keyForKilnScriptState())
     #     log.info("kilnstatus state scriptState added to moData")
     # else:
     #     log.error("Kiln status not found, kilnScriptState not in moData?")

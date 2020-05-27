@@ -171,11 +171,11 @@ class kilnPanel():
     def update(self):
         log.debug("KilnPanel Update")
         self.setData()
-        log.debug("KilnStatus state:"+self.stateName+ " scriptState:"+self.scriptStateName+ " curSegIdx:"+str(self.curSegIdx)
+        log.debug("KilnStatus state:"+self.stateName+ " scriptState:"+self.scriptStateName+ " curSegIdx:"+str(self.curSegIdx))
         
     def getKilnStatus(self):
         # status message recieved: update text and perhaps some others
-        self.kilnStatus = OrderedDict(moData.getValue(keyForKilnStatus()))
+        self.kilnStatus = moData.getValue(keyForKilnStatus())
         self.stateName = self.kilnStatus[keyForState()]
         self.kilnState = KilnState[self.stateName]
         self.scriptStateName = self.kilnStatus[keyForKilnScriptState()]

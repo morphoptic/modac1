@@ -5,6 +5,7 @@
 # KilnScriptState is for script processing of one step
 #####################
 from enum import Enum
+from collections import OrderedDict
 
 #### use this to get current and parent directories, and append parent to Python's import path
 import sys, os
@@ -17,6 +18,7 @@ sys.path.append(__parentDirName__)
 
 # from modac import moKeys
 from modac.moKeys import *
+from .kilnConfig import *
 
 class KilnState(Enum):
     '''States of the KilnProcess internal to LeicaDisto Module'''
@@ -42,29 +44,48 @@ class KilnScriptState(Enum):
     # ScriptTimeStep - 10 sec minimum to keep PID from going crazy
 
 def defaultKilnRuntimeStatus():
-    def_kilnStatus = {
-        keyForTimeStamp(): "none yet",
-        keyForState(): KilnState.Unknown.name,
-        keyForKilnScriptState(): KilnScriptState.Unknown.name,
-        keyForSegmentIndex(): 0,
-        keyForPIDStepTime(): 10,
-        keyForKilnRuntime(): 0,
-        keyForKilnTemperatures(): [0.0, 0.0, 0.0, 0.0],
-        keyForKilnHeaters(): [False, False, False, False],
-        keyForKilnHeaterCommanded(): [False, False, False, False],
-        keyForScript(): [], # collection of script segments
+    asArray = [  # build w array instead of dict to keep order
+        # shared keys - for debug purposes
+        # default values set in moData so not dependent on this file
+        # record time we collected data
+        (keyForTimeStamp(), "default kilnStatus"),
+        ("kilnProcessRunnable", False),
 
+        # kiln state
+        (keyForState(), KilnState.Unknown.name),
+        (keyForKilnScriptState(), KilnState.Unknown.name),
+        (keyForSimulate(), False),
 
-        keyForTargetTemp(): 0,
-        KilnStartTime(): "Not Started",
-        keyForTargetDisplacement(): -1,
-        keyForMaxTime(): 0,
-        keyForStartDistance(): 0,
-        keyForCurrentDisplacement(): 0,
-        keyForKilnHoldTimeMin(): 0,
-        keyForKilnTimeInHoldMinutes(): 0,
-        keyForExhaustFan(): 0,
-        keyForSupportFan():0,
-    }
+        # Script Segment Parameters
+        (keyForSegmentIndex(), 0),
+        (keyForTargetTemp(), 23),
+        (keyForKilnHoldTimeMin(), 1),
+        (keyForKilnHoldTimeSec(), 60),
+        (keyForTargetDisplacement(), 0),
+        (keyForPIDStepTime(), 10),
+        (keyForMaxTime(), default_maxTime),
+
+        # Script Segment data
+        (keyForKilnTimeInHoldSeconds(), 0),
+        (keyForKilnTimeInHoldMinutes(), 0),
+        (keyForKilnHoldStartTime(), "startHoldTimeStr"),
+        (keyForKilnRuntime(), 0),
+        (keyForKilnStartTime(), "startTimeStr"),
+
+        (keyForStartDistance(), 0),
+        (keyForTargetDisplacement(), 0),
+
+        (keyForCurrentDistance(), 0),
+        (keyForCurrentDisplacement(), 0),
+
+        (keyForKilnHeaters(), [False, False, False, False]),
+        (keyForKilnHeaterCommanded(), [False, False, False, False]),
+        (keyForKilnTemperatures(), [0.0, 0.0, 0.0, 0.0]),
+        (keyForExhaustFan(), False),
+        (keyForSupportFan(), False)
+        # (keyForScript(), str(self.myScript)),
+    ]
+    def_kilnStatus = OrderedDict(asArray)
+
     return def_kilnStatus
 

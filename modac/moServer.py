@@ -51,7 +51,7 @@ def startPublisher():
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
     
 def publish():
-    log.debug("publish - only AllData for now")
+    log.debug("publish - only AllData for now %r"%moData.asDict())
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
