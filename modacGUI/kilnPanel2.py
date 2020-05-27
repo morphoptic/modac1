@@ -50,6 +50,15 @@ class kilnPanel():
         
         self.panel = self.builder.get_object("ScriptPanel")
 
+        # top top box holds simulate and 2 state labels
+        self.simulateBtn = self.builder.get_object(keyForSimulate())
+        # TODO change checkbox label color - default white on gray is terrible
+        #   need function to find GTK.Label child and change color to black
+        self.simulateBtn.set_active(False) # for debugging start w simulated
+        self.simulateBtn.set_active(True) # for debugging start w simulated
+        self.kilnStateLabel = self.builder.get_object("KilnState")
+        self.kilnScriptStateLabel = self.builder.get_object("KilnScriptState")
+
         # script data at the top
         self.scriptNameBox = self.builder.get_object(keyForScriptName())
         self.scriptDescriptionBox = self.builder.get_object(keyForScriptDescription())
@@ -86,12 +95,6 @@ class kilnPanel():
         adj = self.timeStepSpinner.get_adjustment()
         adj.configure(defaultStepTime, 1,100.0, 1, 10, 10)
         
-        self.simulateBtn = self.builder.get_object(keyForSimulate())
-        # TODO change checkbox label color - default white on gray is terrible
-        #   need function to find GTK.Label child and change color to black
-        self.simulateBtn.set_active(False) # for debugging start w simulated
-        self.simulateBtn.set_active(True) # for debugging start w simulated
-
         self.exhaustFanBtn = self.builder.get_object(keyForExhaustFan())
         self.supportFanBtn = self.builder.get_object(keyForSupportFan())
 
@@ -129,9 +132,9 @@ class kilnPanel():
         # assuming kilnScript is a KilnScript object
         self.scriptNameBox.set_text(self.kilnScript.name)
         self.scriptDescriptionBox.set_text(self.kilnScript.description)
+        self.getKilnStatus()
         # self.currSegmentIdex is lable so rest value with             keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
         self.curSegIdx = self.kilnScript.curSegmentIdx
-        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx))
         self.simulateBtn.set_active(self.kilnScript.simulate)
         # combo box
         self.segmentListModel.clear()
@@ -148,7 +151,11 @@ class kilnPanel():
         if self.curSegIdx < 0 or self.curSegIdx >= self.kilnScript.numSteps():
             log.error("curSegIdx " + str(self.curSegIdx) + " out of range max "+ str(self.kilnScript.numSteps()))
         self.updating = True
+        self.kilnStateLabel.set_text("Kiln State: "+self.stateName)
+        self.kilnScriptStateLabel.set_text("Kiln ScriptState:"+self.scriptStateName)
         self.segmentSelector.set_active(self.curSegIdx)
+        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx))
+        # now snag the current segment for reference
         self.curSeg = self.kilnScript.segments[self.curSegIdx]
         # fill in for current segment: targetTime, dist, hold
         self.targetTSpinner.set_value(self.curSeg.targetTemperature)
@@ -168,11 +175,10 @@ class kilnPanel():
         self.kilnStatus = OrderedDict(moData.getValue(keyForKilnStatus()))
         self.stateName = self.kilnStatus[keyForState()]
         self.kilnState = KilnState[self.stateName]
+        self.scriptStateName = self.kilnStatus[keyForKilnScriptState()]
         if self.kilnState == KilnState.RunningScript:
-            # kiln thinks it is running, so lock out edits and up date display from values
-            self.scriptStateName = self.kilnStatus[keyForKilnScriptState()]
-            self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
-            self.setCurSegDisplay()
+             # kiln thinks it is running, so lock out edits and up date display from values
+             self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
         self.timestamp = self.kilnStatus[keyForTimeStamp()]
 
         #print("KilnStatus", self.kilnStatus)
@@ -181,7 +187,8 @@ class kilnPanel():
     def setData(self):
         # most of kilnStatus (all?) becomes put JSON text into ScriptStatus box
         self.getKilnStatus()
-        
+        self.setCurSegDisplay()
+
         # state is the name or string rep of KilnState
         log.debug("KilnPanel setData Reported state: "+self.stateName)
 

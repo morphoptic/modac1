@@ -25,9 +25,11 @@ class KilnState(Enum):
     Starting = 1  # between closed and open
     Idle = 2  # waiting for command
     RunningScript = 3  # running a kiln script
+    Unknown = -4
 
 
 class KilnScriptState(Enum):
+    Unknown = -4
     NoScriptStep = 0
     Heating = 1  # in transition, heaters on ramping up or down; exit on temperature reached or Other
     Holding = 2  # in a temperature hold, heaters may be on or off to hold; exit on hold time|dist
@@ -42,7 +44,9 @@ class KilnScriptState(Enum):
 def defaultKilnRuntimeStatus():
     def_kilnStatus = {
         keyForTimeStamp(): "none yet",
-        keyForState(): KilnState.Closed.name,
+        keyForState(): KilnState.Unknown.name,
+        keyForKilnScriptState(): KilnScriptState.Unknown.name,
+        keyForSegmentIndex(): 0,
         keyForPIDStepTime(): 10,
         keyForKilnRuntime(): 0,
         keyForKilnTemperatures(): [0.0, 0.0, 0.0, 0.0],

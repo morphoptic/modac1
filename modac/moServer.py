@@ -29,6 +29,7 @@ from pynng import Pub0, Sub0, Pair1, Timeout
 __Publisher = None
 __CmdListener = None 
 __killCmdListener = False
+__receivedHello = False
 
 def shutdownServer():
     log.debug("try to kill moServer")
@@ -191,10 +192,13 @@ def serverDispatch(topic,body):
             kiln.handleRunKilnScriptCmd(body)
     elif topic == keyForHello():
         log.info("Received Hello from Client ")
+        __receivedHello = True
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
         pass
-        
+
+def receivedHello(_):
+    return __receivedHello
 
 if __name__ == "__main__":
     print("moServer has no self test")

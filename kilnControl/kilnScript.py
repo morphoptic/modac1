@@ -147,16 +147,17 @@ class KilnScript:
         return json.dumps(self.asDict(), indent=4)
 
     def asDict(self):
-        d = OrderedDict(
-            [
+        a =    [
+                #(keyForState(), KilnState.Unknown.name), #should these be here or in kiln?
+                #(keyForKilnScriptState(), KilnScriptState.Unknown.name),
                 (keyForScriptName(), self.name),
                 (keyForScriptDescription(), self.description),
                 (keyForScriptCurrentSegmentIdx(), self.curSegmentIdx),
                 (keyForSimulate(), self.simulate),
                 (keyForScriptSegments(), self.segmentsAsDict()),
             ]
-        )
-        # print (d)
+        d = OrderedDict(a)
+        print ("script dict:",d)
         # print(str(d))
         return d
 

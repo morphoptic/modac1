@@ -252,7 +252,7 @@ class Kiln:
             (keyForKilnHeaters(), self.reportedHeaterStates),
             (keyForKilnHeaterCommanded(), self.commandedHeaterStates),
             (keyForKilnTemperatures(), self.kilnTemps),
-            (keyForScript(), str(self.myScript)),
+            #(keyForScript(), str(self.myScript)),
         ]
         status = OrderedDict(asArray)
         #print("KilnStatus:", status)
@@ -536,7 +536,7 @@ class Kiln:
     def nextScriptSegment(self):
         self.scriptIndex += 1
         log.debug("nextScriptSegment for kilnScript")
-        if self.scriptIndex > self.myScript.numSteps():
+        if self.scriptIndex >= self.myScript.numSteps():
             # ran off end of script.
             # end of runScript
             log.debug("reached end - terminateScript")

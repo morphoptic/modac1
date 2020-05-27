@@ -37,6 +37,8 @@ runTests = False #True
 #publishRate = 0.25 # seconds for sleep at end of main loop
 publishRate = 60.0 # seconds for sleep at end of main loop
 publishRate = 1.0 # seconds for sleep at end of main loop
+publishRate = 30.0 # seconds for sleep at end of main loop
+publishRate30 = 30.0 # seconds for sleep at end of main loop
 
 csvActive = True
 jsonActive = False
@@ -79,10 +81,13 @@ async def modac_ReadPubishLoop():
         if jsonActive == True:
             #print("call moJSON.snapshot")
             moJSON.snapshot()
-            
+
+        if moServer.receivedHello():
+            #this.publishRate = this.publishRate30
+            log.info("Someone is listening - set to slower rate " + str(this.publishRate))
         log.debug("\n*****bottom forever read-publish loop")
         try:
-            await trio.sleep(publishRate)
+            await trio.sleep(this.publishRate)
         except trio.Cancelled:
             log.warn("***Trio Cancelled caught in ReadPublish Loop")
             break
