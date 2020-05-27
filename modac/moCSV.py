@@ -60,7 +60,7 @@ def addRow():
         # gets everything in order
         row = moData.asArray()
         #addTimeToRow(row)
-        #print("csvRow:",row)
+        #log.debug("moCSV.addRow: %r" % row)
         this._csvWriter.writerow(row)
         this._csvFile.flush()
 
@@ -72,7 +72,7 @@ class modacCSVWriter:
     names = []
     
     def __init__(self,filename="modacDataLog.csv",names=None):
-        print("moCSV file: ",filename, " names:",names)
+        log.debug("moCSV file: %s names:%s"%(filename, names))
         self.csvFile = open(filename, "w")
         self.csvWriter = csv.writer(this._csvFile)
         if self.names == None:
@@ -94,7 +94,7 @@ class modacCSVWriter:
             # perhaps do this after create named Channels
             # gotta be some commercial package that uses Channels
             row = moData.asArray()
-            #print("logRow:",row)
+            log.debug("csvWriter.addRow: %r"%row)
             self.csvWriter.writerow(row)
             self.csvFile.flush()
         

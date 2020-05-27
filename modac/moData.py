@@ -204,9 +204,13 @@ def asArray():
     if isValidKey(keyForBinaryOut()):
         a += this.getValue(keyForBinaryOut())
     if isValidKey(keyForKilnState()):
-        a += this.getValue(keyForKilnState())
+        ks = this.getValue(keyForKilnState())
+        a.append(ks)
+#        log.debug("addKilnState to row %r"%ks)
     if isValidKey(keyForKilnScriptState()):
-        a += this.getValue(keyForKilnScriptState())
+        ks = this.getValue(keyForKilnScriptState())
+        a.append(ks)
+#    log.debug("addKilnScriptState to row %r" % ks)
     return a
 
 def __appendAName(key):
@@ -218,6 +222,7 @@ def __appendAName(key):
     for i in range(len(a)):
         s = cPrefix+"_"+str(i)
         this.__namesOfColumns.append(s)
+    pass
 
 def arrayColNames():
     log.debug("modData.arrayColNames - for moCSV")
