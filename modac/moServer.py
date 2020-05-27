@@ -197,7 +197,7 @@ def serverDispatch(topic,body):
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
         pass
 
-def receivedHello(_):
+def receivedHello():
     return __receivedHello
 
 if __name__ == "__main__":

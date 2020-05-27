@@ -179,6 +179,9 @@ class Kiln:
         self.currentDisplacement = 0
         self.reportedHeaterStates = [False, False, False, False]
         self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+        self.exhaustFanState = False
+        self.supportFanState = False
+
         self.kilnTemps = default_kilnTemperatures #self.kilnStartTemps #[0,0,0,0]
         self.pidOut = [0, 0, 0, 0]
         self.pids = [None, None, None, None]
@@ -252,7 +255,9 @@ class Kiln:
             (keyForKilnHeaters(), self.reportedHeaterStates),
             (keyForKilnHeaterCommanded(), self.commandedHeaterStates),
             (keyForKilnTemperatures(), self.kilnTemps),
-            #(keyForScript(), str(self.myScript)),
+            (keyForExhaustFan(), self.exhaustFanState),
+            (keyForSupportFan(), self.supportFanState)
+            # (keyForScript(), str(self.myScript)),
         ]
         status = OrderedDict(asArray)
         #print("KilnStatus:", status)
@@ -464,7 +469,7 @@ class Kiln:
         self.reportedHeaterStates[3] = binaryOutputs[heater_upper]
         self.reportedHeaterStates[0] = self.reportedHeaterStates[1] or self.reportedHeaterStates[2] or self.reportedHeaterStates[3]
         self.exhaustFanState = binaryOutputs[fan_exhaust]
-        self.exhaustFanState = binaryOutputs[fan_support]
+        self.supportFanState = binaryOutputs[fan_support]
 
     def updateTemperatures(self):
         ''' retrieve thermocouple values degC, avg the ones we want '''

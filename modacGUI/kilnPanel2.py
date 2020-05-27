@@ -401,3 +401,5 @@ class kilnPanel():
         log.debug("KilnCallback with topic: "+topic+" body:"+body)
         if topic == keyForKilnScriptEnded():
             self.resetRunStop()
+            self.curSegIdx = 0
+            self.kilnScript.curSegmentIdx = 0

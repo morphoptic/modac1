@@ -63,6 +63,8 @@ def defaultKilnRuntimeStatus():
         keyForCurrentDisplacement(): 0,
         keyForKilnHoldTimeMin(): 0,
         keyForKilnTimeInHoldMinutes(): 0,
+        keyForExhaustFan(): 0,
+        keyForSupportFan():0,
     }
     return def_kilnStatus
 

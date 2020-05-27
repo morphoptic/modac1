@@ -1,7 +1,7 @@
 {
     "ScriptName": "MODAC Kiln Script FiveSteps",
     "ScriptDescription": "created 20200527_13:49:59",
-    "CurrentSegmentIdx": 3,
+    "CurrentSegmentIdx": 0,
     "KilnSimulate": true,
     "ScriptSegments": [
         {
