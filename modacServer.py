@@ -65,6 +65,7 @@ async def modac_ReadPubishLoop():
     #for i in range(300):
     moData.setStatusRunning()
     this.okToRunMainLoop = True
+    moData.logData() # log info as json to stdOut/console + logfile
     while this.okToRunMainLoop: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
@@ -96,13 +97,14 @@ async def modac_ReadPubishLoop():
 async def modac_asyncServer():
     log.info("start modac_asyncServer()")
     modac_loadConfig()
+    # initialize data blackboard on which data is written and read from
+    moData.init(client=False)
+    kilnControl.kiln.init() # init here so status gets into moData early; moHardware does lowlevel hw
 
     # Trio is our async multi-threaded system.
     # it uses the Nursery metaphor for spawning and controlling
     async with trio.open_nursery() as nursery:
-        # initialize data blackboard on which data is written and read from
-        moData.init(client=False) 
-        
+
         # save the nursey in moData for other modules
         moData.setNursery(nursery)
         
@@ -156,6 +158,8 @@ async def modac_asyncServer():
 
 def modac_loadConfig():
     log.info("modac_loadConfig")
+    #TODO kiln_config has some other modules have magic words buried in em
+    # come up with consistent way of loading?
     # configuration is done using python code/files
     # generally inline of the module that needs them
     # see modac/moData for things that should work for client and server

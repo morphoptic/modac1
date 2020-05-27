@@ -65,19 +65,25 @@ def emergencyShutOff():
     endKilnControlProcess() #terminate thread
     # error state tells it we not running
 
+criticalTemp = 600
+
+def init():
+    log.info("Init KilnControl.Kiln Package")
+    this.kilnInstance = Kiln()
+    this.kilnInstance.publishStatus()
+
 
 #####################
 # use command to start kiln process
 async def startKilnControlProcess(nursery=None):
-    if not this.kilnInstance == None:
-        log.error("StartKilnCmd but Kiln already instanced")
-        return
+    if this.kilnInstance == None:
+        this.init()
+
     if nursery == None:
         nursery = moData.getNursery()
 
     if enableKilnControl:
         log.debug("startKiln soon")
-        this.kilnInstance = Kiln() #simulate=True)
         nursery.start_soon(this.kilnInstance.kilnControlProcess)
         # ugh how to kill off Kiln object. Singleton?
     else:
@@ -202,16 +208,19 @@ class Kiln:
         # turn off fans
         self.commandExhaustFan(False)
         self.commandSupportFan(False)
-        self.reset() # clear everything
+
+        moServer.publishKilnScriptEnded() # send ScriptEnded message
+        self.reset()
 
         # were using this but not anymore so comment out
         #self.state = KilnScriptState.EndRun # hang out in this for lil bit to let clients know
 
         # and turn off simulation
         moHardware.simulateKiln(False) # also calls this.setSimulation
-        moServer.publishKilnScriptEnded()
-        self.publishStatus()      
-        log.info("terminateScript")
+
+        log.debug(" status at end of terminateScript")
+        self.publishStatus()
+        log.info("terminateScript end")
        
     def collectStatus(self):
         #startTimeStr =" NotStarted"
@@ -441,6 +450,19 @@ class Kiln:
         #log, publish and put in data blackboard
         #self.publishStatus()
         
+    def nextScriptSegment(self):
+        self.scriptIndex += 1
+        log.debug("nextScriptSegment for kilnScript")
+        if self.scriptIndex >= self.myScript.numSteps():
+            # ran off end of script.
+            # end of runScript
+            log.debug("reached end - terminateScript")
+            self.terminateScript()
+            return
+        self.loadScriptStep()
+        self.scriptState = KilnScriptState.Heating
+        pass
+
     def commandHeaters(self):
         # turn on.off any reported heaters that dont match commanded values
         # ignore 0 as it is just OR of other values
@@ -449,6 +471,7 @@ class Kiln:
             if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
                 log.info("kiln cmd heater change %d"%i)
                 moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
+        pass
 
     def commandExhaustFan(self, cmdState):
         # turn on/off exhaust
@@ -489,17 +512,15 @@ class Kiln:
         else:
             # use only the lower (first) ktype = bottom
             self.kilnTemps[0] = self.kilnTemps[1]
-
-        #tempStr = keyForKilnTemperatures() + ":"
-        #for i in range(len(self.kilnTemps)):
-        #    tempStr += "{0:5.2f} ".format(self.kilnTemps[i])
-        #log.debug("Kiln get temps = " + tempStr)
+        pass
 
     def updateDistance(self):
         if this.simulation:
             slumpRate = 0.1 # mm per loop
             if self.state == KilnState.RunningScript and self.scriptState == KilnScriptState.Holding :
-                self.currentDistance += slumpRate
+                # if we are above critical temp, then slump, unless SupportFan is on
+                if self.kilnTemps[0] > this.criticalTemp and self.supportFanCommanded == False:
+                    self.currentDistance += slumpRate
         else:
             lData = moData.getValue(keyForLeicaDisto())
             self.currentDistance = lData[keyForDistance()]
@@ -537,18 +558,6 @@ class Kiln:
         self.scriptStartTime = datetime.datetime.now()
         log.info("Starting Kiln Script .. status:" + json.dumps(self.collectStatus(), indent=4))
         log.info("async kiln loop should pick this up")
-
-    def nextScriptSegment(self):
-        self.scriptIndex += 1
-        log.debug("nextScriptSegment for kilnScript")
-        if self.scriptIndex >= self.myScript.numSteps():
-            # ran off end of script.
-            # end of runScript
-            log.debug("reached end - terminateScript")
-            self.terminateScript()
-            return
-        self.loadScriptStep()
-        pass
 
     def loadScriptStep(self):
         if self.myScript == None:

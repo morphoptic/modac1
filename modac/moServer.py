@@ -68,10 +68,11 @@ def publishKilnScriptEnded():
     if this.__Publisher == None:
         log.debug("publisher offline publishKilnScriptEnded")
         return
-    print("publish: publishKilnScriptEnded")
+    log.debug("publish: publishKilnScriptEnded")
     msg = moNetwork.mergeTopicBody(keyForKilnScriptEnded(), " ")
     eMsg = msg.encode('utf8')
     this.__Publisher.send(eMsg)
+    pass
 
 
 async def startCmdListener(nursery):
@@ -81,6 +82,8 @@ async def startCmdListener(nursery):
                                 recv_timeout = moNetwork.rcvTimeout())
     print("Cmd Listener: ",this.__CmdListener,moNetwork.rcvTimeout())
     nursery.start_soon(cmdListenLoop)
+    pass
+
 
 __killCmdListener = False
 async def cmdListenLoop():
@@ -99,6 +102,7 @@ async def cmdListenLoop():
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None
+    pass
 
 async def serverReceive():
     if this.__CmdListener == None:

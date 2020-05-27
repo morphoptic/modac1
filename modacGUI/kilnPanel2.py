@@ -153,8 +153,10 @@ class kilnPanel():
         self.updating = True
         self.kilnStateLabel.set_text("Kiln State: "+self.stateName)
         self.kilnScriptStateLabel.set_text("Kiln ScriptState:"+self.scriptStateName)
+
         self.segmentSelector.set_active(self.curSegIdx)
         self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx))
+
         # now snag the current segment for reference
         self.curSeg = self.kilnScript.segments[self.curSegIdx]
         # fill in for current segment: targetTime, dist, hold
@@ -169,6 +171,7 @@ class kilnPanel():
     def update(self):
         log.debug("KilnPanel Update")
         self.setData()
+        log.debug("KilnStatus state:"+self.stateName+ " scriptState:"+self.scriptStateName+ " curSegIdx:"+str(self.curSegIdx)
         
     def getKilnStatus(self):
         # status message recieved: update text and perhaps some others
@@ -195,6 +198,12 @@ class kilnPanel():
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
         self.scriptStatusBuffer.set_text(textScriptStatus)
 
+    def endScript(self):
+        log.debug("Kiln endScript")
+        self.resetRunStop()
+        self.curSegIdx = 0
+        self.kilnScript.getSegment(0)
+
     def on_RunKilnScript_clicked(self, button):
         # start kiln script
         # collect data for command, send command
@@ -212,7 +221,7 @@ class kilnPanel():
         
     def on_StopKilnScript_clicked(self, button):
         log.debug("onTerminateRun")
-        self.resetRunStop()
+        self.endScript()
         moCommand.cmdStopKilnScript()
 
     def setRunStop(self):
@@ -230,6 +239,7 @@ class kilnPanel():
     def onEmergencyOff(self, button):
         log.warning("Emergency OFF clicked")
         moCommand.cmdEmergencyOff()
+        self.endScript()
 
     def on_LoadKilnScript_clicked(self, button):
         # TODO implement loadScript dialog + parsing, dialog here, json to obj in kilnScript
@@ -400,6 +410,4 @@ class kilnPanel():
     def kilncallback(self,topic, body):
         log.debug("KilnCallback with topic: "+topic+" body:"+body)
         if topic == keyForKilnScriptEnded():
-            self.resetRunStop()
-            self.curSegIdx = 0
-            self.kilnScript.curSegmentIdx = 0
+            self.endScript()

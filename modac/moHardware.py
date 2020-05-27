@@ -28,6 +28,7 @@ async def init(nursery):
     ad24.init()
     ad16.init()
     kType.init()
+    # leica distance sensor needs to run its own thread/process
     leicaDisto.init()
     nursery.start_soon(leicaDisto.runLoop)
     this.__initialized = True  # : return

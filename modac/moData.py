@@ -1,4 +1,7 @@
 # moData = common data repo under mordac
+# TODO: partway thru adding top level recognition of kilnStatus.state kilnStatus.kilnScriptState
+# kinda so those get dumped into CSV
+# but this gets all kinda messy as an upper layer over hw
 
 #### use this to get current and parent directories, and append parent to Python's import path
 import sys, os
@@ -40,15 +43,6 @@ def numAD16():
     return 4
 
 logAsJSON = True
-
-if __name__ == "__main__":
-    print("NumKtype: ", numKType())
-    print("numBinaryOut: ", numBinaryOut())
-    print("numAD24: ", numAD24())
-    print("numAD16: ", numAD16())
-    print("moData has no self test")
-    exit(0)
-
 
 #import rest of modac
 from .moKeys import *
@@ -145,6 +139,7 @@ def isValidKey(key):
 
 def getValue(key):
     # will throw KeyError if key is not in dictionary
+    #kilnstatus state and scriptState... TODO: do we really go this way with moData/moCSV
     return __moDataDictionary[key]
 
 def rawDict():
@@ -163,6 +158,8 @@ def logData():
     log.info(json)    
 
 ######  for CSV
+# TODO: messy support here and in init() to get kiln stuff included
+# there needs to be simpler way
 __namesOfColumns = None
 # do this manually or using names?
 # bit too complex for dictwriter, given many entries are complex
@@ -193,6 +190,9 @@ def asArray():
         a += this.getValue(keyForKType())
     if isValidKey(keyForBinaryOut()):
         a += this.getValue(keyForBinaryOut())
+    # if isValidKey(keyForKilnStatus()):
+    #     a += this.getValue(keyForKilnStatus()+"."+keyForState())
+    #     a += this.getValue(keyForKilnStatus()+"."+keyForKilnScriptState())
     return a
 
 def __appendAName(key):
@@ -236,6 +236,12 @@ def arrayColNames():
         this.__appendAName(keyForKType())
     if isValidKey(keyForBinaryOut()):
         this.__appendAName(keyForBinaryOut())
+    # if isValidKey(keyForKilnStatus()):
+    #     this.__namesOfColumns.append(keyForKilnStatus()+"."+keyForState())
+    #     this.__namesOfColumns.append(keyForKilnStatus()+"."+keyForKilnScriptState())
+    #     log.info("kilnstatus state scriptState added to moData")
+    # else:
+    #     log.error("Kiln status not found, kilnScriptState not in moData?")
     log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns
 
@@ -250,4 +256,14 @@ def arrayNameOnlyAD24():
     log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns
 
-    
+# TODO: self test only works with moKeys not .moKeys import at top
+if __name__ == "__main__":
+    print("moData Self test")
+    print("NumKtype: ", numKType())
+    print("numBinaryOut: ", numBinaryOut())
+    print("numAD24: ", numAD24())
+    print("numAD16: ", numAD16())
+    this.init(False)
+    this.logData()
+    exit(0)
+
