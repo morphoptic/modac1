@@ -1,7 +1,4 @@
 # moData = common data repo under mordac
-# TODO: partway thru adding top level recognition of kilnStatus.state kilnStatus.kilnScriptState
-# kinda so those get dumped into CSV
-# but this gets all kinda messy as an upper layer over hw
 
 #### use this to get current and parent directories, and append parent to Python's import path
 import sys, os
@@ -171,8 +168,6 @@ def logData():
     log.info(json)    
 
 ######  for CSV
-# TODO: messy support here and in init() to get kiln stuff included
-# there needs to be simpler way
 __namesOfColumns = None
 # do this manually or using names?
 # bit too complex for dictwriter, given many entries are complex
@@ -206,6 +201,7 @@ def asArray():
     if isValidKey(keyForKilnState()):
         ks = this.getValue(keyForKilnState())
         a.append(ks)
+        # this gives string value vs numeric; but thats ok
 #        log.debug("addKilnState to row %r"%ks)
     if isValidKey(keyForKilnScriptState()):
         ks = this.getValue(keyForKilnScriptState())

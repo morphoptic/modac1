@@ -65,7 +65,7 @@ LeicaDisto Module holds singleton State and methods to talk with BLE Device
 '''
 # moHardware usual init() and update() are here usage questionable
 # 
-useLeica = False # flag to say we are using or not using Leica distance sensor
+useLeica = True # flag to say we are using or not using Leica distance sensor
 
 import sys
 this = sys.modules[__name__]
