@@ -106,11 +106,11 @@ def sendCommand(key, value):
     if this.__CmdSender == None:
         log.error("attempt to sendCommand from non-client")
         return False
-    log.info("send command: key %s"%key)
+    #log.info("send command: key %s"%key)
     #package up the envelope with topic
     cmd = moNetwork.mergeTopicBody(key, value)
     msg = moNetwork.encryptCommand(cmd)
-    log.info("sendCommand msg: %s"%msg)
+    #log.info("sendCommand msg: %s"%msg)
     bmsg = msg.encode('utf8')
    #decryptCommand(msg)
     try:

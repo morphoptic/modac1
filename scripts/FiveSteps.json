@@ -8,7 +8,7 @@
             "SegmentIndex": 0,
             "KilnTargetTemp": 100,
             "KilnTargetDisplacement": 0,
-            "KilnHoldTimeMin": 2
+            "KilnHoldTimeMin": 2,
             "ExhaustFan": 0,
             "SupportFan": 0,
             "PIDStepTime": 10,
@@ -48,7 +48,7 @@
             "SegmentIndex": 4,
             "KilnTargetTemp": 30,
             "KilnTargetDisplacement": 0,
-            "KilnHoldTimeMin": 1400,
+            "KilnHoldTimeMin": 40,
             "ExhaustFan": true,
             "SupportFan": true,
             "PIDStepTime": 10,

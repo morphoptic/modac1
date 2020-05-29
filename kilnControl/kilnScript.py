@@ -59,7 +59,7 @@ class KilnScript:
     # set of commands for KilnControl
     def __init__(self, dict= None):
         self.name = "MODAC Kiln Script X"
-        self.description = "created " + datetime.datetime.now().strftime("%Y%m%d_%H:%M:%S")
+        self.description = "created " + datetime.datetime.now().strftime(keyForTimeFormat())
         self.segments = []  # defaults to having none
         self.curSegmentIdx = 0  # used to indicate current segment
         #self.simulate = False

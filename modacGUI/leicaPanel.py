@@ -108,7 +108,7 @@ class leicaPanel():
         self.count = self.count+1
 
         #update local data arrays
-        self.times.append(self.count) #bme.timestamp.strftime("%S%Z"))
+        self.times.append(self.count)
         self.distance.append(data)
         
         #limit size of arrays

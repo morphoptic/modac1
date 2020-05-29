@@ -229,7 +229,7 @@ class Kiln:
 
         #startTimeStr =" NotStarted"
         #if isinstance(self.processStartTime, datetime.datetime):
-        startTimeStr = self.processStartTime.strftime("%Y-%m-%d %H:%M:%S%Z")
+        startTimeStr = self.processStartTime.strftime(keyForTimeFormat())
 
         status = moData.getValue(keyForKilnStatus())
         if status == None:
@@ -239,7 +239,7 @@ class Kiln:
         # shared keys - for debug purposes
         # default values set in moData so not dependent on this file
         # record time we collected data
-        status[keyForTimeStamp()] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%Z")
+        status[keyForTimeStamp()] = datetime.datetime.now().strftime(keyForTimeFormat())
         status["kilnProcessRunnable"] = self.processRunnable
             
             #kiln state
@@ -411,7 +411,7 @@ class Kiln:
             # reached temp, state should be Hold
             self.scriptState = KilnScriptState.Holding
             self.startHoldTime = currentTime
-            self.startHoldTimeStr = currentTime.strftime("%Y-%m-%d %H,%M,%S%Z")
+            self.startHoldTimeStr = currentTime.strftime(keyForTimeFormat())
             log.debug("Kiln Switch to Holding State "  +str(currentTime))
 
         # pdate PID/Heater control

@@ -95,7 +95,7 @@ class ad24Panel():
         self.count = self.count+1
        
         #update local data arrays
-        self.times.append(self.count) #bme.timestamp.strftime("%S%Z"))
+        self.times.append(self.count)
         self.times = self.times[-self.plotWidth:]
         row = [moData.getValue(keyForTimeStamp())]
         for i in range(len(data)):

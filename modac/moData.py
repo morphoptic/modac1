@@ -188,10 +188,10 @@ def asArray():
         leica = this.getValue(keyForLeicaDisto())
         a.append(leica[keyForDistance()])
     
-    if isValidKey(keyForAD24Raw()):
-        a += this.getValue(keyForAD24Raw())
-    if isValidKey(keyForAD24()):
-        a += this.getValue(keyForAD24())
+    # if isValidKey(keyForAD24Raw()):
+    #     a += this.getValue(keyForAD24Raw())
+    # if isValidKey(keyForAD24()):
+    #     a += this.getValue(keyForAD24())
     if isValidKey(keyForAD16()):
         a += this.getValue(keyForAD16())
     if isValidKey(keyForKType()):
@@ -241,10 +241,10 @@ def arrayColNames():
 #    if isValidKey(keyForDistance()):
     if isValidKey(keyForLeicaDisto()):
          this.__namesOfColumns.append(keyForDistance())
-    if isValidKey(keyForAD24Raw()):
-        this.__appendAName(keyForAD24Raw())
-    if isValidKey(keyForAD24()):
-        this.__appendAName(keyForAD24())
+    # if isValidKey(keyForAD24Raw()):
+    #     this.__appendAName(keyForAD24Raw())
+    # if isValidKey(keyForAD24()):
+    #     this.__appendAName(keyForAD24())
     if isValidKey(keyForAD16()):
         this.__appendAName(keyForAD16())
     if isValidKey(keyForKType()):

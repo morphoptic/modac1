@@ -51,7 +51,7 @@ def addTimeToRow(row):
     # but apparently it doesnt work on pi
     # but does work later in decimate.csv.py on mac
     dtStr = moData.getTimestamp()
-    dt = datetime.datetime.strptime(dtStr, moData.getTimeFormat())
+    dt = datetime.datetime.strptime(dtStr, keyForTimeFormat())
     timeStr = datetime.datetime.strftime(dt, timeFormat)
     row[timeKey] = timeStr
     

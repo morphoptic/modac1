@@ -4,7 +4,10 @@
 # topics are UTF8 encoded arrays
 def moKeyToTopic(key):
     assert isinstance(key,str)
+
     return key.encode('utf8')
+def keyForTimeFormat():
+    return "%Y-%m-%d %H:%M:%S%Z"
 
 def keyForNotStarted(): return "NotStarted"
 

@@ -107,7 +107,7 @@ class enviroPanel():
         self.pStr = '%0.3fhPa'%pressure
        
         #update local data arrays
-        self.times.append(self.count) #bme.timestamp.strftime("%S%Z"))
+        self.times.append(self.count)
         self.temps.append(temperature)
         self.humid.append(humidity)
         self.press.append(pressure)
@@ -136,7 +136,6 @@ class enviroPanel():
         return True
     
     def printBMEData(self):
-        #dateStr = self.bme.timestamp.strftime("Date  %Y-%m-%d") 
         print("BME: ",self.count, self.timestamp,self.tStr,self.hStr,self.pStr)
         
     def plotTemp(self): #, treeview, path, view_column):
