@@ -66,6 +66,7 @@ LeicaDisto Module holds singleton State and methods to talk with BLE Device
 # moHardware usual init() and update() are here usage questionable
 # 
 useLeica = True # flag to say we are using or not using Leica distance sensor
+useLeica = False # flag to say we are using or not using Leica distance sensor
 
 import sys
 this = sys.modules[__name__]
@@ -177,7 +178,7 @@ class gattProcess:
         self.distance = -1
         self.gatt = None
         self.timeoutCount = 0
-#        print("gattProcess initialized %r"%(this))
+        log.debug("gattProcess initialized %r"%(this))
         pass
     
     def getTimeouts():
