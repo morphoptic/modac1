@@ -8,7 +8,7 @@
             "SegmentIndex": 0,
             "KilnTargetTemp": 100,
             "KilnTargetDisplacement": 0,
-            "KilnHoldTimeMin": 1,
+            "KilnHoldTimeMin": 2
             "ExhaustFan": 0,
             "SupportFan": 0,
             "PIDStepTime": 10,
@@ -27,7 +27,7 @@
         {
             "SegmentIndex": 2,
             "KilnTargetTemp": 650.0,
-            "KilnTargetDisplacement": 0,
+            "KilnTargetDisplacement": 10,
             "KilnHoldTimeMin": 20,
             "ExhaustFan": false,
             "SupportFan": false,
@@ -38,7 +38,7 @@
             "SegmentIndex": 3,
             "KilnTargetTemp": 650.0,
             "KilnTargetDisplacement": 0,
-            "KilnHoldTimeMin": 3,
+            "KilnHoldTimeMin": 1,
             "ExhaustFan": true,
             "SupportFan": true,
             "PIDStepTime": 10,

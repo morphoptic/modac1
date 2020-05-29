@@ -7,7 +7,7 @@ import logging
 from time import sleep
 from modac import moLogger
 if __name__ == "__main__":
-    moLogger.init()
+    moLogger.init("testLeica")
     
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
