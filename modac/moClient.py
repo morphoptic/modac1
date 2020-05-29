@@ -81,15 +81,14 @@ def clientReceive():
     return msgReceived
             
 def clientDispatch(topic,body):
-    #log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
+    log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
         #log.debug("AllData body "+json.dumps(body, indent=4))
         moData.updateAllData(body)
     elif topic == keyForKilnStatus():
         moData.update(keyForKilnStatus(), body)
     elif topic == keyForKilnScriptEnded():
-        # TODO how signal this
-        log.debug("try calling kilnCallback")
+        log.debug("Topic = ScriptEnded try calling kilnCallback")
         if not this.__kilnCallback == None:
             log.info("yep one set, call it")
             this.__kilnCallback(topic, body)

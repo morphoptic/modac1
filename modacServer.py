@@ -40,7 +40,7 @@ publishRate = 1.0 # seconds for sleep at end of main loop
 publishRate30 = 30.0 # seconds for sleep at end of main loop
 
 csvActive = True
-jsonActive = False
+jsonActive = True
 startKilnOnStartup = True
 okToRunMainLoop = False
 

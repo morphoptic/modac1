@@ -123,7 +123,11 @@ def handleEndKilnScriptCmd():
 #####################
 
 def setRelayPower(onOff= False):
-    moHardware.binaryCmd(relayPower, onOff)
+    if this.simulation == True:
+        moHardware.binaryCmd(relayPower, onOff)
+    else:
+        moHardware.binaryCmd(relayPower, False)
+
 
 #####################
 # kilnTemps is array of reported temps for our 3 Tcouple + average
@@ -205,6 +209,7 @@ class Kiln:
         moHardware.binaryCmd(heater_lower, HeaterOff)
         moHardware.binaryCmd(heater_middle, HeaterOff)
         moHardware.binaryCmd(heater_upper, HeaterOff)
+        setRelayPower(False)
         # turn off fans
         self.commandExhaustFan(False)
         self.commandSupportFan(False)
