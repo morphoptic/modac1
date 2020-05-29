@@ -81,9 +81,9 @@ def clientReceive():
     return msgReceived
             
 def clientDispatch(topic,body):
-    log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
+    #log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
-        log.debug("AllData body "+json.dumps(body, indent=4))
+        #log.debug("AllData body "+json.dumps(body, indent=4))
         moData.updateAllData(body)
     elif topic == keyForKilnStatus():
         moData.update(keyForKilnStatus(), body)

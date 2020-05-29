@@ -187,6 +187,6 @@ class tempDistPanel():
         self.updatePlot()
 
     def update(self):
-        log.debug("KilnTemp-Dist panel update")
+        #log.debug("KilnTemp-Dist panel update")
         if self.getData() == True:
             self.updatePlot()

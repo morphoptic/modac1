@@ -85,7 +85,7 @@ async def modac_ReadPubishLoop():
         if moServer.receivedHello():
             #this.publishRate = this.publishRate30
             log.info("Someone is listening - set to slower rate " + str(this.publishRate))
-        log.debug("\n*****bottom forever read-publish loop")
+        # log.debug("\n*****bottom forever read-publish loop")
         try:
             await trio.sleep(this.publishRate)
         except trio.Cancelled:

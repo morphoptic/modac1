@@ -3,7 +3,7 @@ import sys
 this = sys.modules[__name__]
 import os
 import csv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 infilename ='temps_server.csv'
 outfilename = 'temps_server_out.csv'
@@ -22,7 +22,9 @@ lastDateTime = None
 
 def processLine (row):
     #print("processing line ",count, row)
-    dtStr = row[timestampKey]
+    days = row[timeKey]
+    hours = row[timestampKey]
+    dtStr = days + " " + hours # original had one field, now we have two
     dt = datetime.strptime(dtStr,"%Y-%m-%d %H:%M:%S")
     if this.lastDateTime== None :
         this.lastDateTime = dt
@@ -58,6 +60,8 @@ def doFile(filename):
             #print (count, row)
             processLine(row)
             this.count = this.count+1
+            if this.count %100 == 0:
+                print (this.count)
             #if count > 500:
             #    break
     this.outfile.close()
@@ -66,4 +70,4 @@ def doFile(filename):
     this.count = 0
     this.outCount = 0
 
-doFile('modacServer_0225.csv')
+doFile('/home/pi/Desktop/logs200525/moserver_25may_b.csv')

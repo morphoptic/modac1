@@ -169,7 +169,7 @@ class kilnPanel():
         self.updating = False
 
     def update(self):
-        log.debug("KilnPanel Update")
+        #log.debug("KilnPanel Update")
         self.setData()
         log.debug("KilnStatus state:"+self.stateName+ " scriptState:"+self.scriptStateName+ " curSegIdx:"+str(self.curSegIdx))
         
@@ -193,7 +193,7 @@ class kilnPanel():
         self.setCurSegDisplay()
 
         # state is the name or string rep of KilnState
-        log.debug("KilnPanel setData Reported state: "+self.stateName)
+        #log.debug("KilnPanel setData Reported state: "+self.stateName)
 
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
         self.scriptStatusBuffer.set_text(textScriptStatus)

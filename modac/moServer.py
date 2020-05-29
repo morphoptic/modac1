@@ -51,7 +51,7 @@ def startPublisher():
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
     
 def publish():
-    log.debug("publish - only AllData for now %s"%moData.asJson())
+    #log.debug("publish - only AllData for now %s"%moData.asJson())
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
@@ -111,7 +111,7 @@ async def serverReceive():
         return False
     msg = None
     try:
-        log.debug("serverReceive await msg")
+        #log.debug("serverReceive await msg")
         msgObj = await this.__CmdListener.arecv_msg()
         # async read will block here
         #msgObj is a pyNNG Message with gives info on sender
@@ -120,7 +120,7 @@ async def serverReceive():
         # most of the guts of encrypt/decrypt is in moNetwork
         # by the time it gets back here as topic/body
         # it should be a string key and Object body (converted from json text)
-        print("Server Receive msgObj", msgObj)
+        #print("Server Receive msgObj", msgObj)
         source_addr = str(msgObj.pipe.remote_address)
         # do we need to verify the source address?
         msgStr = msgObj.bytes.decode('utf8')
@@ -130,7 +130,7 @@ async def serverReceive():
         log.info("\n\nCommand Received")
         log.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
         
-        print("Cmd topic,body:", topic,body)
+        #print("Cmd topic,body:", topic,body)
         if topic == "error":
             log.warning("CmdListener got non-modac command %s"%topic)
             return True

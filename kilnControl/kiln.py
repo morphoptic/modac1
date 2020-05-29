@@ -340,7 +340,7 @@ class Kiln:
         self.updateTemperatures()
         self.updateDistance()
 
-        log.debug("KilnStep top; state: "+str(self.state)+" heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
+        log.debug("KilnStep top; state: "+str(self.state)+ " curSeg:"+str(self.scriptIndex)+"  heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
         
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
         if enableEStop:
@@ -361,7 +361,7 @@ class Kiln:
             # after collecting, nothing left to do in Idle
             return
         
-        log.info("kilnStep not Idle = " + str(self.state))
+        #log.info("kilnStep not Idle = " + str(self.state))
 
         if (self.processRuntime >= self.maxTimeSec):
             log.error("Max Time for script exceeded, abort script")
@@ -379,7 +379,7 @@ class Kiln:
 
         ###################
         # now deal with Script Segment
-        log.debug("deal with Script Segment status: "+self.scriptState.name )
+        #log.debug("deal with Script Segment status: "+self.scriptState.name )
 
         # displacement test - have we reached slump distance?
 
@@ -388,8 +388,8 @@ class Kiln:
         # if there is a targetDisplacement
         # if displacement target reached got to next segment
         # if our current is close enough to target, got to next segment
-        if self.targetDisplacement >0 and (self.currentDisplacement + distanceEpsilon) >= self.targetDisplacement:
-            log.info("target displacement reached. next segment")
+        if self.targetDisplacement >0 and self.currentDisplacement >= self.targetDisplacement:
+            log.info("target displacement %f reached. next segment"%(self.targetDisplacement,self.currentDisplacement))
             self.nextScriptSegment()
 
         if self.scriptState == KilnScriptState.Holding :
@@ -397,7 +397,7 @@ class Kiln:
             # self.targetHoldTimeSec = 0 # seconds to hold at target temp, default 0 = ignore
             log.debug("Kiln HOLDING started at "+str(self.startHoldTime) +" cur:"+str(currentTime))
             self.timeInHoldSeconds = (currentTime - self.startHoldTime).total_seconds()
-            log.debug("Kiln Holding, target " + str(self.targetHoldTimeSec) + " In Hold" + str(self.timeInHoldSeconds))
+            #log.debug("Kiln Holding, targetSec " + str(self.targetHoldTimeSec) + " In Hold" + str(self.timeInHoldSeconds))
             
             if self.targetHoldTimeSec > 0.0 and self.timeInHoldSeconds > self.targetHoldTimeSec :
                 # hold time given and exceeded
@@ -405,7 +405,7 @@ class Kiln:
                 self.nextScriptSegment()
  
         # test if reached hold temp +- some epsilon
-        log.debug("test if switch to hold")
+        #log.debug("test if switch to hold")
         if self.scriptState == KilnScriptState.Heating and self.targetTemperature <= self.kilnTemps[0] :
             #+ self.tempertureEpsilon:
             # reached temp, state should be Hold
@@ -417,13 +417,13 @@ class Kiln:
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway
         if self.scriptState == KilnScriptState.Heating or self.scriptState == KilnScriptState.Holding:
-            log.debug("Do PID ")
+            #log.debug("Do PID ")
             # update PIDs
             self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
             if self.useSinglePID:
                 #using only the 0 index wich may be avg or paritular ktype to control PID
                 self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
-                log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
+                #log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
                 #print("PID 0: ", self.pidOut[0], self.targetTemperature, self.kilnTemps[0])
                 if self.pidOut[0] > 0:
                     # turn heaters on
@@ -463,7 +463,7 @@ class Kiln:
         
     def nextScriptSegment(self):
         self.scriptIndex += 1
-        log.debug("nextScriptSegment for kilnScript")
+        log.debug("nextScriptSegment for kilnScript "+str(self.scriptIndex))
         if self.scriptIndex >= self.myScript.numSteps():
             # ran off end of script.
             # end of runScript

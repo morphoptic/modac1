@@ -44,7 +44,7 @@ def init(name="modac", level=logging.DEBUG):
     #consoleHandler.setFormatter(logFormatter)
     #rootLogger.addHandler(consoleHandler);
     # chain rotating file handler so logs go to stderr as well as logName file
-    fileHandler = logging.handlers.RotatingFileHandler(logName, maxBytes=maxLogSize, backupCount=10)
+    fileHandler = logging.handlers.RotatingFileHandler(logName, maxBytes=maxLogSize, backupCount=100)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
     

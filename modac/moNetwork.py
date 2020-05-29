@@ -106,11 +106,11 @@ def modacDecrypt(crypto):
     return clearTxt
 
 def encryptCommand(cmd):
-    log.info("encryptCommand cmd: %s"%cmd)
+    #log.info("encryptCommand cmd: %s"%cmd)
     #package up the envelope with topic
     encoded = modacEncrypt(cmd)
     msg = mergeTopicBody(keyForModacCmd(), encoded)
-    log.info("encryptCommand msg: %s"%msg)
+    #log.info("encryptCommand msg: %s"%msg)
     # for testing
     #print("decypher test: ", decryptCommand(msg))
     return msg
