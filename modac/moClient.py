@@ -47,9 +47,10 @@ def startCmdSender():
 
 # start PyNNG subscriber for Modac Server
 #need to register for whatever published keys you want to receive
-def startSubscriber(keys=[keyForAllData(), keyForKilnStatus(), keyForKilnScriptEnded()]):
+def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnStatus()]):
     #topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
+    log.debug("startClientSubscriver keys: %r"%keys)
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
     if subscriber == None:
         log.error("client failed to connect to publisher")

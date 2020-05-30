@@ -1,6 +1,5 @@
 # modacGUI kiln Panel 2
 # supports multi-step kiln control scripts
-# TODO properly connect Panel2.glade with this code
 #
 
 # cute hack to use module namespace this.fIO this.value should work
@@ -44,6 +43,9 @@ class kilnPanel():
         self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
         self.kilnScript = KilnScript()
         self.last_open_dir = "."
+        self.kilnState = KilnState.Closed
+        self.prevkilnState = KilnState.Closed
+
 
         # because i forgot to add one in Glade and its too painful to go back and edit
         self.box = Gtk.VBox()
@@ -155,7 +157,7 @@ class kilnPanel():
         self.kilnScriptStateLabel.set_text("Kiln ScriptState:"+self.scriptStateName)
 
         self.segmentSelector.set_active(self.curSegIdx)
-        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx))
+        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx) + " of "+ str(self.kilnScript.numSteps()))
 
         # now snag the current segment for reference
         self.curSeg = self.kilnScript.segments[self.curSegIdx]
@@ -191,6 +193,13 @@ class kilnPanel():
         # most of kilnStatus (all?) becomes put JSON text into ScriptStatus box
         self.getKilnStatus()
         self.setCurSegDisplay()
+
+        if self.prevkilnState == KilnState.RunningScript and self.kilnState == KilnState.Idle:
+            # really should have gotten EndScript command but...
+            log.debug("noticed kilnState went back to Idle, so endScript")
+            self.endScript()
+
+        self.prevkilnState = self.kilnState
 
         # state is the name or string rep of KilnState
         #log.debug("KilnPanel setData Reported state: "+self.stateName)

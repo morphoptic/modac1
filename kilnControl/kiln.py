@@ -123,9 +123,9 @@ def handleEndKilnScriptCmd():
 #####################
 
 def setRelayPower(onOff= False):
-    if this.simulation == True:
+    if this.simulation == False: # 12v On
         moHardware.binaryCmd(relayPower, onOff)
-    else:
+    else: # simulatoin, dont turn on 12v power
         moHardware.binaryCmd(relayPower, False)
 
 
@@ -222,8 +222,9 @@ class Kiln:
 
         # and turn off simulation
         moHardware.simulateKiln(False) # also calls this.setSimulation
+        moServer.publishKilnScriptEnded() # send ScriptEnded message, again
 
-        log.debug(" status at end of terminateScript")
+        #log.debug(" status at end of terminateScript")
         self.publishStatus()
         log.info("terminateScript end")
        
