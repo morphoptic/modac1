@@ -1,7 +1,7 @@
 {
     "ScriptName": "MODAC Kiln Script FiveSteps",
     "ScriptDescription": "created 20200527_13:49:59",
-    "CurrentSegmentIdx": 0,
+    "CurrentSegmentIdx": 4,
     "KilnSimulate": true,
     "ScriptSegments": [
         {
@@ -27,8 +27,8 @@
         {
             "SegmentIndex": 2,
             "KilnTargetTemp": 620.0,
-            "KilnTargetDisplacement": 10,
-            "KilnHoldTimeMin": 20,
+            "KilnTargetDisplacement": 0.0,
+            "KilnHoldTimeMin": 1.0,
             "ExhaustFan": false,
             "SupportFan": false,
             "PIDStepTime": 10,
@@ -48,7 +48,7 @@
             "SegmentIndex": 4,
             "KilnTargetTemp": 30,
             "KilnTargetDisplacement": 0,
-            "KilnHoldTimeMin": 40,
+            "KilnHoldTimeMin": 5.0,
             "ExhaustFan": true,
             "SupportFan": true,
             "PIDStepTime": 10,
