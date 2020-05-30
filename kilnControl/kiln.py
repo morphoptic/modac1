@@ -567,7 +567,7 @@ class Kiln:
         self.currentDistance = dist
         self.targetDist = self.startDistance + self.targetDisplacement
 
-        setRelayPower(True)
+        #setRelayPower(True)
 
         self.state = KilnState.RunningScript
         self.scriptState = KilnScriptState.Heating # figure we always start by heating
@@ -595,6 +595,7 @@ class Kiln:
         self.targetHoldTimeMin = curSeg.holdTimeMinutes
         self.targetHoldTimeSec = self.targetHoldTimeMin * 60
         # set exhaust/support fans? command_X
+        this.setRelayPower(curSeg.exhaustFan)
         self.commandExhaustFan(curSeg.exhaustFan)
         self.commandSupportFan(curSeg.supportFan)
 

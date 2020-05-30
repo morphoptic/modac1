@@ -62,6 +62,9 @@ def defaultKilnRuntimeStatus():
         (keyForKilnHoldTimeMin(), 1),
         (keyForKilnHoldTimeSec(), 60),
         (keyForTargetDisplacement(), 0),
+        (keyForExhaustFan(), False),
+        (keyForSupportFan(), False),
+        (keyFor12vRelay(), True),
         (keyForPIDStepTime(), 10),
         (keyForMaxTime(), default_maxTime),
 
@@ -81,8 +84,7 @@ def defaultKilnRuntimeStatus():
         (keyForKilnHeaters(), [False, False, False, False]),
         (keyForKilnHeaterCommanded(), [False, False, False, False]),
         (keyForKilnTemperatures(), [0.0, 0.0, 0.0, 0.0]),
-        (keyForExhaustFan(), False),
-        (keyForSupportFan(), False)
+
         # (keyForScript(), str(self.myScript)),
     ]
     def_kilnStatus = OrderedDict(asArray)

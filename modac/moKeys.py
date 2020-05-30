@@ -93,6 +93,7 @@ def keyForTargetDisplacement():return 'KilnTargetDisplacement'
 def keyForPIDStepTime(): return "PIDStepTime"
 def keyForExhaustFan(): return "ExhaustFan"
 def keyForSupportFan(): return "SupportFan"
+def keyFor12vRelay(): return "12vRelay"
 def keyForSegmentIndex(): return 'SegmentIndex'
 
 # TODO not sure what this is anymore

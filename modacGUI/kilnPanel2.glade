@@ -520,6 +520,21 @@
               </packing>
             </child>
             <child>
+              <object class="GtkCheckButton" id="12vRelay">
+                <property name="label" translatable="yes">12v Relay (heaters)</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="draw_indicator">True</property>
+                <signal name="toggled" handler="on_12vRelay_toggled" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">6</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkBox" id="PIDStepTimeBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
@@ -563,7 +578,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">6</property>
+                <property name="position">7</property>
               </packing>
             </child>
           </object>

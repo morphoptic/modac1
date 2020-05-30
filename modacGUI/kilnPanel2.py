@@ -99,6 +99,7 @@ class kilnPanel():
         
         self.exhaustFanBtn = self.builder.get_object(keyForExhaustFan())
         self.supportFanBtn = self.builder.get_object(keyForSupportFan())
+        self.v12RelayBtn = self.builder.get_object(keyFor12vRelay())
 
         ## grab handles on some Buttons for later use
         self.loadBtn = self.builder.get_object("LoadKilnScript")
@@ -168,6 +169,7 @@ class kilnPanel():
         self.timeStepSpinner.set_value(self.curSeg.stepTime)
         self.exhaustFanBtn.set_active(self.curSeg.exhaustFan)
         self.supportFanBtn.set_active(self.curSeg.supportFan)
+        self.v12RelayBtn.set_active(self.curSeg.v12Relay)
         self.updating = False
 
     def update(self):
@@ -387,6 +389,13 @@ class kilnPanel():
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.supportFan = state
         log.info("after toggle support: "+str(curSeg))
+
+    def on_12vRelay_toggled(self, button):
+        if self.updating == True: return # avoid repeated triggers and stack overflow
+        state = button.get_active()
+        curSeg = self.kilnScript.getCurrentSegment()
+        curSeg.v12Relay = state
+        log.info("after toggle v12Relay: "+str(curSeg))
 
     def on_AddButton_clicked(self, button):
         # add one to end, update display

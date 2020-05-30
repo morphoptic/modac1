@@ -180,6 +180,7 @@ class KilnScriptSegment:
         self.holdTimeMinutes = 1  # minutes to hold once targetTemperature is reached
         self.exhaustFan = 0  # off or on
         self.supportFan = 0  # off or on
+        self.v12Relay = True # default is On; turn off in last step
         self.stepTime = default_stepTime  # from kilnConfig.py
         self.maxTimeMin = default_maxTime
         #log.debug("new empty segment:"+ str(self))
@@ -203,6 +204,7 @@ class KilnScriptSegment:
                 (keyForKilnHoldTimeMin(), self.holdTimeMinutes),
                 (keyForExhaustFan(), self.exhaustFan),
                 (keyForSupportFan(), self.supportFan),
+                (keyFor12vRelay(), self.v12Relay),
                 (keyForPIDStepTime(), self.stepTime),
                 (keyForMaxTime(), self.maxTimeMin),
             ]
@@ -222,6 +224,7 @@ class KilnScriptSegment:
         self.exhaustFan = d[keyForExhaustFan()]
         self.supportFan = d[keyForSupportFan()]
         self.stepTime = d[keyForPIDStepTime()]
+        self.v12Relay = d[keyFor12vRelay()]
         #log.debug("update from Dict: "+ json.dumps(d, indent=4) + "\n yields: "+ str(self))
 
 
