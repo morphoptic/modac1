@@ -253,7 +253,7 @@ class kilnPanel():
         self.endScript()
 
     def on_LoadKilnScript_clicked(self, button):
-        # TODO implement loadScript dialog + parsing, dialog here, json to obj in kilnScript
+        #  implement loadScript dialog + parsing, dialog here, json to obj in kilnScript
         log.debug("on_LoadKilnScript_clicked")
         # dialog to get filename
         topLevel = button.get_toplevel()
@@ -286,6 +286,7 @@ class kilnPanel():
             else:
                 log.debug("on_LoadScript  succeeded file: " + self.filename )
                 self.kilnScript = retVal
+                self.kilnScript.curSegmentIdx = 0  # force load to step 0
                 self.setFromScript()
 
         dialog.destroy()

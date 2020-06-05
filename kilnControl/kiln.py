@@ -122,11 +122,14 @@ def handleEndKilnScriptCmd():
 
 #####################
 
-def setRelayPower(onOff= False):
-    if this.simulation == False: # 12v On
-        moHardware.binaryCmd(relayPower, onOff)
-    else: # simulatoin, dont turn on 12v power
-        moHardware.binaryCmd(relayPower, False)
+# def setRelayPower(onOff= False):
+#     log.debug("kiln SetRelayPower "+str(onOff))
+#     if this.simulation == False: # 12v On
+#         log.debug("not simulation, so do as commanded")
+#         moHardware.binaryCmd(relayPower, onOff)
+#     else: # simulatoin, dont turn on 12v power
+#         log.debug("simulating, dont turn on relay power")
+#         moHardware.binaryCmd(relayPower, False)
 
 
 #####################
@@ -191,6 +194,7 @@ class Kiln:
         self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
         self.exhaustFanState = False
         self.supportFanState = False
+        self.v12RelayState = False
 
         self.kilnTemps = default_kilnTemperatures #self.kilnStartTemps #[0,0,0,0]
         self.pidOut = [0, 0, 0, 0]
@@ -209,7 +213,7 @@ class Kiln:
         moHardware.binaryCmd(heater_lower, HeaterOff)
         moHardware.binaryCmd(heater_middle, HeaterOff)
         moHardware.binaryCmd(heater_upper, HeaterOff)
-        setRelayPower(False)
+        self.command12VRelay(False)
         # turn off fans
         self.commandExhaustFan(False)
         self.commandSupportFan(False)
@@ -239,6 +243,7 @@ class Kiln:
 
         status = moData.getValue(keyForKilnStatus())
         if status == None:
+            log.debug("first status, get default")
             status = defaultKilnRuntimeStatus()
 
         # step thru list updating
@@ -280,6 +285,8 @@ class Kiln:
         status[keyForKilnTemperatures()] = self.kilnTemps
         status[keyForExhaustFan()] = self.exhaustFanState
         status[keyForSupportFan()] = self.supportFanState
+        status[keyFor12vRelay()] = self.v12RelayState
+
         # (keyForScript(), str(self.myScript)),
         return status
 
@@ -490,15 +497,31 @@ class Kiln:
                 moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         pass
 
+    def command12VRelay(self,cmdState):
+        tmpState = cmdState
+        if self.simulation == True: # 12v On
+            tmpState = False
+        log.debug("Command 12v Relay " + str(cmdState) + " sim: "+str(this.simulation) + " actual:"+str(tmpState))
+        self.v12RelayCommanded = tmpState
+        moHardware.binaryCmd(relayPower,tmpState)
+
     def commandExhaustFan(self, cmdState):
         # turn on/off exhaust
-        self.exhaustFanCommanded = cmdState
-        moHardware.binaryCmd(fan_exhaust, cmdState)
+        tmpState = cmdState
+        if self.simulation == True: # 12v On
+            tmpState = False
+        log.debug("commandExhaustFan " + str(cmdState) + " sim: "+str(this.simulation) + " actual:"+str(tmpState))
+        self.exhaustFanCommanded = tmpState
+        moHardware.binaryCmd(fan_exhaust, tmpState)
 
     def commandSupportFan(self, cmdState):
         # turn on/off support fan
-        self.supportFanCommanded = cmdState
-        moHardware.binaryCmd(fan_support, cmdState)
+        tmpState = cmdState
+        if self.simulation == True: # 12v On
+            tmpState = False
+        log.debug("commandSupportFan " + str(cmdState) + " sim: "+str(this.simulation) + " actual:"+str(tmpState))
+        self.supportFanCommanded = tmpState
+        moHardware.binaryCmd(fan_support, tmpState)
 
     def updateBinaryDevices(self):
         '''map MODAC Binary Output data to local variables'''
@@ -510,6 +533,7 @@ class Kiln:
         self.reportedHeaterStates[0] = self.reportedHeaterStates[1] or self.reportedHeaterStates[2] or self.reportedHeaterStates[3]
         self.exhaustFanState = binaryOutputs[fan_exhaust]
         self.supportFanState = binaryOutputs[fan_support]
+        self.v12RelayState = binaryOutputs[relayPower]
 
     def updateTemperatures(self):
         ''' retrieve thermocouple values degC, avg the ones we want '''
@@ -532,7 +556,7 @@ class Kiln:
         pass
 
     def updateDistance(self):
-        if this.simulation:
+        if self.simulation:
             slumpRate = 0.1 # mm per loop
             if self.state == KilnState.RunningScript and self.scriptState == KilnScriptState.Holding :
                 # if we are above critical temp, then slump, unless SupportFan is on
@@ -567,8 +591,6 @@ class Kiln:
         self.currentDistance = dist
         self.targetDist = self.startDistance + self.targetDisplacement
 
-        #setRelayPower(True)
-
         self.state = KilnState.RunningScript
         self.scriptState = KilnScriptState.Heating # figure we always start by heating
 
@@ -581,6 +603,7 @@ class Kiln:
             log.error("no kiln script for loading step")
             return
         curSeg = self.myScript.getSegment(self.scriptIndex)
+        log.debug("Load Script Step %d: %s"%(self.scriptIndex,str(curSeg)))
 
         # copy values from script to internals
         # we use internals and duplicate curSeg/kilnScript to keep it pristine
@@ -595,7 +618,7 @@ class Kiln:
         self.targetHoldTimeMin = curSeg.holdTimeMinutes
         self.targetHoldTimeSec = self.targetHoldTimeMin * 60
         # set exhaust/support fans? command_X
-        this.setRelayPower(curSeg.exhaustFan)
+        self.command12VRelay(curSeg.v12Relay)
         self.commandExhaustFan(curSeg.exhaustFan)
         self.commandSupportFan(curSeg.supportFan)
 

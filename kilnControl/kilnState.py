@@ -64,7 +64,7 @@ def defaultKilnRuntimeStatus():
         (keyForTargetDisplacement(), 0),
         (keyForExhaustFan(), False),
         (keyForSupportFan(), False),
-        (keyFor12vRelay(), True),
+        (keyFor12vRelay(), False),
         (keyForPIDStepTime(), 10),
         (keyForMaxTime(), default_maxTime),
 

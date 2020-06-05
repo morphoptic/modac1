@@ -213,18 +213,25 @@ class KilnScriptSegment:
         # log.info("seg "+str(self.stepIdx)+ " " + json.dumps(d, indent=4))
         return d
 
+    def valueFromDict(self, d, key ):
+        try:
+            return d[key]
+            pass
+        except KeyError:
+            return 0 # default to integer zero
+
     def updateFromDict(self, d):
         if d == None:
             log.error("update from Dict given None")
             return
-        self.stepIdx = d[keyForSegmentIndex()]
-        self.targetTemperature = d[keyForTargetTemp()]
-        self.targetDistanceChange = d[keyForTargetDisplacement()]
-        self.holdTimeMinutes = d[keyForKilnHoldTimeMin()]
-        self.exhaustFan = d[keyForExhaustFan()]
-        self.supportFan = d[keyForSupportFan()]
-        self.stepTime = d[keyForPIDStepTime()]
-        self.v12Relay = d[keyFor12vRelay()]
+        self.stepIdx = self.valueFromDict(d,keyForSegmentIndex())
+        self.targetTemperature = self.valueFromDict(d,keyForTargetTemp())
+        self.targetDistanceChange = self.valueFromDict(d,keyForTargetDisplacement())
+        self.holdTimeMinutes = self.valueFromDict(d,keyForKilnHoldTimeMin())
+        self.exhaustFan = self.valueFromDict(d,keyForExhaustFan())
+        self.supportFan = self.valueFromDict(d,keyForSupportFan())
+        self.stepTime = self.valueFromDict(d,keyForPIDStepTime())
+        self.v12Relay = self.valueFromDict(d,keyFor12vRelay())
         #log.debug("update from Dict: "+ json.dumps(d, indent=4) + "\n yields: "+ str(self))
 
 
