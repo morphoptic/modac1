@@ -353,7 +353,9 @@ class Kiln:
         self.updateTemperatures()
         self.updateDistance()
 
-        log.debug("KilnStep top; state: "+str(self.state)+ " curSeg:"+str(self.scriptIndex)+"  heaters:"+str(self.reportedHeaterStates)+" temp:"+str(self.kilnTemps))
+        log.debug("KilnStep top; state: "+str(self.state)+ " curSeg:"+str(self.scriptIndex)+"\n    heaters:"+str(self.reportedHeaterStates)
+                  +" temp:"+str(self.kilnTemps) +" heaters:"+str(self.reportedHeaterStates)+
+                  " relays: e="+str(self.exhaustFanState)+" s="+str(self.supportFanState)+" 12v:"+str(self.v12RelayState))
         
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
         if enableEStop:
@@ -616,8 +618,3 @@ class Kiln:
         self.command12VRelay(curSeg.v12Relay)
         self.commandExhaustFan(curSeg.exhaustFan)
         self.commandSupportFan(curSeg.supportFan)
-
-  
-        
-        
-        

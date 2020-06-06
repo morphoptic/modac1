@@ -158,7 +158,7 @@ class kilnPanel():
         self.kilnScriptStateLabel.set_text("Kiln ScriptState:"+self.scriptStateName)
 
         self.segmentSelector.set_active(self.curSegIdx)
-        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx) + " of "+ str(self.kilnScript.numSteps()))
+        self.currentSegmentIdxBox.set_text("Step Index: "+str(self.curSegIdx) + " of "+ str(self.kilnScript.numSteps()-1))
 
         # now snag the current segment for reference
         self.curSeg = self.kilnScript.segments[self.curSegIdx]

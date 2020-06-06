@@ -170,6 +170,11 @@ class KilnScript:
         #log.info("array of segments: " + str(a))
         return a
 
+    def renumber(self):
+        i = 0
+        for s in self.segments:
+            s.stepIdx= i
+            i += 1
 
 class KilnScriptSegment:
     def __init__(self, idx=0):

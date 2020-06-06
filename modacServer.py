@@ -66,6 +66,10 @@ async def modac_ReadPubishLoop():
     moData.setStatusRunning()
     this.okToRunMainLoop = True
     moData.logData() # log info as json to stdOut/console + logfile
+    lastTime = datetime.datetime.now()
+    # make it 1min ago to trigger first print below
+    lastTime = lastTime - datetime.timedelta(minutes=1)
+
     while this.okToRunMainLoop: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
@@ -74,14 +78,18 @@ async def modac_ReadPubishLoop():
         #moData.logData() # log info as json to stdOut/console + logfile
         # publish data
         moServer.publish()
-        #moData.logData()
-        if csvActive == True:
-            #print("call csvAddRow")
-            moCSV.addRow()
-        if jsonActive == True:
-            #print("call moJSON.snapshot")
-            moJSON.snapshot()
-
+        currentTime = datetime.datetime.now()
+        #sinceLastLog = (currentTime-lastTime).total_seconds()
+        #if sinceLastLog >=60:
+        if not currentTime.time().minute == lastTime.time().minute:
+            moData.logData()
+            if csvActive == True:
+                #print("call csvAddRow")
+                moCSV.addRow()
+            if jsonActive == True:
+                #print("call moJSON.snapshot")
+                moJSON.snapshot()
+            lastTime = currentTime
         if moServer.receivedHello():
             #this.publishRate = this.publishRate30
             log.info("Someone is listening - set to slower rate " + str(this.publishRate))

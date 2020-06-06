@@ -100,9 +100,8 @@ def update():
         moData.update(keyForKType(), asArray())
     else:
         assert not this.simulator == None
-        print("\n\n************\n")
-        log.info("SIMULATED KTYPE")
-        print("************\n")
+        #print("\n\n************\n")
+
         this.simulator.update()
     pass
 
@@ -129,6 +128,11 @@ def asArray():
         except ValueError:
             log.error("Error converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]))
             t = 0
+        except IndexError:
+            log.error("IndexError adIdx "+str(adIdx)+ " "+str(adArray))
+        except:
+            log.exception("exception in kType asArray()")
+            break
         ktypeData.append(t)
     #print ("KType as array", ktypeData)
     return ktypeData
@@ -157,17 +161,19 @@ class SimulateKtypes:
         # TODO This should be a KilnState. kilnStatus doent index keyForState; because it became an array not dictj  kilnState = kilnStatus[keyForState()]
         binOut = moData.getValue(keyForBinaryOut())
         sum = 0.0
+        log.info("\n************\nSIMULATED KTYPE")
         log.info("update simulated ktypes, len " + str(len(self.ktypeData)))
-        print("update simulated heaters, len ", len(heaters))
         for i in range(1,len(heaters)):
             heaterOn = binOut[heaters[i]]
             print("Heater ",i, heaters[i], "is ", heaterOn)
             if heaterOn:
                 self.ktypeData[i-1] += self.increaseRate *random()
-            if binOut[fan_exhaust]:
+            else:
                 self.ktypeData[i-1] -= self.decreseRate *random()
-                if self.ktypeData[i-1] < 0:
-                    self.ktypeData[i-1] = 0 # dont let it go below
+            if binOut[fan_exhaust]:
+                self.ktypeData[i-1] -= self.decreseRate *2*random()
+            if self.ktypeData[i-1] < 20:
+                self.ktypeData[i-1] = 20 # dont let it go below
             sum += self.ktypeData[i-1]
         self.ktypeData[0] = sum/3
 
