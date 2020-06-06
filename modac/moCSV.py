@@ -29,7 +29,8 @@ def init(filename="modacDataLog.csv"):
     print("moCSV file: ",filename)
     this._csvFile = open(filename, "w")
     this._csvWriter = csv.writer(this._csvFile)
-    names = [timeKey] +  moData.arrayColNames() # arrayNameOnlyAD24
+    # names = [timeKey] +  moData.arrayColNames() # this was for some odd test
+    names =  moData.arrayColNames() # arrayNameOnlyAD24
     #names = moData.arrayNameOnlyAD24()
     print("moCSV col Names", names)
     this._csvWriter.writerow(names)
@@ -64,37 +65,3 @@ def addRow():
         this._csvWriter.writerow(row)
         this._csvFile.flush()
 
-### start of a class that would write desired Named Data in moData to a csv
-# why do we have the methods above AND this class?
-class modacCSVWriter:
-    csvFile = None
-    csvWriter = None
-    names = []
-    
-    def __init__(self,filename="modacDataLog.csv",names=None):
-        log.debug("moCSV file: %s names:%s"%(filename, names))
-        self.csvFile = open(filename, "w")
-        self.csvWriter = csv.writer(this._csvFile)
-        if self.names == None:
-            self.names = moData.arrayColNames()
-        print("moCSV columNames ",filename, names)
-        self.csvWriter.writerow(names)
-        pass
-
-    def close(self):
-        if self._csvFile == None:
-            return
-        self.csvFile.close()
-        del self._csvFile
-        self.csvFile = None
-
-    def addRow(self):
-        if self.isOpen():
-            ## select names from moData? how?
-            # perhaps do this after create named Channels
-            # gotta be some commercial package that uses Channels
-            row = moData.asArray()
-            log.debug("csvWriter.addRow: %r"%row)
-            self.csvWriter.writerow(row)
-            self.csvFile.flush()
-        

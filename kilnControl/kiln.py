@@ -402,7 +402,7 @@ class Kiln:
         # if displacement target reached got to next segment
         # if our current is close enough to target, got to next segment
         if self.targetDisplacement >0 and self.currentDisplacement >= self.targetDisplacement:
-            log.info("target displacement %f reached. next segment"%(self.targetDisplacement,self.currentDisplacement))
+            log.info("target displacement %f reached. next segment"%(self.currentDisplacement))
             self.nextScriptSegment()
 
         if self.scriptState == KilnScriptState.Holding :
@@ -430,50 +430,55 @@ class Kiln:
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway
         if self.scriptState == KilnScriptState.Heating or self.scriptState == KilnScriptState.Holding:
-            #log.debug("Do PID ")
-            # update PIDs
-            self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+            #log.debug("Update PIDs ")
             if self.useSinglePID:
-                #using only the 0 index wich may be avg or paritular ktype to control PID
-                self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
-                #log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
-                #print("PID 0: ", self.pidOut[0], self.targetTemperature, self.kilnTemps[0])
-                if self.pidOut[0] > 0:
-                    # turn heaters on
-                    self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
-                else: # shouldnt have to do this but
-                    self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+                self.doSinglePID()
             else:
-                # compute individual pidOuts
-                # pidOut[0] true if any true
-                self.pidOut[1] = self.pids[1].compute(self.targetTemperature, self.kilnTemps[1])
-                if self.pidOut[1] > 0:
-                    # turn heaters on
-                    self.commandedHeaterStates[0] = HeaterOn
-                    self.commandedHeaterStates[1] = HeaterOn
-                self.pidOut[2] = self.pids[2].compute(self.targetTemperature, self.kilnTemps[2])
-                if self.pidOut[2] > 0:
-                    # turn heaters on
-                    self.commandedHeaterStates[0] = HeaterOn
-                    self.commandedHeaterStates[2] = HeaterOn
-                self.pidOut[3] = self.pids[3].compute(self.targetTemperature, self.kilnTemps[3])
-                if self.pidOut[3] > 0:
-                    # turn heaters on
-                    self.commandedHeaterStates[0] = HeaterOn
-                    self.commandedHeaterStates[3] = HeaterOn
+                self.doMultiplePID()
             # common code to command heaters to change, but only if needed
-            self.commandHeaters()
-
             for i in range(1,4): # should use len heaters?
                 if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
-                    log.info("loop kiln cmd heater change %d"%i)
+                    log.info("pid kiln cmd heater change %d"%i)
                     moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         # bottom of step
-
         #log, publish and put in data blackboard
         #self.publishStatus()
         pass
-        
+
+    def doSinglePID(self):
+        # using only the 0 index wich may be avg or paritular ktype to control PID
+        self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
+        # log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
+        if self.pidOut[0] > 0:
+            # turn heaters on
+            log.debug("single PID - all On")
+            self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
+        else:  # shouldnt have to do this but
+            self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+
+
+    def doMultiplePID(self):
+        log.error("MultiplePID Not Tested")
+        # self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+        # # compute individual pidOuts
+        # # pidOut[0] true if any true
+        # self.pidOut[1] = self.pids[1].compute(self.targetTemperature, self.kilnTemps[1])
+        # if self.pidOut[1] > 0:
+        #     # turn heaters on
+        #     self.commandedHeaterStates[0] = HeaterOn
+        #     self.commandedHeaterStates[1] = HeaterOn
+        # self.pidOut[2] = self.pids[2].compute(self.targetTemperature, self.kilnTemps[2])
+        # if self.pidOut[2] > 0:
+        #     # turn heaters on
+        #     self.commandedHeaterStates[0] = HeaterOn
+        #     self.commandedHeaterStates[2] = HeaterOn
+        # self.pidOut[3] = self.pids[3].compute(self.targetTemperature, self.kilnTemps[3])
+        # if self.pidOut[3] > 0:
+        #     # turn heaters on
+        #     self.commandedHeaterStates[0] = HeaterOn
+        #     self.commandedHeaterStates[3] = HeaterOn
+        pass
+
     def nextScriptSegment(self):
         self.scriptIndex += 1
         log.debug("nextScriptSegment for kilnScript "+str(self.scriptIndex))
@@ -485,16 +490,6 @@ class Kiln:
             return
         self.loadScriptStep()
         self.scriptState = KilnScriptState.Heating
-        pass
-
-    def commandHeaters(self):
-        # turn on.off any reported heaters that dont match commanded values
-        # ignore 0 as it is just OR of other values
-        # TODO magic number here- configure NumberOfHeaters 3+1
-        for i in range(1,4):
-            if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
-                log.info("kiln cmd heater change %d"%i)
-                moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         pass
 
     def command12VRelay(self,cmdState):
