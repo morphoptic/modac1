@@ -59,7 +59,7 @@ def addTimeToRow(row):
 def addRow():
     if this.isOpen():
         # gets everything in order
-        row = moData.asArray()
+        row = moData.asRowArray()
         #addTimeToRow(row)
         #log.debug("moCSV.addRow: %r" % row)
         this._csvWriter.writerow(row)

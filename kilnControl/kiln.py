@@ -236,6 +236,7 @@ class Kiln:
         # better for this to start w default and update instead of new each call
         moData.update(keyForKilnState(),self.state.name)
         moData.update(keyForKilnScriptState(), self.scriptState.name)
+        moData.update(keyForIndex(),self.scriptIndex)
 
         #startTimeStr =" NotStarted"
         #if isinstance(self.processStartTime, datetime.datetime):
@@ -562,6 +563,7 @@ class Kiln:
         else:
             lData = moData.getValue(keyForLeicaDisto())
             self.currentDistance = lData[keyForDistance()]
+        pass
 
     def runKilnScript(self, scriptAsJson):
         #log.debug("runKilnScript: "+str(scriptAsJson))
@@ -601,7 +603,7 @@ class Kiln:
             return
         curSeg = self.myScript.getSegment(self.scriptIndex)
         log.debug("Load Script Step %d: %s"%(self.scriptIndex,str(curSeg)))
-
+        moData.update(keyForIndex(),self.scriptIndex)
         # copy values from script to internals
         # we use internals and duplicate curSeg/kilnScript to keep it pristine
         # and also because the rest of this was written with local vars first
@@ -618,3 +620,8 @@ class Kiln:
         self.command12VRelay(curSeg.v12Relay)
         self.commandExhaustFan(curSeg.exhaustFan)
         self.commandSupportFan(curSeg.supportFan)
+        # reset runtime vars
+        self.startHoldTime = 0  # begin of hold state
+        self.startHoldTimeStr = "notHolding"
+        self.timeInHoldSeconds = 0
+        self.timeInHoldMinutes = 0

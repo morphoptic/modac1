@@ -175,7 +175,7 @@ def __appendArray(key,targetArray):
     a = this.getValue(key)
     targetArray + a
     
-def asArray():
+def asRowArray():
     a = []
     a.append(this.getValue(keyForTimeStamp()))
     if isValidKey(keyForEnviro()):
@@ -205,6 +205,9 @@ def asArray():
 #        log.debug("addKilnState to row %r"%ks)
     if isValidKey(keyForKilnScriptState()):
         ks = this.getValue(keyForKilnScriptState())
+        a.append(ks)
+    if isValidKey(keyForIndex()):
+        ks = this.getValue(keyForIndex())
         a.append(ks)
 #    log.debug("addKilnScriptState to row %r" % ks)
     return a
@@ -254,6 +257,7 @@ def arrayColNames():
     if isValidKey(keyForKilnStatus()):
         this.__namesOfColumns.append(keyForKilnState())
         this.__namesOfColumns.append(keyForKilnScriptState())
+        this.__namesOfColumns.append(keyForIndex())
     #     log.info("kilnstatus state scriptState added to moData")
     # else:
     #     log.error("Kiln status not found, kilnScriptState not in moData?")
