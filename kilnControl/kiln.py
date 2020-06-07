@@ -1,6 +1,7 @@
 # modac Kiln Controller, built on generic modac data acq & control
 #  runs as trio thread on ModacServer having direct control of BinaryOut
 #  links into the modac.moData blackboard of shared data for sensors
+#  posts several datum to toplevel moData so it gets to CSV, rest as normal
 #  most configuration is in kilnControl.py
 #  kilnState.py defines enum class for stateMachine
 #
@@ -234,6 +235,7 @@ class Kiln:
        
     def updateStatus(self):
         # better for this to start w default and update instead of new each call
+        # these are top level moData so they get t CSV easy
         moData.update(keyForKilnState(),self.state.name)
         moData.update(keyForKilnScriptState(), self.scriptState.name)
         moData.update(keyForIndex(),self.scriptIndex)
@@ -603,7 +605,8 @@ class Kiln:
             return
         curSeg = self.myScript.getSegment(self.scriptIndex)
         log.debug("Load Script Step %d: %s"%(self.scriptIndex,str(curSeg)))
-        moData.update(keyForIndex(),self.scriptIndex)
+        moData.update(keyForIndex(),self.scriptIndex) # as top level moData so it gets to CSV easy
+
         # copy values from script to internals
         # we use internals and duplicate curSeg/kilnScript to keep it pristine
         # and also because the rest of this was written with local vars first

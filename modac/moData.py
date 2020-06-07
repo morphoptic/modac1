@@ -254,7 +254,9 @@ def arrayColNames():
         this.__appendAName(keyForKType())
     if isValidKey(keyForBinaryOut()):
         this.__appendAName(keyForBinaryOut())
+
     if isValidKey(keyForKilnStatus()):
+        # kiln data at top so it gets to CSV
         this.__namesOfColumns.append(keyForKilnState())
         this.__namesOfColumns.append(keyForKilnScriptState())
         this.__namesOfColumns.append(keyForIndex())

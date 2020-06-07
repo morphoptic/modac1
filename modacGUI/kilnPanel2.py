@@ -21,6 +21,7 @@ from collections import OrderedDict
 from modac.moKeys import *
 from modac import moData, moLogger
 from modac import moCommand, moClient
+from .tempDistPanel import tempDistPanel
 
 from kilnControl.kilnState  import *
 from kilnControl.kilnScript import *
@@ -110,6 +111,19 @@ class kilnPanel():
         self.addBtn = self.builder.get_object("AddButton")
         self.removeBtn = self.builder.get_object("RemoveButton")
 
+        # Graph Area replace label with tempDistPanel
+        self.graphBox = self.builder.get_object("GraphBox")
+        self.tempDist = tempDistPanel()
+
+        oldLabel = self.builder.get_object("GraphBoxLabel")
+        self.graphBox.remove(oldLabel)
+        self.graphBox.add(self.tempDist.box)
+
+        #parent = oldLabel.get_parent()
+        #props = {}
+        #for key in Gtk.ContainerClass.list_child_properties(type(parent)):
+        #    props[key,name] = parent.child_get_property(oldLabel,key.name)
+
         # and text area to display ScriptStatus
         self.scriptStatusBox = self.builder.get_object(keyForKilnStatus())
         self.scriptStatusBuffer = self.scriptStatusBox.get_buffer()
@@ -175,6 +189,7 @@ class kilnPanel():
     def update(self):
         #log.debug("KilnPanel Update")
         self.setData()
+        self.tempDist.update()
         log.debug("KilnStatus state:"+self.stateName+ " scriptState:"+self.scriptStateName+ " curSegIdx:"+str(self.curSegIdx))
         
     def getKilnStatus(self):
