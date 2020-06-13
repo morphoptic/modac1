@@ -1,8 +1,8 @@
 {
-    "ScriptName": "MODAC Kiln Script FiveSteps",
+    "ScriptName": "MODAC Kiln Slump Test,
     "ScriptDescription": "created 20200527_13:49:59",
     "CurrentSegmentIdx": 0,
-    "KilnSimulate": true,
+    "KilnSimulate": false,
     "ScriptSegments": [
         {
             "SegmentIndex": 0,
