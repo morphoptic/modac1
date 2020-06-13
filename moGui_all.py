@@ -33,7 +33,7 @@ from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
 from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
 from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
-from modacGUI import kilnPanel
+from modacGUI import kilnPanel2
 #from modacGUI import CsvStartDialog, CsvTimeStepDialog
 
 maxCsvStep = 240
@@ -100,7 +100,7 @@ class ModacAppWindow(object):
         self.notebook.remove_page(0)
         
         #####
-        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
+        self.kilnPanel = kilnPanel2.kilnPanel() # Panel to be tested
         self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
 
         self.tempDistPanel= tempDistPanel.tempDistPanel()
@@ -152,17 +152,6 @@ class ModacAppWindow(object):
     
     def on_SetCSVTiming_activate(self, menuitem, data=None):
         # dialog to set self.csvStep
-#        dialog = CsvTimeStepDialog(self,maxCsvStep)
-#        response = dialog.run()
-#
-#        if response == Gtk.ResponseType.OK:
-#            self.csvStep = dialog.get_value()
-#            print("CsvTimeStep ok clicked result: ", self.csvStep )
-#        elif response == Gtk.ResponseType.CANCEL:
-#            print("CsvTimeStep Cancel clicked")
-#
-#        dialog.destroy()
-#        pass
         dialog = Gtk.MessageDialog(self.MainWindow, 0, Gtk.MessageType.WARNING,
             Gtk.ButtonsType.OK_CANCEL, "Set CSV Time Step")
         box = dialog.get_content_area()
@@ -317,7 +306,7 @@ if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
     #moLogger.init("moGUI_1") # start logging (could use cmd line args config files)
     # logging initialized at top to avoid start by libraries
-    log.debug("moGUI_1: modac from glade files")
+    log.debug("moGUI_all: modac from glade files")
     try:
         moData.init(client=True)
         # setup MODAC data/networking

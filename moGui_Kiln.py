@@ -26,7 +26,7 @@ from modac import moLogger
 from modac import kType
 
 if __name__ == "__main__":
-    moLogger.init("modacGUI")
+    moLogger.init("moGUI_Kiln")
     
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -108,8 +108,8 @@ class ModacAppWindow(object):
         # self.leicaPanel = leicaPanel.leicaPanel()
         # self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
 
-        self.tempDistPanel = tempDistPanel.tempDistPanel()
-        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
+        #self.tempDistPanel = tempDistPanel.tempDistPanel()
+        #self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
 
         self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
         self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
@@ -291,7 +291,7 @@ class ModacAppWindow(object):
     
     def updatePanels(self):        
 #        self.leicaPanel.update()
-        self.tempDistPanel.update()
+#        self.tempDistPanel.update()
         self.kilnPanel.update()
         self.binaryOutPanel.update()
 
