@@ -1,5 +1,5 @@
 """
-moGui_4: stripped down GTK GUI for MODAC, using only kiln+ad16+ktype+
+moGui_4: stripped down GTK GUI for MODAC, using only kiln2 with graphs and Binary Out
 """
 # short timer (on_handle_timer) makes gui unresponsive
 timer_interval = 5

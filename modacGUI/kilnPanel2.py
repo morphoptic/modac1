@@ -287,14 +287,24 @@ class kilnPanel():
         filter_json.add_pattern("*.json")
         dialog.add_filter(filter_json)
         response = dialog.run()
-        print("FileChooserDialog response: ", response, "OK=",Gtk.ResponseType.OK)
+        print("FileChooserDialog response: ", response, "OK=",Gtk.ResponseType.OK, " we got ", Gtk.ResponseType(response))
         self.filename = dialog.get_filename()
         self.last_open_dir = dialog.get_current_folder()
         print("filename: ",dialog.get_filename(), " folder:", self.last_open_dir)
+        dialog.destroy()
 
         if response != Gtk.ResponseType.CANCEL:
             # load script is in kilnScript
-            retVal = loadScriptFromFile(self.filename)
+            retVal = None
+            try:
+                retVal = loadScriptFromFile(self.filename)
+            except:
+                md = Gtk.MessageDialog(topLevel, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.CLOSE,
+                                       "Error loading script. See log file for details")
+                md.run()
+                md.destroy()
+                pass
+
             print("loaded file? ", str(retVal))
             if retVal == None:
                 log.error("on_LoadScript failed, file: " + self.filename )
@@ -303,8 +313,10 @@ class kilnPanel():
                 self.kilnScript = retVal
                 self.kilnScript.curSegmentIdx = 0  # force load to step 0
                 self.setFromScript()
+        else:
+            log.debug("apparently Canceled load dialog")
 
-        dialog.destroy()
+        #dialog.destroy()
         pass
 
     def on_SaveKilnScript_clicked(self, button):

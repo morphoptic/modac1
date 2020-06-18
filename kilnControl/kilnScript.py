@@ -44,10 +44,15 @@ from .kilnState import KilnState, KilnScriptState
 
 # given a file, try to load it as Json save of KilnScript
 def loadScriptFromFile( filename):
-    with open(filename, "r") as jsonFile:
-        dict = json.load(jsonFile)
-        log.debug("Read jsonDict from file: " + filename )
-        return KilnScript(dict)
+    try:
+        with open(filename, "r") as jsonFile:
+            dict = json.load(jsonFile)
+            log.debug("Read jsonDict from file: " + filename )
+            return KilnScript(dict)
+    except :
+        log.exception("ERROR Reading Json script "+filename)
+        raise
+        pass
     return None
 
 def newScriptFromText(text):
