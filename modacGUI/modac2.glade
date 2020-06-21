@@ -6,11 +6,11 @@
     <property name="can_focus">False</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">MODAC- MorpOptic Data Acquisition and Control</property>
-    <property name="version">first gui july31 2019</property>
-    <property name="copyright" translatable="yes">(c) Morphoptic Inc 2019</property>
+    <property name="version">Proof of Concept (PoC) June 2020</property>
+    <property name="copyright" translatable="yes">(c) Morphoptic Inc 2020</property>
     <property name="license" translatable="yes">Proprietary!! Dont Read Source
 KAPU!!!</property>
-    <property name="authors">Jerry Isdale - Maui Institute of Art and Technology
+    <property name="authors">Jerry Isdale - Maui Institute of Art and Technology (jerry@mioat.com)
 Joe Ritter - MorphOptic</property>
     <property name="logo_icon_name">image-missing</property>
     <property name="wrap_license">True</property>
@@ -39,7 +39,7 @@ Joe Ritter - MorphOptic</property>
   </object>
   <object class="GtkApplicationWindow" id="MainWindow">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">MODAC Test2</property>
+    <property name="title" translatable="yes">MODAC PoC</property>
     <property name="default_width">820</property>
     <property name="default_height">640</property>
     <property name="destroy_with_parent">True</property>

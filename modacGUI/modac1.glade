@@ -6,8 +6,8 @@
     <property name="can_focus">False</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">MODAC- MorpOptic Data Acquisition and Control</property>
-    <property name="version">first gui july31 2019</property>
-    <property name="copyright" translatable="yes">(c) Morphoptic Inc 2019</property>
+    <property name="version">POC gui june 2020</property>
+    <property name="copyright" translatable="yes">(c) Morphoptic Inc 2020</property>
     <property name="license" translatable="yes">Proprietary!! Dont Read Source
 KAPU!!!</property>
     <property name="authors">Jerry Isdale - Maui Institute of Art and Technology
