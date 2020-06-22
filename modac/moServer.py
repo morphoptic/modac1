@@ -1,4 +1,5 @@
-# moServer - modac Server networking stuff
+# moServer - modac Server networking stuff using PyNNG
+# https://github.com/codypiersall/pynng
 #   Publish puts out tagged JSON messages of encrypted key,data (clients subscribe)
 #       actually publishing is synchronous
 #   Listen Thread: async to listen for client commands and serverDispatch() them
@@ -14,6 +15,7 @@ log.setLevel(logging.DEBUG)
 import json
 #from simplecrypt import encrypt, decrypt
 from binascii import hexlify, unhexlify
+import trio #adding async functions use the Trio package
 
 #import rest of modac
 from .moKeys import *
@@ -26,9 +28,12 @@ from pynng import Pub0, Sub0, Pair1, Timeout
 # pub sub messages
 __Publisher = None
 __CmdListener = None 
+__killCmdListener = False
+__receivedHello = False
 
 def shutdownServer():
-    __killCmdListener = True
+    log.debug("try to kill moServer")
+    this.__killCmdListener = True # this should stop the serverReceive() from pair1
     if not this.__Publisher == None:
         this.publish() # one last time
         this.publishData(keyForShutdown(), keyForShutdown())
@@ -46,7 +51,7 @@ def startPublisher():
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
     
 def publish():
-    log.debug("publish - only AllData for now")
+    #log.debug("publish - only AllData for now %s"%moData.asJson())
     publishData(keyForAllData(), moData.asDict())
 
 def publishData(key, value):
@@ -59,36 +64,54 @@ def publishData(key, value):
     this.__Publisher.send(eMsg)
     #log.debug("sendTopic %s"%msg)
 
+def publishKilnScriptEnded():
+    if this.__Publisher == None:
+        log.debug("publisher offline publishKilnScriptEnded")
+        return
+    log.debug("publish: publishKilnScriptEnded")
+    msg = moNetwork.mergeTopicBody(keyForKilnScriptEnded(), " ")
+    eMsg = msg.encode('utf8')
+    this.__Publisher.send(eMsg)
+    pass
+
+
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
-                                polyamorous=True, # poly means we listen to many
+                                # poly means we listen to many
+                                polyamorous=True,
                                 recv_timeout = moNetwork.rcvTimeout())
-    print("Cmd Listener: ",this.__CmdListener)
+    print("Cmd Listener: ",this.__CmdListener,moNetwork.rcvTimeout())
     nursery.start_soon(cmdListenLoop)
+    pass
+
 
 __killCmdListener = False
 async def cmdListenLoop():
     # async forever loop
-    # sorta semiphore to signal we are shutting down 
+    # sorta semiphore to signal we are shutting down
+    log.debug("Start cmdListenLoop")
     while not this.__killCmdListener:
         try:
-            await this.serverReceive()
+            retval = await this.serverReceive()
         except trio.Cancelled:
             log.error("***cmdListenLoop caught trioCancelled, exiting")
             break
-    log.error("***cmdListenLoop Not Running")
+        if not retval:
+            this.__killCmdListener = True
+    log.error("***cmdListenLoop stopping")
     if not this.__CmdListener == None:
         this.__CmdListener.close()
         this.__CmdListener = None
+    pass
 
 async def serverReceive():
-    #not sure yet what this might become
     if this.__CmdListener == None:
         log.error("aserverReceive() but CmdListener not initialized")
         this.__killCmdListener = True
         return False
     msg = None
     try:
+        #log.debug("serverReceive await msg")
         msgObj = await this.__CmdListener.arecv_msg()
         # async read will block here
         #msgObj is a pyNNG Message with gives info on sender
@@ -107,26 +130,36 @@ async def serverReceive():
         log.info("\n\nCommand Received")
         log.info("Command recieved from: %s = (%s,%s)"%(str(source_addr),str(topic), str(body)))
         
-        print("Cmd topic,body:", topic,body)
+        #print("Cmd topic,body:", topic,body)
         if topic == "error":
             log.warning("CmdListener got non-modac command %s"%topic)
             return True
         # ok... body should hold modac encrypted command
         serverDispatch(topic,body)
         return True
+    except trio.Cancelled:
+        log.debug("trio canclled exception")
+        this.__killCmdListener = True
+        return False
     except Timeout:
         # be quiet about it
         #log.debug("serverReceive() receive timeout")
         return True
-    except :
+    except AttributeError as e:
+        log.error("AttributeError while handling command " + topic)
+        log.exception(e)
+        return True
+    except:
         log.error("serverReceive() caught exception %s"%sys.exc_info()[0])
         traceback.print_exc()#sys.exc_info()[2].print_tb()
         #log.exception("Some other exeption! on sub%d "%(i))
         this.__killCmdListener = True
         return False
+    log.error("server receive end")
+    return True
 
 def serverDispatch(topic,body):
-    log.info("\n*******serverDispatch: Topic:%s Obj:%s"%(topic,body))
+    log.info("\n*******serverDispatch: Topic:'%s' Obj:'%s'"%(topic,body))
     if topic == keyForEmergencyOff():
         log.debug("EmergencyOff Cmd dispatching")
         moHardware.EmergencyOff() #patches thru to kiln.emergencyOff()
@@ -141,40 +174,35 @@ def serverDispatch(topic,body):
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
         
-    # kiln control commands: startProcess, kill process, runScript, stopScript
-    elif topic == keyForStartKilnCmd():
-        kiln.handleStartKilnProcessCmd() # spawn thread to run kiln
-    elif topic == keyForEndKilnProcess():
-        kiln.handleEndKilnProcessCmd() # spawn thread to run kiln
-        
+    # kiln control commands: runScript, stopScript
     elif topic == keyForStopKilnScript():
         print("\n====== doing Kiln Abort script :", topic)
         log.info("Received StopKilnScript Command")
-        if kiln.kiln == None:
+        if kiln.kilnInstance == None:
             log.info("no kiln object, ignore abort")
             return
         kiln.handleEndKilnScriptCmd()
         
     elif topic == keyForRunKilnScript():
         # where do we have the kiln stashed?
-        print("\n====== doing Kiln RUN :", topic)
-        if kiln.kiln == None:
-            log.error("run script, but No Kiln to run!")
+        # print("\n====== doing Kiln RUN :", topic)
+        # print("\n\nload and run kiln script, body == ", body)
+        if body == []:
+            log.error("No data on runKiln")
         else:
-            print("\n\nload and run kiln script, body == ", body)
-            if body == []:
-                log.error("No data on runKiln")
-            else:
-                log.info("=== RunKiln param:", body)
-                # need to unpack body?
-                log.info("kiln cmd rcv with body: "+str(body))
-                kiln.handleRunKilnScriptCmd(body)
-            pass
-        pass
+            log.info("=== RunKiln param:"+ body)
+            # need to unpack body?
+            log.info("kiln cmd rcv with body: "+str(body))
+            kiln.handleRunKilnScriptCmd(body)
+    elif topic == keyForHello():
+        log.info("Received Hello from Client ")
+        __receivedHello = True
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
         pass
-        
+
+def receivedHello():
+    return __receivedHello
 
 if __name__ == "__main__":
     print("moServer has no self test")

@@ -1,7 +1,9 @@
 """
-moGui_1: 2nd experiment with GTK for MODAC
+moGui_4: stripped down GTK GUI for MODAC, using only kiln2 with graphs and Binary Out
 """
-timer_interval = 1
+# short timer (on_handle_timer) makes gui unresponsive
+timer_interval = 5
+timer_interval = 10
 
 import math
 from time import sleep
@@ -24,17 +26,15 @@ from modac import moLogger
 from modac import kType
 
 if __name__ == "__main__":
-    moLogger.init("modacGUI")
+    moLogger.init("moGUI_Kiln")
     
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
-from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
-from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
-from modacGUI import kilnPanel
-#from modacGUI import CsvStartDialog, CsvTimeStepDialog
+from modacGUI import ktypePanel, tempDistPanel
+from modacGUI import kilnPanel2, leicaPanel, binaryOutPanel
 
 maxCsvStep = 240
 
@@ -60,6 +60,7 @@ class ModacAppWindow(object):
     dataCount = 0
     last_open_dir = "~"
     def __init__(self, application):
+
         self.Application = application
         builder = None
         now = datetime.datetime.now()
@@ -72,7 +73,7 @@ class ModacAppWindow(object):
         # Read GUI from file and retrieve objects from Gtk.Builder
         try:
             log.debug("load gui from file")
-            builder = Gtk.Builder.new_from_file("modacGUI/modac1.glade")
+            builder = Gtk.Builder.new_from_file("modacGUI/modac2.glade")
             builder.connect_signals(self)
             log.debug("signals connected")
         except GObject.GError:
@@ -85,7 +86,7 @@ class ModacAppWindow(object):
         self.statusbar = builder.get_object("MainStatusBar")
         self.context_id = self.statusbar.get_context_id("status")
         self.status_count = 0
-        status_text = "Welcome to MODAC"
+        status_text = "Welcome to MODAC Kiln Control"
         self.statusbar.push(self.context_id, status_text)   
 
         self.aboutdialog = builder.get_object("AboutMODAC_Dialog")
@@ -100,30 +101,18 @@ class ModacAppWindow(object):
         self.notebook.remove_page(0)
         
         #####
-        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
+
+        self.kilnPanel = kilnPanel2.kilnPanel() # Panel to be tested
         self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
 
-        self.tempDistPanel= tempDistPanel.tempDistPanel()
-        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
-        
-        self.leicaPanel = leicaPanel.leicaPanel()
-        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
-        
+        # self.leicaPanel = leicaPanel.leicaPanel()
+        # self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
+
+        #self.tempDistPanel = tempDistPanel.tempDistPanel()
+        #self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
+
         self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
         self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
-        
-        self.enviroPanel = enviroPanel.enviroPanel()
-        self.notebook.append_page(self.enviroPanel.box, self.enviroPanel.label)
-
-        self.ktypePanel = ktypePanel.ktypePanel()
-        self.notebook.append_page(self.ktypePanel.box, self.ktypePanel.label)
-        
-        self.ad24Panel = ad24Panel.ad24Panel()
-        self.notebook.append_page(self.ad24Panel.box, self.ad24Panel.label)
-        
-        self.ad16Panel = ad16Panel.ad16Panel()
-        self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
-        
 
         #  add here and then in updatePanels
         
@@ -290,6 +279,7 @@ class ModacAppWindow(object):
     
     def getData(self):
         # update from network
+        #return False
         if not moClient.clientReceive():
             #log.debug("no client data received")
             return False
@@ -300,14 +290,10 @@ class ModacAppWindow(object):
         return True
     
     def updatePanels(self):        
+#        self.leicaPanel.update()
+#        self.tempDistPanel.update()
         self.kilnPanel.update()
-        self.enviroPanel.update()
-        self.ktypePanel.update()
-        self.ad24Panel.update()
-        self.ad16Panel.update()
-        self.leicaPanel.update()
         self.binaryOutPanel.update()
-        self.tempDistPanel.update()
 
 def modacExit():
     log.info("modacExit")

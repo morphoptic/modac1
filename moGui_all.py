@@ -1,5 +1,5 @@
 """
-moGui_2: stripped down GTK GUI for MODAC, using only enviro+ad16+ktype
+moGui_1: 2nd experiment with GTK for MODAC
 """
 timer_interval = 1
 
@@ -31,8 +31,10 @@ log.setLevel(logging.DEBUG)
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
-from modacGUI import enviroPanel, ktypePanel, ad16Panel
-from modacGUI import kilnPanel
+from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
+from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
+from modacGUI import kilnPanel2
+#from modacGUI import CsvStartDialog, CsvTimeStepDialog
 
 maxCsvStep = 240
 
@@ -70,7 +72,7 @@ class ModacAppWindow(object):
         # Read GUI from file and retrieve objects from Gtk.Builder
         try:
             log.debug("load gui from file")
-            builder = Gtk.Builder.new_from_file("modacGUI/modac1.glade")
+            builder = Gtk.Builder.new_from_file("modacGUI/modac2.glade")
             builder.connect_signals(self)
             log.debug("signals connected")
         except GObject.GError:
@@ -98,17 +100,27 @@ class ModacAppWindow(object):
         self.notebook.remove_page(0)
         
         #####
+        self.kilnPanel = kilnPanel2.kilnPanel() # Panel to be tested
+        self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
+
+        self.tempDistPanel= tempDistPanel.tempDistPanel()
+        self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
+        
+        self.leicaPanel = leicaPanel.leicaPanel()
+        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
+        
+        self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
+        self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)
+        
         self.ktypePanel = ktypePanel.ktypePanel()
         self.notebook.append_page(self.ktypePanel.box, self.ktypePanel.label)
+        
+        self.ad24Panel = ad24Panel.ad24Panel()
+        self.notebook.append_page(self.ad24Panel.box, self.ad24Panel.label)
         
         self.ad16Panel = ad16Panel.ad16Panel()
         self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
         
-        self.enviroPanel = enviroPanel.enviroPanel()
-        self.notebook.append_page(self.enviroPanel.box, self.enviroPanel.label)
-
-        self.kilnPanel = kilnPanel.kilnPanel() # Panel to be tested
-        self.notebook.append_page(self.kilnPanel.box, self.kilnPanel.label)
 
         #  add here and then in updatePanels
         
@@ -140,17 +152,6 @@ class ModacAppWindow(object):
     
     def on_SetCSVTiming_activate(self, menuitem, data=None):
         # dialog to set self.csvStep
-#        dialog = CsvTimeStepDialog(self,maxCsvStep)
-#        response = dialog.run()
-#
-#        if response == Gtk.ResponseType.OK:
-#            self.csvStep = dialog.get_value()
-#            print("CsvTimeStep ok clicked result: ", self.csvStep )
-#        elif response == Gtk.ResponseType.CANCEL:
-#            print("CsvTimeStep Cancel clicked")
-#
-#        dialog.destroy()
-#        pass
         dialog = Gtk.MessageDialog(self.MainWindow, 0, Gtk.MessageType.WARNING,
             Gtk.ButtonsType.OK_CANCEL, "Set CSV Time Step")
         box = dialog.get_content_area()
@@ -285,10 +286,14 @@ class ModacAppWindow(object):
         return True
     
     def updatePanels(self):        
+        self.kilnPanel.update()
         self.enviroPanel.update()
         self.ktypePanel.update()
+        self.ad24Panel.update()
         self.ad16Panel.update()
-        self.kilnPanel.update()
+        self.leicaPanel.update()
+        self.binaryOutPanel.update()
+        self.tempDistPanel.update()
 
 def modacExit():
     log.info("modacExit")
@@ -301,7 +306,7 @@ if __name__ == "__main__":
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
     #moLogger.init("moGUI_1") # start logging (could use cmd line args config files)
     # logging initialized at top to avoid start by libraries
-    log.debug("moGUI_1: modac from glade files")
+    log.debug("moGUI_all: modac from glade files")
     try:
         moData.init(client=True)
         # setup MODAC data/networking

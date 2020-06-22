@@ -41,15 +41,6 @@ def numAD16():
 
 logAsJSON = True
 
-if __name__ == "__main__":
-    print("NumKtype: ", numKType())
-    print("numBinaryOut: ", numBinaryOut())
-    print("numAD24: ", numAD24())
-    print("numAD16: ", numAD16())
-    print("moData has no self test")
-    exit(0)
-
-
 #import rest of modac
 from .moKeys import *
 
@@ -101,10 +92,14 @@ def init(client=False):
         update(keyForKType(), [0.0]*this.numKType())
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
-        def_kilnStatus = kilnState.defaultStatus()
-        update(keyForKilnStatus(), def_kilnStatus)
 
-        log.info("moData.init = "+asJson())
+    def_kilnStatus = kilnState.defaultKilnRuntimeStatus()
+    update(keyForKilnState(),def_kilnStatus[keyForState()])
+    update(keyForKilnScriptState(), def_kilnStatus[keyForKilnScriptState()])
+
+    update(keyForKilnStatus(), def_kilnStatus)
+
+    log.info("moData.init = "+asJson())
     
     # modac_BLE_Laser.init()
     pass
@@ -145,6 +140,7 @@ def isValidKey(key):
 
 def getValue(key):
     # will throw KeyError if key is not in dictionary
+    #kilnstatus state and scriptState... TODO: do we really go this way with moData/moCSV
     return __moDataDictionary[key]
 
 def rawDict():
@@ -154,9 +150,18 @@ def rawDict():
 # validity of keys is left to update function (if at all)
 def updateAllData(d):
     assert isinstance(d, dict)
+    #log.debug("updateAllData")
     for key, value in d.items():
-        update(key,value)
-    #print("Updated: ", asJson())
+        if key == keyForKilnStatus():
+            # step thru kilnStatus values to keep order in OrderedDict
+            kstatus = this.getValue(keyForKilnStatus())
+            #log.debug("updating KilnStatus")
+            for kkey in kstatus.keys():
+                kstatus[kkey]=value[kkey]
+        else:
+            update(key,value)
+    #this.logData()
+    pass
 
 def logData():
     json = this.asJson()
@@ -170,7 +175,7 @@ def __appendArray(key,targetArray):
     a = this.getValue(key)
     targetArray + a
     
-def asArray():
+def asRowArray():
     a = []
     a.append(this.getValue(keyForTimeStamp()))
     if isValidKey(keyForEnviro()):
@@ -183,16 +188,28 @@ def asArray():
         leica = this.getValue(keyForLeicaDisto())
         a.append(leica[keyForDistance()])
     
-    if isValidKey(keyForAD24Raw()):
-        a += this.getValue(keyForAD24Raw())
-    if isValidKey(keyForAD24()):
-        a += this.getValue(keyForAD24())
+    # if isValidKey(keyForAD24Raw()):
+    #     a += this.getValue(keyForAD24Raw())
+    # if isValidKey(keyForAD24()):
+    #     a += this.getValue(keyForAD24())
     if isValidKey(keyForAD16()):
         a += this.getValue(keyForAD16())
     if isValidKey(keyForKType()):
         a += this.getValue(keyForKType())
     if isValidKey(keyForBinaryOut()):
         a += this.getValue(keyForBinaryOut())
+    if isValidKey(keyForKilnState()):
+        ks = this.getValue(keyForKilnState())
+        a.append(ks)
+        # this gives string value vs numeric; but thats ok
+#        log.debug("addKilnState to row %r"%ks)
+    if isValidKey(keyForKilnScriptState()):
+        ks = this.getValue(keyForKilnScriptState())
+        a.append(ks)
+    if isValidKey(keyForIndex()):
+        ks = this.getValue(keyForIndex())
+        a.append(ks)
+#    log.debug("addKilnScriptState to row %r" % ks)
     return a
 
 def __appendAName(key):
@@ -204,6 +221,7 @@ def __appendAName(key):
     for i in range(len(a)):
         s = cPrefix+"_"+str(i)
         this.__namesOfColumns.append(s)
+    pass
 
 def arrayColNames():
     log.debug("modData.arrayColNames - for moCSV")
@@ -226,16 +244,25 @@ def arrayColNames():
 #    if isValidKey(keyForDistance()):
     if isValidKey(keyForLeicaDisto()):
          this.__namesOfColumns.append(keyForDistance())
-    if isValidKey(keyForAD24Raw()):
-        this.__appendAName(keyForAD24Raw())
-    if isValidKey(keyForAD24()):
-        this.__appendAName(keyForAD24())
+    # if isValidKey(keyForAD24Raw()):
+    #     this.__appendAName(keyForAD24Raw())
+    # if isValidKey(keyForAD24()):
+    #     this.__appendAName(keyForAD24())
     if isValidKey(keyForAD16()):
         this.__appendAName(keyForAD16())
     if isValidKey(keyForKType()):
         this.__appendAName(keyForKType())
     if isValidKey(keyForBinaryOut()):
         this.__appendAName(keyForBinaryOut())
+
+    if isValidKey(keyForKilnStatus()):
+        # kiln data at top so it gets to CSV
+        this.__namesOfColumns.append(keyForKilnState())
+        this.__namesOfColumns.append(keyForKilnScriptState())
+        this.__namesOfColumns.append(keyForIndex())
+    #     log.info("kilnstatus state scriptState added to moData")
+    # else:
+    #     log.error("Kiln status not found, kilnScriptState not in moData?")
     log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns
 
@@ -250,4 +277,14 @@ def arrayNameOnlyAD24():
     log.debug("col names: %r"%(__namesOfColumns))
     return this.__namesOfColumns
 
-    
+# TODO: self test only works with moKeys not .moKeys import at top
+if __name__ == "__main__":
+    print("moData Self test")
+    print("NumKtype: ", numKType())
+    print("numBinaryOut: ", numBinaryOut())
+    print("numAD24: ", numAD24())
+    print("numAD16: ", numAD16())
+    this.init(False)
+    this.logData()
+    exit(0)
+

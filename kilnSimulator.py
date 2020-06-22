@@ -20,6 +20,10 @@
 import sys
 this = sys.modules[__name__]
 import logging
+from modac import moLogger
+
+if __name__ == "__main__":
+    moLogger.init("modacKilnSimulator")
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
@@ -32,6 +36,7 @@ import trio
 
 #import kilnControl.config as config
 from modac import moLogger, moData
+from modac import  moServer
 moLogger.init()
 
 from kilnControl import kiln
@@ -40,15 +45,33 @@ print(" continue with kilnController")
 
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
-    exit(0)
+    # NO!! need clean shutdown
+    #exit(0)
+    log.error("signal exit! someone hit ctrl-C?")
+    with moData.getNursery() as nursery:
+        if nursery == None:
+            log.info("signal exit, no nursery")
+        else:
+            print("nursery still contains ", nursery.child_tasks)
 
-secondsToRunTest = 90
+    modacExit()
+
+
+secondsToRunTest = 120
 
 async def simulateKiln():
     print("simulate kiln")
     async with trio.open_nursery() as nursery:
         moData.setNursery(nursery)
+
+        # if we want to hear from gui, then we need to start these
+        # TODO: serverReceive cmdListenLoop, doesnt wait, why?
+        # we are The Server, theHub, theBroker
+        # async so it can spawn CmdListener
+        await moServer.startServer(nursery)
+
         #kiln.simulation = True
+
         await kiln.startKilnControlProcess()
 
         kiln.setSimulation(True)

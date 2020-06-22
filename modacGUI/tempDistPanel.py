@@ -29,7 +29,7 @@ class tempDistPanel():
     plotWidth = 100 #__plotWidth # for some reason it is not accepting __plotWidth
     def __init__(self):
         
-        self.box = Gtk.VBox(homogeneous=False, spacing=8)
+        self.box = Gtk.VBox(homogeneous=True, spacing=8)
         self.label = Gtk.Label("Temp/Distance")
 
         #n_col = moData.numKType() + 1 # + one for dist
@@ -187,6 +187,6 @@ class tempDistPanel():
         self.updatePlot()
 
     def update(self):
-        log.debug("KilnTemp-Dist panel update")
+        #log.debug("KilnTemp-Dist panel update")
         if self.getData() == True:
             self.updatePlot()

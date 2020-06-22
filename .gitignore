@@ -2,6 +2,7 @@
 logs/
 *.csv
 *.glade~
+*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

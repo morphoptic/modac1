@@ -33,12 +33,15 @@ def cmdRunKilnScript(param={}):
     # new kiln.startRun: takes holdTemp, deflectionDist, maxTime, stepTime
     # these could be fields in Kiln page
     # also should display Kiln.status
-    print("cmdRunscriptKiln key=" , keyForRunKilnScript())
+    log.debug("cmdRunscriptKiln key= " + keyForRunKilnScript())
     moClient.sendCommand(keyForRunKilnScript(), param)
     
-def cmdAbortKiln():
-    moClient.sendCommand(keyForKilnAbortCmd(),())
-    
+def cmdHello():
+    moClient.sendCommand(keyForHello(),())
+
+def cmdStopKilnScript():
+    moClient.sendCommand(keyForStopKilnScript(),())
+
 def cmdResetLeica():
     moClient.sendCommand(keyForResetLeica(),())
 

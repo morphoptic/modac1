@@ -1,4 +1,5 @@
-# moClient - client side of modac networking
+# moClient - client side of modac networking using PyNNG Pair1 style polyamorous
+# https://github.com/codypiersall/pynng
 
 # cute hack to use module namespace this.fIO this.value should work
 import sys
@@ -16,16 +17,23 @@ from . import moData, moNetwork
 #from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
+import trio # adding Trio package to handle Cancelled
 
 __CmdSender = None
 #
 __subscribers = [] # array of all subscribers on PubSub in this process
+
+__kilnCallback = None
+def setKilnCallback(function):
+    log.info("Set KilnCallback: " + repr(function))
+    this.__kilnCallback = function
 
 def shutdownClient():
     if not this.__CmdSender == None:
         this.__CmdSender.close()
     for s in this.__subscribers:
         s.close()
+    log.debug("end shutdownClient")
     pass
 
 def startClient():
@@ -38,9 +46,11 @@ def startCmdSender():
     pass
 
 # start PyNNG subscriber for Modac Server
-def startSubscriber(keys=[keyForAllData(), keyForKilnStatus()]):
+#need to register for whatever published keys you want to receive
+def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnStatus()]):
     #topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
+    log.debug("startClientSubscriver keys: %r"%keys)
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
     if subscriber == None:
         log.error("client failed to connect to publisher")
@@ -63,6 +73,8 @@ def clientReceive():
                 topic, body = moNetwork.splitTopicStr(msg)
                 clientDispatch(topic,body)
                 msgReceived = True
+        except trio.Cancelled:
+            log.warn("trio cancelled")
         except Timeout:
             log.debug("receive timeout on subsciber %d"%(i))
         except :
@@ -72,9 +84,18 @@ def clientReceive():
 def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
+        #log.debug("AllData body "+json.dumps(body, indent=4))
         moData.updateAllData(body)
     elif topic == keyForKilnStatus():
         moData.update(keyForKilnStatus(), body)
+    elif topic == keyForKilnScriptEnded():
+        log.debug("Topic = ScriptEnded try calling kilnCallback")
+        if not this.__kilnCallback == None:
+            log.info("yep one set, call it")
+            this.__kilnCallback(topic, body)
+        else:
+            log.error("Ooops - no callback for kilnCallback")
+        pass
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   
@@ -85,15 +106,17 @@ def sendCommand(key, value):
     if this.__CmdSender == None:
         log.error("attempt to sendCommand from non-client")
         return False
-    log.info("send command: key %s"%key)
+    #log.info("send command: key %s"%key)
     #package up the envelope with topic
     cmd = moNetwork.mergeTopicBody(key, value)
     msg = moNetwork.encryptCommand(cmd)
-    log.info("sendCommand msg: %s"%msg)
+    #log.info("sendCommand msg: %s"%msg)
     bmsg = msg.encode('utf8')
    #decryptCommand(msg)
     try:
         this.__CmdSender.send(bmsg)
+    except trio.Cancelled:
+        log.warn("trio cancelled")
     except Timeout:
         log.warn("Timeout sending message "+key)
     # for testing

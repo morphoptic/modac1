@@ -1,0 +1,58 @@
+{
+    "ScriptName": "MODAC Kiln Script FiveSteps",
+    "ScriptDescription": "created 20200527_13:49:59",
+    "CurrentSegmentIdx": 0,
+    "KilnSimulate": true,
+    "ScriptSegments": [
+        {
+            "SegmentIndex": 0,
+            "KilnTargetTemp": 100,
+            "KilnTargetDisplacement": 0,
+            "KilnHoldTimeMin": 2,
+            "ExhaustFan": 0,
+            "SupportFan": 0,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 1,
+            "KilnTargetTemp": 550.0,
+            "KilnTargetDisplacement": 0.0,
+            "KilnHoldTimeMin": 5,
+            "ExhaustFan": false,
+            "SupportFan": 0,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 2,
+            "KilnTargetTemp": 650.0,
+            "KilnTargetDisplacement": 0,
+            "KilnHoldTimeMin": 20,
+            "ExhaustFan": false,
+            "SupportFan": false,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 3,
+            "KilnTargetTemp": 650.0,
+            "KilnTargetDisplacement": 0,
+            "KilnHoldTimeMin": 3,
+            "ExhaustFan": true,
+            "SupportFan": true,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 4,
+            "KilnTargetTemp": 30,
+            "KilnTargetDisplacement": 0,
+            "KilnHoldTimeMin": 1400,
+            "ExhaustFan": true,
+            "SupportFan": true,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        }
+    ]
+}

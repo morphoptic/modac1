@@ -7,6 +7,7 @@
 # Trio provides async data handling
 # Some hardware, notably blutooth Leica Distance Sensor, require separate threads or processes
 import sys
+this = sys.modules[__name__]
 import os
 import logging, logging.handlers, traceback
 import argparse
@@ -36,14 +37,17 @@ runTests = False #True
 #publishRate = 0.25 # seconds for sleep at end of main loop
 publishRate = 60.0 # seconds for sleep at end of main loop
 publishRate = 1.0 # seconds for sleep at end of main loop
+publishRate30 = 30.0 # seconds for sleep at end of main loop
 
 csvActive = True
 jsonActive = False
 startKilnOnStartup = True
+okToRunMainLoop = False
 
 def modacExit():
     log.info("modacExit shutting down")
-    kilnControl.killKilnControlProcess()
+    this.okToRunMainLoop = False
+    kilnControl.kiln.endKilnControlProcess()
     moHardware.shutdown()  # turns off any hardware
     #gpioZero takes care of this: GPIO.cleanup()
     if csvActive:
@@ -60,7 +64,13 @@ async def modac_ReadPubishLoop():
     log.info("\n\nEnter Modac ReadPublish Loop")
     #for i in range(300):
     moData.setStatusRunning()
-    while True: # hopefully CtrlC will kill it
+    this.okToRunMainLoop = True
+    moData.logData() # log info as json to stdOut/console + logfile
+    lastTime = datetime.datetime.now()
+    # make it 1min ago to trigger first print below
+    lastTime = lastTime - datetime.timedelta(minutes=1)
+
+    while this.okToRunMainLoop: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
         moHardware.update()
@@ -68,17 +78,24 @@ async def modac_ReadPubishLoop():
         #moData.logData() # log info as json to stdOut/console + logfile
         # publish data
         moServer.publish()
-        #moData.logData()
-        if csvActive == True:
-            #print("call csvAddRow")
-            moCSV.addRow()
-        if jsonActive == True:
-            #print("call moJSON.snapshot")
-            moJSON.snapshot()
-            
-        log.debug("\n*****bottom forever read-publish loop")
+        currentTime = datetime.datetime.now()
+        #sinceLastLog = (currentTime-lastTime).total_seconds()
+        #if sinceLastLog >=60:
+        if not currentTime.time().minute == lastTime.time().minute:
+            moData.logData()
+            if csvActive == True:
+                #print("call csvAddRow")
+                moCSV.addRow()
+            if jsonActive == True:
+                #print("call moJSON.snapshot")
+                moJSON.snapshot()
+            lastTime = currentTime
+        if moServer.receivedHello():
+            #this.publishRate = this.publishRate30
+            log.info("Someone is listening - set to slower rate " + str(this.publishRate))
+        # log.debug("\n*****bottom forever read-publish loop")
         try:
-            await trio.sleep(publishRate)
+            await trio.sleep(this.publishRate)
         except trio.Cancelled:
             log.warn("***Trio Cancelled caught in ReadPublish Loop")
             break
@@ -88,13 +105,14 @@ async def modac_ReadPubishLoop():
 async def modac_asyncServer():
     log.info("start modac_asyncServer()")
     modac_loadConfig()
+    # initialize data blackboard on which data is written and read from
+    moData.init(client=False)
+    kilnControl.kiln.init() # init here so status gets into moData early; moHardware does lowlevel hw
 
     # Trio is our async multi-threaded system.
     # it uses the Nursery metaphor for spawning and controlling
     async with trio.open_nursery() as nursery:
-        # initialize data blackboard on which data is written and read from
-        moData.init(client=False) 
-        
+
         # save the nursey in moData for other modules
         moData.setNursery(nursery)
         
@@ -148,6 +166,8 @@ async def modac_asyncServer():
 
 def modac_loadConfig():
     log.info("modac_loadConfig")
+    #TODO kiln_config has some other modules have magic words buried in em
+    # come up with consistent way of loading?
     # configuration is done using python code/files
     # generally inline of the module that needs them
     # see modac/moData for things that should work for client and server
@@ -161,11 +181,11 @@ def modac_loadConfig():
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     log.error("signal exit! someone hit ctrl-C?")
-    with moData.getNursery() as nursery:
-        if nursery == None:
-            log.info("signal exit, no nursery")
-        else:
-            print("nursery still contains ", nursery.child_tasks)
+    # with moData.getNursery() as nursery:
+    #     if nursery == None:
+    #         log.info("signal exit, no nursery")
+    #     else:
+    #         print("nursery still contains ", nursery.child_tasks)
             
     modacExit()
     
@@ -177,6 +197,8 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signalExit)
     try:
         trio.run(modac_asyncServer)
+    except trio.Cancelled:
+        log.warning("Trio Cancelled - ending server")
     except Exception as e:
         print("Exception somewhere in modac_io_server. see log files")
         log.error("Exception happened", exc_info=True)

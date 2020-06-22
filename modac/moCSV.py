@@ -29,7 +29,8 @@ def init(filename="modacDataLog.csv"):
     print("moCSV file: ",filename)
     this._csvFile = open(filename, "w")
     this._csvWriter = csv.writer(this._csvFile)
-    names = [timeKey] +  moData.arrayColNames() # arrayNameOnlyAD24
+    # names = [timeKey] +  moData.arrayColNames() # this was for some odd test
+    names =  moData.arrayColNames() # arrayNameOnlyAD24
     #names = moData.arrayNameOnlyAD24()
     print("moCSV col Names", names)
     this._csvWriter.writerow(names)
@@ -42,6 +43,8 @@ def close():
     this._csvFile.close()
     del this._csvFile
     this._csvFile = None
+    this._csvWriter = None
+
 
 def addTimeToRow(row):
     ### add a time column formatted like KISS does its time
@@ -49,50 +52,16 @@ def addTimeToRow(row):
     # but apparently it doesnt work on pi
     # but does work later in decimate.csv.py on mac
     dtStr = moData.getTimestamp()
-    dt = datetime.datetime.strptime(dtStr, moData.getTimeFormat())
+    dt = datetime.datetime.strptime(dtStr, keyForTimeFormat())
     timeStr = datetime.datetime.strftime(dt, timeFormat)
     row[timeKey] = timeStr
     
 def addRow():
     if this.isOpen():
         # gets everything in order
-        row = moData.asArray()
+        row = moData.asRowArray()
         #addTimeToRow(row)
-        #print("csvRow:",row)
+        #log.debug("moCSV.addRow: %r" % row)
         this._csvWriter.writerow(row)
         this._csvFile.flush()
 
-### start of a class that would write desired Named Data in moData to a csv
-# why do we have the methods above AND this class?
-class modacCSVWriter:
-    csvFile = None
-    csvWriter = None
-    names = []
-    
-    def __init__(self,filename="modacDataLog.csv",names=None):
-        print("moCSV file: ",filename, " names:",names)
-        self.csvFile = open(filename, "w")
-        self.csvWriter = csv.writer(this._csvFile)
-        if self.names == None:
-            self.names = moData.arrayColNames()
-        print("moCSV columNames ",filename, names)
-        self.csvWriter.writerow(names)
-        pass
-
-    def close(self):
-        if self._csvFile == None:
-            return
-        self.csvFile.close()
-        del self._csvFile
-        self.csvFile = None
-
-    def addRow(self):
-        if self.isOpen():
-            ## select names from moData? how?
-            # perhaps do this after create named Channels
-            # gotta be some commercial package that uses Channels
-            row = moData.asArray()
-            #print("logRow:",row)
-            self.csvWriter.writerow(row)
-            self.csvFile.flush()
-        

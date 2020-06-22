@@ -65,6 +65,8 @@ LeicaDisto Module holds singleton State and methods to talk with BLE Device
 '''
 # moHardware usual init() and update() are here usage questionable
 # 
+useLeica = True # flag to say we are using or not using Leica distance sensor
+#useLeica = False # flag to say we are using or not using Leica distance sensor
 
 import sys
 this = sys.modules[__name__]
@@ -109,13 +111,14 @@ class LeicaState(Enum):
 
 ######
 # some module globals that might get Config overrides someday
-maxGattTimeoutTilClose = 3
-maxGattRestartsTilDead = 5#sys.maxsize
+maxGattTimeoutTilClose = 2
+maxGattRestartsTilDead = 500 #sys.maxsize
 TimeBetweenMeasurements = 5
 
 # this is BLE MAC address, specific to unit. It shouold be in a config
 # you can override it with setAddress() BEFORE calling init()
-__defaultAddrStr = "D3:9D:70:68:8B:F2"
+__defaultAddrStr = "D3:9D:70:68:8B:F2" # leica 1 w power supply
+__defaultAddrStr = "CC:23:AB:33:FA:E2" # leica 2 w batteries
 
 ####
 # module dunder variables
@@ -175,7 +178,7 @@ class gattProcess:
         self.distance = -1
         self.gatt = None
         self.timeoutCount = 0
-#        print("gattProcess initialized %r"%(this))
+        log.debug("gattProcess initialized %r"%(this))
         pass
     
     def getTimeouts():
@@ -349,6 +352,9 @@ def init():
     }
     moData.update(keyForLeicaDisto(), d)
 
+    if not useLeica == True:
+        return
+
     if not this._state == LeicaState.Closed:
         log.error("trying to Init Leica when not Closed, needs Reset")
         return
@@ -377,6 +383,9 @@ async def runLoop():
         enter innerloop of measure/post/sleep until error or stop signal
         after innerloop, release gattProcess and continue outter loop '''
     #
+
+    if not useLeica == True:
+        return
     log.debug("starting runLoop")
     dumpDebug()
     while this._state == LeicaState.Looping:

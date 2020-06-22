@@ -1,5 +1,7 @@
 # moNetwork - modac common networking methods and data
 # IP addresses, encode/decode messages w/encryption etc
+# actual send/receive connection setup using PyNNG is in moServer moClient
+# https://github.com/codypiersall/pynng
 
 # cute hack to use module namespace this.fIO this.value should work
 import sys
@@ -47,12 +49,9 @@ def cmdAddress():
         this.__cmdAddress = this.__myIPAddress +':21212'
     return this.__cmdAddress
 
-# timeout for cmd recieve.  CmdListener loop delays any checks this long
-def rcvTimeout():
-    return 100
-
-def sendTimeout():
-    return 10
+# ms timeout for cmd recieve. CmdListener loop delays any checks this long
+def rcvTimeout(): return 2*1000
+def sendTimeout(): return 10
 
 #################################
 # parts for composing/decomposing network messages    
@@ -107,11 +106,11 @@ def modacDecrypt(crypto):
     return clearTxt
 
 def encryptCommand(cmd):
-    log.info("encryptCommand cmd: %s"%cmd)
+    #log.info("encryptCommand cmd: %s"%cmd)
     #package up the envelope with topic
     encoded = modacEncrypt(cmd)
     msg = mergeTopicBody(keyForModacCmd(), encoded)
-    log.info("encryptCommand msg: %s"%msg)
+    #log.info("encryptCommand msg: %s"%msg)
     # for testing
     #print("decypher test: ", decryptCommand(msg))
     return msg

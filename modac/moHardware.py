@@ -18,6 +18,8 @@ from modac import leicaDistoAsync as leicaDisto
 import trio
 import datetime
 
+__initialized = False # : return
+
 __nursery = None
 async def init(nursery):
     this.__nursery = nursery
@@ -26,8 +28,10 @@ async def init(nursery):
     ad24.init()
     ad16.init()
     kType.init()
+    # leica distance sensor needs to run its own thread/process
     leicaDisto.init()
     nursery.start_soon(leicaDisto.runLoop)
+    this.__initialized = True  # : return
     moData.setStatusInitialized()
     # force at least one update so moData is populated
     update()
@@ -35,6 +39,8 @@ async def init(nursery):
 
 
 def update():
+    if not __initialized == True: return
+
     # get our own timestamp
     moData.updateTimestamp()
     enviro.update()
@@ -55,6 +61,7 @@ def shutdown():
     ad16.shutdown()
     binaryOutputs.shutdown()
     leicaDisto.shutdown()
+    __initialized = False
     log.debug("shutdown hardware")
 
 # TODO should not have two of these!

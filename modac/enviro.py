@@ -92,7 +92,7 @@ def timestamp():
 def timestampStr():
     if this.__eSensor == None:
         return "no enviro sensor"
-    return timestamp().strftime("%Y-%m-%d %H:%M:%S%Z")
+    return timestamp().strftime(keyForTimeFormat())
 
 def timestampISOStr():
     return timestamp().isoformat()
@@ -140,7 +140,7 @@ def testBME280():
         hStr = 'Humidity: %0.3f %%rH '% humidity()
         tStr = 'Temp: %0.3f °C '% temperature()
         pStr = 'Pressure: %0.3f hPa' % pressure()
-        timeStr = timestampStr() #timestamp().strftime("%Y-%m-%d %H:%M:%S.%f%Z : ")
+        timeStr = timestampStr()
         msg = timeStr + hStr+tStr+pStr
         #print(msg)
         log.info(msg)

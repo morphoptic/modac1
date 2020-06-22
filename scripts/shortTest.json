@@ -1,0 +1,52 @@
+{
+    "ScriptName": "MODAC Kiln Script FiveSteps",
+    "ScriptDescription": "created 20200527_13:49:59",
+    "CurrentSegmentIdx": 3,
+    "KilnSimulate": true,
+    "ScriptSegments": [
+        {
+            "SegmentIndex": 0,
+            "KilnTargetTemp": 100.0,
+            "KilnTargetDisplacement": 0.0,
+            "KilnHoldTimeMin": 5,
+            "ExhaustFan": 0,
+            "SupportFan": 0,
+            "12vRelay": true,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 1,
+            "KilnTargetTemp": 120.0,
+            "KilnTargetDisplacement": 10,
+            "KilnHoldTimeMin": 5,
+            "ExhaustFan": false,
+            "SupportFan": false,
+            "12vRelay": true,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 2,
+            "KilnTargetTemp": 120.0,
+            "KilnTargetDisplacement": 0,
+            "KilnHoldTimeMin": 1,
+            "ExhaustFan": true,
+            "SupportFan": true,
+            "12vRelay": false,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        },
+        {
+            "SegmentIndex": 3,
+            "KilnTargetTemp": 30,
+            "KilnTargetDisplacement": 0,
+            "KilnHoldTimeMin": 5.0,
+            "ExhaustFan": true,
+            "SupportFan": true,
+            "12vRelay": 0,
+            "PIDStepTime": 10,
+            "KilnMaxTime": 4320
+        }
+    ]
+}
