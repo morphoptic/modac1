@@ -1,4 +1,5 @@
-#Morph Optics Data Acquistion (MODAC) Proof Of Concept
+#Morph Optics Data Acquistion (MODAC) Proof Of Concept#
+
 MODAC is a generic Data Acquisition and Control tool built on Raspberry Pi as a Client/Server tool.
 It uses the pyNNG brokerless messaging system for IP based communications. The server uses the Trio async library. Gui tools rely on GTK for pseudo-async
 
