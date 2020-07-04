@@ -1,19 +1,39 @@
-#Morph Optics Data Acquistion (MODAC) Unit Tests
-This folder holds python tools for testing MODAC components. 
-Contents may vary over time with older versions moving to sub folder oldTests.
+#Morph Optics Data Acquistion (MODAC) Proof Of Concept
+MODAC is a generic Data Acquisition and Control tool built on Raspberry Pi as a Client/Server tool.
+It uses the pyNNG brokerless messaging system for IP based communications. The server uses the Trio async library. Gui tools rely on GTK for pseudo-async
 
-Due to nature of Packages, some subfolders are used to create support libraries that are imported into tools
-while others hold operational tests
+Thop folder holds the MODAC Proof of Concept Code & some other assets. 
+Documentation is currently on GoogleDrive and *may* migrate here.
 
-MODAC_UnitTests contains the python scripts used for the Phase 1 development
-MODAC_Phase1Code is the code used at Demo.
-ian-BlueToothDistance is code from Ian's git repo to support the BlueTooth Laser distance sensor
-oldTests is experimental scaffolding code to test out stuff. this may vanish in later builds as git works
-github user morphoptic  repo modac1
+testCode and MODAC_UnitTests contain the python scripts used to test components of MODAC
+Due to nature of Packages, some subfolders are used to create support libraries that are imported into tools while others hold operational tests. Some migrated to this top level for quick tests.
+
+Postprocessing holds python code to process various CSV files for comparisons with original controller.
+
+scripts holds various shell scripts to start the tools from command line (or autostart on boot).
+
+setupPi holds the scripts to pull various libraries.
+
+waveshareADAC is package for the 24bit AD Waveshare board.
+
+thermocouple is the package for converting between degC and mV for various thermocouples. Most other imports are installed system wide.
+
+MODAC_Config were experiements in config files. We currently use variables in python files (see docs)
+
+modac is the package holding most of the MODAC generic DA code
+
+kilnControl is package holding the kiln specific parts
+
+modacServer.py is main server script
+
+moGui_all.py is GTK GUI app with all panels
+
+moGui_Kiln.py is GTK Gui stripped down for just kiln control.
 
 ------
+(older info, see documentation for *more* up to date stuff)
 
-Current Phase 2 system has evolved to a server/client setup where the server (modac_io_server.py) runs
+Current system is a server/client setup where the server runs
 the hardware and publishes data on a PyNNG pub/sub channel, while listening for commands on a Pair1 link
 Clients subscribe to the data channel and send commands to server on the Pair1 link 
 multiple clients are allowed. they dont know about each other.
@@ -23,15 +43,6 @@ Phase 3 will add clients on a PC and perhaps use some zeroConfig ip address reso
 Both client and server architectures share common code but add their own specifics
 modac folder contains the internals of modac for both server and client
 modacGUI folder holds python code and Glade layout definitions for gtk clients
-
-testPanel is used to test UI panels. a couple edits and it can test different panels
-moGui_1 is the combined gui - it uses a tabbed Notebook style to support multiple panels
-
-modac_io_server is the only real server code
-It uses the Trio system for async threading.  It has threads (or whatever they are) for:
-  * main publishing loop
-  * cmd receiving loop
-  * leica Disto BLE device management
 
 Basic action is for leica to run on its own, measuring every second or so (see code for delay),
 while cmd receiving loop runs async reads (await sock.aread())
