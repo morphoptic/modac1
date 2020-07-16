@@ -1,0 +1,11 @@
+hostname: modacServer
+ipaddr: 127.0.1.1
+IPs for network adapter lo
+   127.0.0.1/8
+   ('::1', 0, 0)/128
+IPs for network adapter eth0
+   169.254.76.220/16
+   ('fe80::e2a7:66c2:2587:848b', 0, 2)/64
+IPs for network adapter wlan0
+   192.168.1.22/24
+   ('fe80::9755:1fcc:bbf3:f312', 0, 3)/64
