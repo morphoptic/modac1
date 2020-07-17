@@ -56,5 +56,5 @@ sudo pip3 install --upgrade pytest
 sudo apt-get install dosfstools
 sudo apt-get install hfsutils hfsprogs hfsutils
 #
-sudo pip3 install --upgrade zeroconf
+#sudo pip3 install --upgrade zeroconf
 
