@@ -22,15 +22,17 @@ from . import moData
 # locally required for this module
 
 # TODO: convert us from raw ip to a zeroConf address
-__zConfigName = "modacServer.local"
-__myIPAddress = 'tcp://127.0.0.1'
-__pubAddress = None 
+__serverName = "modacServer.local"
+__noNetAddress = '127.0.0.1'
+__eth0Address = '192.168.0.10'  # set in servers /etc/dhcpcd.conf
+__serverIPAddress = None
+#__myIPAddress = 'tcp://127.0.0.1'
+__pubAddress = None
 __cmdAddress = None
 
-def initIPfromName():
-    # insert zeroConfig stuff to get ip address
-    # __zconfigName -> __myIPAddress
-    # for now its pass thru
+def getServerIPaddr():
+    # try to find the server IP address
+    __serverIPAddress = __eth0Address
     pass
 
 # these need to be visible by both sides of pubSub/Pair1
@@ -38,15 +40,15 @@ def initIPfromName():
 def pubSubAddress():
     if this.__pubAddress == None:
         #initialize it
-        initIPfromName()
-        this.__pubAddress = this.__myIPAddress +':31313'
+        getServerIPaddr()
+        this.__pubAddress = 'tcp://'+ this.__serverIPAddress +':31313'
     return this.__pubAddress
 
 def cmdAddress():
     if this.__cmdAddress == None:
         #initialize it
-        initIPfromName()
-        this.__cmdAddress = this.__myIPAddress +':21212'
+        getServerIPaddr()
+        this.__cmdAddress = 'tcp://'+ this.__serverIPAddress +':21212'
     return this.__cmdAddress
 
 # ms timeout for cmd recieve. CmdListener loop delays any checks this long
