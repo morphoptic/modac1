@@ -42,3 +42,8 @@ def ping(host):
     return subprocess.call(command) == 0
 
 value = ping(modacServerIPAddr)
+print("Ping = ", value)
+
+noNetAddress = '127.0.0.1'
+value = ping(noNetAddress)
+print("Ping = ", value)

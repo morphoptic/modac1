@@ -19,7 +19,7 @@ from binascii import hexlify, unhexlify
 #import rest of modac
 from .moKeys import *
 from . import moData
-from . import ping
+from .ping import ping
 # locally required for this module
 
 # TODO: convert us from raw ip to a zeroConf address
@@ -34,9 +34,10 @@ __cmdAddress = None
 def getServerIPaddr():
     # try to find the server IP address
     if ping(__eth0Address) == 0:
-        __serverIPAddress = __noNetAddress
+        this.__serverIPAddress = __noNetAddress
     else:
-        __serverIPAddress = __eth0Address
+        this.__serverIPAddress = __eth0Address
+    log.debug("Server IP Address will be:"+this.__serverIPAddress)
     pass
 
 # these need to be visible by both sides of pubSub/Pair1
