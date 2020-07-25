@@ -367,8 +367,8 @@ class Kiln:
                 moHardware.EmergencyOff()
                 return
             
-        if (self.kilnTemps[0] < 0.0):
-            # should never get below zero
+        if (self.kilnTemps[0] <= 1.0):
+            # should never get below 1C (0 is indicator of error)
             log.error("Kiln ERROR: average temp is below zero! "+str(self.kilnTemps[0]))
             log.error("there is error somewhere, so shutdown")
             moHardware.EmergencyOff()
@@ -538,6 +538,9 @@ class Kiln:
     def updateTemperatures(self):
         ''' retrieve thermocouple values degC, avg the ones we want '''
         kTemps = moData.getValue(keyForKType())
+        # need to check if KTypes are valid, which should reflect if errors elsewhere in Thermocouple chain
+        #error is all values = 0, chk ktypeStatus?
+
         # print("Kiln ktypes read as: ", kTemps)
         sum = 0.0
         self.kilnTemps[1] = kTemps[kType_lower]
@@ -553,6 +556,7 @@ class Kiln:
         else:
             # use only the lower (first) ktype = bottom
             self.kilnTemps[0] = self.kilnTemps[1]
+
         pass
 
     def updateDistance(self):
