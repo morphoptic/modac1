@@ -108,12 +108,27 @@ Joe Ritter - MorphOptic</property>
                       </object>
                     </child>
                     <child>
+                      <object class="GtkSeparatorMenuItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkImageMenuItem" id="gtk_quit">
                         <property name="label">gtk-quit</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <signal name="activate" handler="on_gtk_quit_activate" swapped="no"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="ShutdownServer">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label">Shutdown Server</property>
+                        <signal name="activate" handler="on_ShutdownServer_activate" swapped="no"/>
                       </object>
                     </child>
                   </object>

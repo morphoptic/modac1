@@ -30,15 +30,18 @@ __Publisher = None
 __CmdListener = None 
 __killCmdListener = False
 __receivedHello = False
+__Shutdown = False
 
 def shutdownServer():
     log.debug("try to kill moServer")
+    sendShutdown()
+
     this.__killCmdListener = True # this should stop the serverReceive() from pair1
     if not this.__Publisher == None:
         this.publish() # one last time
-        this.publishData(keyForShutdown(), keyForShutdown())
         this.__Publisher.close()
         this.__Publisher = None
+    this.__Shutdown = True
 
 async def startServer(nursery):
     # publisher is synchronous for now
@@ -49,7 +52,11 @@ async def startServer(nursery):
 def startPublisher():
     log.debug("start_Publisher")
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
-    
+
+def sendShutdown():
+    log.info("Send Shutdown")
+    publishData(keyForShutdown(), None)
+
 def publish():
     #log.debug("publish - only AllData for now %s"%moData.asJson())
     publishData(keyForAllData(), moData.asDict())
@@ -196,13 +203,30 @@ def serverDispatch(topic,body):
             kiln.handleRunKilnScriptCmd(body)
     elif topic == keyForHello():
         log.info("Received Hello from Client ")
-        __receivedHello = True
+        this.__receivedHello = True
+        receivedHello()
+    elif topic == keyForGoodbye():
+        log.info("Received Goodbye from Client ")
+        receivedGoodbye()
+    elif topic == keyForShutdown():
+        log.info("Received Shutdown from Client ")
+        shutdownServer()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
         pass
 
+#client checkin checkout but no count kept
 def receivedHello():
-    return __receivedHello
+    #log.info("Check Hello "+ str(this.__receivedHello))
+    return this.__receivedHello
+
+def receivedGoodbye():
+    log.info("Check Goodbye ")
+    return
+
+def receivedShutdown():
+    #log.info("Received Shutdown?")
+    return this.__Shutdown
 
 if __name__ == "__main__":
     print("moServer has no self test")

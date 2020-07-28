@@ -19,7 +19,7 @@ def keyForShutdown():   return "shutdown"
 # generic keys used by various components
 # timestamp key used for all data, enviro and leicaDisto
 def keyForTimeStamp(): return "timestamp"
-# Generic key for State used by any state machine in its own context
+# Generic keywords for State, etc used by any state machine in its own context
 def keyForState(): return 'State'
 def keyForStatus(): return "Status"
 def keyForScript(): return "Script"
@@ -50,9 +50,14 @@ def keyForKType(): return "kType"
 def keyForLeicaDisto(): return "leicaD1"
 def keyForDistance(): return "distance"
 
+# some combined keys
+def keyForAD16Status() : return keyForAD16()+ "_" + keyForStatus()
+def keyForKTypeStatus() : return keyForKType()+ "_" + keyForStatus()
+
 #keys for commands from clients
 def keyForHello() : return "Hello"
 def keyForGoodbye() : return "Goodbye"
+def keyForShutdown(): return "Shutdown"
 
 def keyForModacCmd(): return "modac"
 def keyForBinaryCmd(): return "binaryCmd"
