@@ -11,7 +11,7 @@ import os
 import argparse
 import json
 
-# my stuff
+# modac stuff
 from modac import moData, moClient, moLogger,moCSV
 import logging
 moLogger.init("netLogger")
