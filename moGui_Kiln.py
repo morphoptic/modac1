@@ -125,6 +125,17 @@ class ModacAppWindow(object):
     def close(self, *args):
         self.MainWindow.destroy()
     
+    def on_gtk_quit_activate(self, widget, data=None):
+        log.debug("Quit Activated")
+        #modacExit()
+        self.close()
+        pass
+
+    def on_ShutdownServer_activate(self, widget, data=None):
+        log.debug("Shutdown Server Activated")
+        moCommand.cmdShutdown()
+        pass
+
     def on_winMain_destroy(self, widget, data=None):
         log.debug("on_winMain_destory")
         #self.shutdown()

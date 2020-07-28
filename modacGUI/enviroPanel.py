@@ -95,7 +95,7 @@ class enviroPanel():
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
         enviro = moData.getValue(keyForEnviro())
-        log.debug("enviro Update = "+str( enviro))
+        #log.debug("enviro Update = "+str( enviro))
         temperature = enviro[keyForTemperature()]
         humidity = enviro[keyForHumidity()]
         pressure = enviro[keyForPressure()]

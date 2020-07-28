@@ -18,6 +18,8 @@ import time
 #from . import moduleName
 from .moKeys import *
 from . import moData
+from .moStatus import *
+
 
 #for AD1115 support
 import board
@@ -26,6 +28,7 @@ import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
 __isAlive = False
+__status = moStatus.Default
 
 # Create the I2C bus
 __ad16_i2c = None
@@ -52,7 +55,8 @@ __ad16chanConfig = [
     ( 0, ADS.P3)
 ]
 __channels = []
-__values = []
+__values = [0,0,0,0]
+__numChannels = 4  # its 5 in PoC version, may be different, might be better to use len(ad16chanConfig)?
 
 #each moAD16Device has 4 ADChannels defined in the chanConfig above
 class moAD16Device:
@@ -70,6 +74,7 @@ class moAD16Device:
 #            __ad16_i2c = busio.I2C(board.SCL, board.SDA)
         if this.get_i2c() == None:
             log.error("moAD16device error getting i2c bus")
+            this.__status = moStatus.Error
             return
         # now add the Adafruit Object for device
         self.device = ADS.ADS1115(this.get_i2c(),address=self.address)
@@ -108,6 +113,7 @@ def init():
     this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
     if this.__ad16_i2c == None:
         log.error("error getting i2c bus for AD16")
+        this.__status = moStatus.Error
         moData.update(keyForAD16(), this.__values)
         return
     # init each defined device
@@ -118,9 +124,24 @@ def init():
             d = moAD16Device(address=this.__ad16devAddr[idx])
         except:
             log.error(" Cant create device %d "%this.__ad16devAddr[idx]+str( sys.exc_info()[0]))
+            this.__status = moStatus.Error
+
         this.__ad16dev.append(d)
         if d == None:
             log.error("No AD16 device found")
+            this.__status = moStatus.Error
+
+    if this.__status == moStatus.Error:
+        log.error("some error initializing ad16")
+        __isAlive = False
+        if this.__status == moStatus.Error:
+            this.__values = [0] * this.__numChannels
+        #
+        moData.update(keyForAD16(), this.__values)
+        moData.update(keyForAD16Status(), this.__status.name)
+        print("Bad Values "+str(this.__values))
+        return
+
     print("Initialized AD16 devices: ", this.__ad16dev)
         
     # init each channel
@@ -142,6 +163,8 @@ def init():
     
     # now get initial values
     this.update()
+    this.__status = moStatus.OK
+
     #print("ad16 Initialized")
     #print("__ad16devAddr ",__ad16dev)
     #print("__ad16chanConfig ",__ad16chanConfig)
@@ -153,6 +176,8 @@ def update():
         return
     if this.__isAlive == False:
         return
+    moData.update(keyForAD16Status(), this.__status.name)
+
     #log.debug("ad16 update()")
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
     #print (this.__values)
@@ -170,6 +195,11 @@ def update():
         moData.update(keyForAD16(), this.__values)
         this.__ad16_i2c = None
         this.__isAlive = False
+        this.__status = moStatus.Error
+
+    # force error values
+    if this.__status == moStatus.Error:
+        this.__values = [0]* len(this.__values)
     #
     moData.update(keyForAD16(), this.__values)
 
@@ -183,3 +213,12 @@ def shutdown():
     this.__ad16dev = []
     this.__channels = []
     this.__values = []    
+
+# these two checks have slightly different meanings.  Alive may be ok until an error occurs
+def isError():
+    if this.__status == moStatus.Error:
+        return True
+    return False
+
+def isAlive():
+    return this.__isAlive()

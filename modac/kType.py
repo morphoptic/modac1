@@ -1,4 +1,5 @@
-# kType
+# kType - convert AD Inputs of thermocouple readings to temperatures
+#
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
@@ -9,20 +10,24 @@ log.setLevel(logging.DEBUG)
 #import rest of modac
 from .moKeys import *
 from . import moData
+from .moStatus import *
 # should revise this so it gets direct from moData rather than having knowledge of other device api?
-from . import ad24, enviro
+#from . import ad24, enviro
 # locally required for this module
 
 from thermocouples_reference import thermocouples
-
 # only looking at kType thermocouples
 __typeK = thermocouples['K']
 
 # cant dunder kTypeIdx 'cause its used in Simulator
+status = moStatus.Default
+
 # ktypes in use are White, Green, Yellow (not blue) from amp box
 # amp-connector & pi-connector order is Green-White-Yellow-Blue
+# this bit ref's 24bit AD which is not being used in later part of PoC project
+# see bit below for the AD16
 # two 4 chan amps are available, 1st connects AD-2 AD-3, while AD-0 is pot, AD-1=photoSense
-# kTypeIdx is indicies into AD24Bit array for k-type thermocouple
+# kTypeIdx is indicies into AD array for k-type thermocouple
 # Note length must match moData value returned by
 #kTypeIdx= [0,1,2,3,4,5,6,7]
 #kTypeIdx= [2,3,4,5,6,7]
@@ -90,6 +95,7 @@ def init():
     this.simulator = None
     this.getNumKType()
     calc0_100_300()
+    this.status = moStatus.Initialized
     update()
     pass
 
@@ -97,12 +103,14 @@ def update():
     #assert not moData.getValue(keyForAD24()) == None
     #assert not moData.getValue(keyForEnviro()) == None
     if not this.simulation:
+        # not a simulation=  watch for sensor errors
         moData.update(keyForKType(), asArray())
     else:
         assert not this.simulator == None
         #print("\n\n************\n")
-
+        this.status = moStatus.Simulated
         this.simulator.update()
+    moData.update(keyForKTypeStatus(), this.status.name)
     pass
 
 def asArray():
@@ -110,7 +118,13 @@ def asArray():
     ktypeData = []
     # retrieve the ad as 0-5V values
     if _use16BitDA:
-        adArray = moData.getValue(keyForAD16())
+        # check for error
+        if moData.getValue(keyForAD16Status()) == moStatus.Error.name:
+            ktypeData = [0]* len(kTypeIdx)
+            this.status = moStatus.Error
+            return ktypeData
+        else:
+            adArray = moData.getValue(keyForAD16())
         #print("adArray from 16bit ", adArray)
     else:
         adArray = ad24.all0to5Array()
