@@ -34,10 +34,9 @@ from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moJSON
 import kilnControl
 
 runTests = False #True
-#publishRate = 0.25 # seconds for sleep at end of main loop
-publishRate = 60.0 # seconds for sleep at end of main loop
-publishRate = 1.0 # seconds for sleep at end of main loop
-publishRate30 = 30.0 # seconds for sleep at end of main loop
+publishRateFast = 1.0
+publishRateSlow = 15.0 # seconds for sleep at end of main loop
+publishRate = publishRateFast # seconds for sleep at end of main loop
 
 csvActive = True
 jsonActive = False
@@ -73,6 +72,11 @@ async def modac_ReadPubishLoop():
     while this.okToRunMainLoop: # hopefully CtrlC will kill it
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
+        if moServer.receivedShutdown():
+            log.warn("Received Shutdown, exit loop")
+            moServer.sendShutdown()
+            modacExit()
+            break;
         moHardware.update()
         # any logging?
         #moData.logData() # log info as json to stdOut/console + logfile
@@ -91,7 +95,7 @@ async def modac_ReadPubishLoop():
                 moJSON.snapshot()
             lastTime = currentTime
         if moServer.receivedHello():
-            #this.publishRate = this.publishRate30
+            this.publishRate = this.publishRateSlow
             log.info("Someone is listening - set to slower rate " + str(this.publishRate))
         # log.debug("\n*****bottom forever read-publish loop")
         try:
@@ -140,9 +144,9 @@ async def modac_asyncServer():
         else:
             moData.update(moKeys.keyForKilnStatus(), moKeys.keyForNotStarted())
 
+        # now spawn the main ReadPublish Loop
         try:
             #   run event loop
-            #print("modata:",moData.rawDict())
             await modac_ReadPubishLoop()
         except trio.Cancelled:
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")

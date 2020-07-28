@@ -39,6 +39,12 @@ def cmdRunKilnScript(param={}):
 def cmdHello():
     moClient.sendCommand(keyForHello(),())
 
+def cmdGoodbye():
+    moClient.sendCommand(keyForGoodbye(), ())
+
+def cmdShutdown():
+    moClient.sendCommand(keyForShutdown(), ())
+
 def cmdStopKilnScript():
     moClient.sendCommand(keyForStopKilnScript(),())
 

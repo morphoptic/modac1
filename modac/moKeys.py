@@ -57,6 +57,7 @@ def keyForKTypeStatus() : return keyForKType()+ "_" + keyForStatus()
 #keys for commands from clients
 def keyForHello() : return "Hello"
 def keyForGoodbye() : return "Goodbye"
+def keyForShutdown(): return "Shutdown"
 
 def keyForModacCmd(): return "modac"
 def keyForBinaryCmd(): return "binaryCmd"

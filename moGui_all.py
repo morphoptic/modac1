@@ -120,7 +120,10 @@ class ModacAppWindow(object):
         
         self.ad16Panel = ad16Panel.ad16Panel()
         self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
-        
+
+        self.enviroPanel = enviroPanel.enviroPanel()
+        self.notebook.append_page(self.enviroPanel.box, self.enviroPanel.label)
+
 
         #  add here and then in updatePanels
         
@@ -132,7 +135,18 @@ class ModacAppWindow(object):
             
     def close(self, *args):
         self.MainWindow.destroy()
-    
+
+    def on_gtk_quit_activate(self, widget, data=None):
+        log.debug("Quit Activated")
+        self.close()
+        pass
+
+
+    def on_ShutdownServer_activate(self, widget, data=None):
+        log.debug("Shutdown Server Activated")
+        moCommand.cmdShutdown()
+        pass
+
     def on_winMain_destroy(self, widget, data=None):
         log.debug("on_winMain_destory")
         #self.shutdown()

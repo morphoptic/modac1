@@ -13,7 +13,7 @@ import json
 
 #import rest of modac
 from .moKeys import *
-from . import moData, moNetwork
+from . import moData, moNetwork, moCommand
 #from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
@@ -24,6 +24,8 @@ __CmdSender = None
 __subscribers = [] # array of all subscribers on PubSub in this process
 
 __kilnCallback = None
+__running = False
+
 def setKilnCallback(function):
     log.info("Set KilnCallback: " + repr(function))
     this.__kilnCallback = function
@@ -34,11 +36,18 @@ def shutdownClient():
     for s in this.__subscribers:
         s.close()
     log.debug("end shutdownClient")
+    this.__running = False
     pass
+
+def isRunning():
+    return this.__running
 
 def startClient():
     startSubscriber()
     startCmdSender()
+    moCommand.cmdHello() # say hello to our little friend
+    this.__running = True
+
     
 # start PyNNG sender for commands to MODAC Server
 def startCmdSender():
@@ -47,10 +56,10 @@ def startCmdSender():
 
 # start PyNNG subscriber for Modac Server
 #need to register for whatever published keys you want to receive
-def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnStatus()]):
+def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnStatus(), keyForShutdown()]):
     #topics=[moTopicForKey(keyForAllData)]):
     timeout = 100
-    log.debug("startClientSubscriver keys: %r"%keys)
+    log.debug("startClientSubscriber keys: %r"%keys)
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
     if subscriber == None:
         log.error("client failed to connect to publisher")
@@ -65,9 +74,10 @@ def clientReceive():
     for i in range(len(this.__subscribers)):
         try:
             while not msgReceived: #stays here till timeout or receive
+                log.debug("client subscriber %d rcv"%(i))
                 msgRaw = this.__subscribers[i].recv()
                 #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
-                #log.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
+                log.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 #print("clientReceive msgRaw", msgRaw)
                 msg = msgRaw.decode('utf8')
                 topic, body = moNetwork.splitTopicStr(msg)
@@ -96,6 +106,9 @@ def clientDispatch(topic,body):
         else:
             log.error("Ooops - no callback for kilnCallback")
         pass
+    elif topic == keyForShutdown():
+        log.warning("Shutdown Command received from Server")
+        this.shutdownClient()
     else:
         log.warning("Unknown Topic in ClientDispatch %s"%topic)
     # handle other client messages   

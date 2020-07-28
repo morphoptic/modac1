@@ -367,19 +367,21 @@ class Kiln:
                 moHardware.EmergencyOff()
                 return
             
-        if (self.kilnTemps[0] <= 1.0):
-            # should never get below 1C (0 is indicator of error)
-            log.error("Kiln ERROR: average temp is below zero! "+str(self.kilnTemps[0]))
-            log.error("there is error somewhere, so shutdown")
-            moHardware.EmergencyOff()
-            return
-    
         if self.state == KilnState.Idle:
             #print("Kiln idle step")
             # after collecting, nothing left to do in Idle
             return
         
         #log.info("kilnStep not Idle = " + str(self.state))
+
+        if self.kilnTemps[0] <= 1.0 and simulation == False:
+            # should never get below 1C (0 is indicator of error)
+            # dont kill it yet, just dot let it run non-simulated script
+            log.warning("Kiln Warning: average temp is below 1C! " + str(self.kilnTemps[0]))
+            # log.error("there is error somewhere, so shutdown")
+            # moHardware.EmergencyOff()
+            self.terminateScript()
+            return
 
         if (self.processRuntime >= self.maxTimeSec):
             log.error("Max Time for script exceeded, abort script")

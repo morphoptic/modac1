@@ -57,7 +57,7 @@ def cmdAddress():
     return this.__cmdAddress
 
 # ms timeout for cmd recieve. CmdListener loop delays any checks this long
-def rcvTimeout(): return 2*1000
+def rcvTimeout(): return 500 # was 2*1000
 def sendTimeout(): return 10
 
 #################################
