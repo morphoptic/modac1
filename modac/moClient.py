@@ -14,9 +14,9 @@ import json
 #import rest of modac
 from .moKeys import *
 from . import moData, moNetwork, moCommand
-#from kilnControl import kiln
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
+import pynng
 import trio # adding Trio package to handle Cancelled
 
 __CmdSender = None
@@ -82,8 +82,6 @@ def clientReceive():
                 #print("clientReceive msgRaw", msgRaw)
                 clientHandleRecievedMsg(msgRaw)
                 msgReceived = True
-        except trio.Cancelled:
-            log.warn("trio cancelled")
         except Timeout:
             log.debug("receive timeout on subsciber %d"%(i))
         except :
@@ -92,12 +90,10 @@ def clientReceive():
             log.error("Traceback is: " + exc)
     return msgReceived
 
-
 def clientHandleRecievedMsg(msgRaw):
     msg = msgRaw.decode('utf8')
     topic, body = moNetwork.splitTopicStr(msg)
     clientDispatch(topic, body)
-
 
 # async version of client Recieve; should be called in a Trio Nursery event loop
 # This will do one receive: ending either with receipt and dispatch or Timeout
@@ -106,27 +102,19 @@ async def asyncClientReceive():
     msgReceived = False
     for i in range(len(this.__subscribers)):
         try:
-            while not msgReceived:  # stays here till timeout or receive
-                log.debug("client subscriber %d rcv" % (i))
-                await asyncReadSubscriber(i)
-                msgReceived = True
-        except trio.Cancelled:
-            log.warn("trio cancelled")
+            msgRaw = await this.__subscribers[i].arecv()
+            clientHandleRecievedMsg(msgRaw)
+            msgReceived = True
+        # trio closed exceptions not caught here
+        except pynng.exceptions.Closed:
+            log.debug("Closed: subscriber %d - so terminate" % (i))
+            return False
         except Timeout:
-            log.debug("receive timeout on subsciber %d" % (i))
+            log.debug("receive timeout on subscriber %d" % (i))
         except:
-            log.exception("Some other exception! on sub%d " % (i))
+            log.exception("Some other exception! on subscriber %d " % (i))
+            return False
     return msgReceived
-
-
-async def asyncReadSubscriber(idx):
-    try:
-        await msgRaw = this.__subscribers[idx].arecv()
-        print("Arecv returned: ", msgRaw)
-        #log.info(    "sub %d rcv: %s" % (idx, msgRaw.decode()))  # prints b'wolf...' since that is the matching message
-        clientHandleRecievedMsg(msgRaw)
-    except Timeout:
-        log.debug("receive timeout on subsciber %d" % (idx))
 
 
 def clientDispatch(topic,body):

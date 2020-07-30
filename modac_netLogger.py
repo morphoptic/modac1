@@ -19,16 +19,16 @@ import logging
 moLogger.init("netLogger")
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 mainLoopDelay = 2 # seconds for sleep at end of main loop
 
-def modac_exit():
+def modacExit():
     log.info("modacExit")
     if moCSV.isOpen():
         moCSV.close()
     moClient.shutdownClient()
     #sys.exit(0)
-
 
 def log_data():
     moDict = moData.asDict()
@@ -55,6 +55,7 @@ def modac_ClientEventLoop():
         if moClient.clientReceive():
             #client received something
             log.debug("should log what was received")
+            log_data()
         sleep(mainLoopDelay)
     log.info("modac_ClientEventLoop ended")
 
@@ -70,8 +71,7 @@ def synch_NetLogger():
         log.error("Exception happened", exc_info=True)
         log.exception("Exception Happened")
 
-    modac_exit()
-
+    modacExit()()
 
 async def modac_asyncClientEventLoop():
 
@@ -79,8 +79,14 @@ async def modac_asyncClientEventLoop():
     log.info("Enter Event Loop")
     for i in range(90): #currently only do a few while we get it running
         log.debug("modac_SubscriberEventLoop - loop %d"%(i))
-        await moClient.asyncClientReceive()
-        #client received something. log it?
+        try:
+            rcvd = await moClient.asyncClientReceive()
+            #client received something. log it?
+            if rcvd == True:
+                log_data()
+        except trio.Cancelled:
+            log.debug("Trio Cancelled")
+            return
         await trio.sleep(this.mainLoopDelay)
         # skipping try/except and pushing that off on calling routine
 
@@ -135,7 +141,7 @@ if __name__ == "__main__":
         log.exception("huh?")
     finally:
         log.warning("end main of modac_netLogger")
-    modac_exit()
+    modacExit()
     print("ThThThats All Folks")
 
 
