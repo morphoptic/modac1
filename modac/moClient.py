@@ -67,8 +67,9 @@ def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnSt
     # this doesnt format log.debug("startSubscriber: ", subscriber.toString())
     return subscriber
 
-# client Recieve called from main or gtk loop 
+# client Receive called from main or gtk loop  CAUTION: be sure to sync changes with asyncClientReceive
 # servers may also be doing a Pair1 sendCmd in their loop
+# This will do one receive: ending either with receipt and dispatch or Timeout
 def clientReceive():
     msgReceived = False
     for i in range(len(this.__subscribers)):
@@ -79,18 +80,55 @@ def clientReceive():
                 #print("sub %d rcv:"%(i),msg)  # prints b'wolf...' since that is the matching message
                 log.info("sub %d rcv: %s"%(i,msgRaw.decode()))  # prints b'wolf...' since that is the matching message
                 #print("clientReceive msgRaw", msgRaw)
-                msg = msgRaw.decode('utf8')
-                topic, body = moNetwork.splitTopicStr(msg)
-                clientDispatch(topic,body)
+                clientHandleRecievedMsg(msgRaw)
                 msgReceived = True
         except trio.Cancelled:
             log.warn("trio cancelled")
         except Timeout:
             log.debug("receive timeout on subsciber %d"%(i))
         except :
-            log.exception("Some other exeption! on sub%d "%(i))
+            log.exception("Some other exception! on subcriber channel %d "%(i))
+            exc = traceback.format_exc()
+            log.error("Traceback is: " + exc)
     return msgReceived
-            
+
+
+def clientHandleRecievedMsg(msgRaw):
+    msg = msgRaw.decode('utf8')
+    topic, body = moNetwork.splitTopicStr(msg)
+    clientDispatch(topic, body)
+
+
+# async version of client Recieve; should be called in a Trio Nursery event loop
+# This will do one receive: ending either with receipt and dispatch or Timeout
+# either one will return to the parent loop
+async def asyncClientReceive():
+    msgReceived = False
+    for i in range(len(this.__subscribers)):
+        try:
+            while not msgReceived:  # stays here till timeout or receive
+                log.debug("client subscriber %d rcv" % (i))
+                await asyncReadSubscriber(i)
+                msgReceived = True
+        except trio.Cancelled:
+            log.warn("trio cancelled")
+        except Timeout:
+            log.debug("receive timeout on subsciber %d" % (i))
+        except:
+            log.exception("Some other exception! on sub%d " % (i))
+    return msgReceived
+
+
+async def asyncReadSubscriber(idx):
+    try:
+        await msgRaw = this.__subscribers[idx].arecv()
+        print("Arecv returned: ", msgRaw)
+        #log.info(    "sub %d rcv: %s" % (idx, msgRaw.decode()))  # prints b'wolf...' since that is the matching message
+        clientHandleRecievedMsg(msgRaw)
+    except Timeout:
+        log.debug("receive timeout on subsciber %d" % (idx))
+
+
 def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
     if topic == keyForAllData():
