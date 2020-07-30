@@ -55,7 +55,7 @@ def modacExit():
         moJSON.closeJsonLog()
     moData.shutdown()
     moServer.shutdownServer()
-    log.info("closed everything i think")
+    log.info("modacExit: closed everything i think, although those are async trio")
     #exit(0)
 
 async def modac_ReadPubishLoop():
@@ -79,14 +79,15 @@ async def modac_ReadPubishLoop():
             break;
         moHardware.update()
         # any logging?
+
         #moData.logData() # log info as json to stdOut/console + logfile
         # publish data
-        moServer.publish()
+        await moServer.publish()
         currentTime = datetime.datetime.now()
         #sinceLastLog = (currentTime-lastTime).total_seconds()
         #if sinceLastLog >=60:
         if not currentTime.time().minute == lastTime.time().minute:
-            moData.logData()
+            moData.logData() # outputs JSON to log file
             if csvActive == True:
                 #print("call csvAddRow")
                 moCSV.addRow()
@@ -101,7 +102,7 @@ async def modac_ReadPubishLoop():
         try:
             await trio.sleep(this.publishRate)
         except trio.Cancelled:
-            log.warn("***Trio Cancelled caught in ReadPublish Loop")
+            log.warning("***Trio Cancelled caught in ReadPublish Loop")
             break
     # after Forever
     log.info("somehow we exited the ReadPublish Forever Loop")
@@ -160,8 +161,8 @@ async def modac_asyncServer():
             print(exc)
             #traceback.print_exc()#sys.exc_info()[2].print_tb()
     moData.setNursery(None)
-    log.debug("nusery try died");
-    log.error("Exception happened", exc_info=True)
+    log.debug("modac nursery try died");
+    log.error("Exception happened?", exc_info=True)
     modacExit()
 
 # if we decide to use cmd line args, its 2 step process parsing and dispatch
@@ -209,5 +210,7 @@ if __name__ == "__main__":
     finally:
         print("end main")
     modacExit()
+    log.warning("End of modacServer Main ")
+    print("ThThThats All Folks")
     
 
