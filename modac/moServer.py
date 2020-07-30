@@ -33,7 +33,7 @@ __receivedHello = False
 __Shutdown = False
 
 def shutdownServer():
-    log.debug("try to kill moServer")
+    log.debug("try to kill moServer CmdListener+Publisher")
     sendShutdown()
 
     this.__killCmdListener = True # this should stop the serverReceive() from pair1
@@ -57,19 +57,19 @@ def sendShutdown():
     log.info("Send Shutdown")
     publishData(keyForShutdown(), None)
 
-def publish():
-    #log.debug("publish - only AllData for now %s"%moData.asJson())
-    publishData(keyForAllData(), moData.asDict())
+async def publish():
+    log.debug("publish - only AllData for now %s"%moData.asJson())
+    await publishData(keyForAllData(), moData.asDict())
 
-def publishData(key, value):
+async def publishData(key, value):
     if this.__Publisher == None:
         log.debug("publisher offline "+key)
         return
     #print("publish: key/value: ", key, value)
     msg = moNetwork.mergeTopicBody(key, value)
     eMsg = msg.encode('utf8')
-    this.__Publisher.send(eMsg)
-    #log.debug("sendTopic %s"%msg)
+    await this.__Publisher.asend(eMsg)
+    log.debug("sendTopic %s"%msg)
 
 def publishKilnScriptEnded():
     if this.__Publisher == None:
