@@ -106,16 +106,17 @@ async def asyncClientReceive():
             clientHandleRecievedMsg(msgRaw)
             msgReceived = True
         # trio closed exceptions not caught here
+        except Timeout:
+            log.debug("receive timeout on subscriber %d" % (i))
         except pynng.exceptions.Closed:
             log.debug("Closed: subscriber %d - so terminate" % (i))
             return False
-        except Timeout:
-            log.debug("receive timeout on subscriber %d" % (i))
+        except trio.Cancelled:
+            return False
         except:
             log.exception("Some other exception! on subscriber %d " % (i))
             return False
     return msgReceived
-
 
 def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
