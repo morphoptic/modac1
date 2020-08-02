@@ -1,4 +1,5 @@
 # moTkShared - data and methods shared w others in moTk
+# mostly (at least at start) these are for moTkMenu -> moTkShell data sharing
 import os
 from singleton_decorator import singleton
 import datetime
