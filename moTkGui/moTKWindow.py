@@ -17,6 +17,9 @@ import trio
 # modac stuff
 from modac.moKeys import *
 from modac import moData, moCommand, moClient, moCSV
+from modac.moStatus import *
+from .moTkShared import *
+from .moTkMenu import moTkMenu
 
 class moTkWindow():
 
@@ -26,9 +29,10 @@ class moTkWindow():
         self.window.geometry('800x600')
         self.window.title(title)
         self.moObjects = [] # an array into which we will store panels that hold modac data
+        self.shared = moTkShared()
 
         # put in the common Modac Menu
-        #self.menu = moTkMenu(self.window)
+        self.menu = moTkMenu(self.window)
 
         # status bar below Menu
         self.moStatus = tk.StringVar()
@@ -38,13 +42,13 @@ class moTkWindow():
 
         self.topFrame = tk.Frame(self.window, bg="blue")
         # self.l1 = ttk.Label(self.topFrame, text=self.str_modacStatus)#, textvariable=self.moStatus)
-        mostat = ttk.Label(self.topFrame, textvariable=self.moStatus)
+        mostat = tk.Label(self.topFrame, textvariable=self.moStatus)
         mostat.grid(row=0, column=0,sticky='NW')
         self.moStatus.set("ModacStatus: waiting for data.")
 
-        adstat = ttk.Label(self.topFrame, textvariable=self.ad16Status)
+        self.adStatusLabel = tk.Label(self.topFrame, textvariable=self.ad16Status)
         self.ad16Status.set("Ad16: tk starting")
-        adstat.grid(row=0, column=2,sticky='NE')
+        self.adStatusLabel.grid(row=0, column=2,sticky='NE')
         self.topFrame.grid(row=0, sticky='NW')
 
         # Tabbed Notebook
@@ -95,7 +99,16 @@ class moTkWindow():
 
         timestamp = moData.getValue(keyForTimeStamp())
         self.moStatus.set("ModacStatus: " + moData.getValue(keyForStatus()))
-        self.ad16Status.set("Ad16: "+ moData.getValue(keyForAD16Status()))
+
+        adStatus = moData.getValue(keyForAD16Status())
+        self.ad16Status.set("Ad16: "+ adStatus)
+        if adStatus == moStatus.Error.name:
+            self.adStatusLabel.configure(bg="red")
+        elif adStatus == moStatus.Simulated.name:
+            self.adStatusLabel.configure(bg="yellow")
+        else:
+            self.adStatusLabel.configure(bg="green")
+
         self.moUpdateStr.set("Data Updated: #%d at "%self.dataCount +timestamp)
 
         # update top/bottom status

@@ -19,7 +19,7 @@ txt.grid(column=0, row=1)
 
 def clicked():
     res = "Welcome to " + txt.get()
-    l1.configure(text=res)
+    l1.configure(text=res, bg="blue")
 
 def clicked1():
     l1.configure(text="Button was clicked !!")

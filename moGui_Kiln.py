@@ -155,17 +155,6 @@ class ModacAppWindow(object):
     
     def on_SetCSVTiming_activate(self, menuitem, data=None):
         # dialog to set self.csvStep
-#        dialog = CsvTimeStepDialog(self,maxCsvStep)
-#        response = dialog.run()
-#
-#        if response == Gtk.ResponseType.OK:
-#            self.csvStep = dialog.get_value()
-#            print("CsvTimeStep ok clicked result: ", self.csvStep )
-#        elif response == Gtk.ResponseType.CANCEL:
-#            print("CsvTimeStep Cancel clicked")
-#
-#        dialog.destroy()
-#        pass
         dialog = Gtk.MessageDialog(self.MainWindow, 0, Gtk.MessageType.WARNING,
             Gtk.ButtonsType.OK_CANCEL, "Set CSV Time Step")
         box = dialog.get_content_area()

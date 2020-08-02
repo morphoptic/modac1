@@ -3,11 +3,9 @@ import tkinter
 window = tkinter.Tk()
 window.title("GUI")
 
-
 # creating 3 different functions for 3 events
 def left_click(event):
     tkinter.Label(window, text="Left Click!").pack()
-
 
 def middle_click(event):
     tkinter.Label(window, text="Middle Click!").pack()
