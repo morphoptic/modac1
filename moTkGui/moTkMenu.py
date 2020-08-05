@@ -63,6 +63,7 @@ def setCSVFile():
     if name == None or name == "":
         return
     moTkShared().csvFilename = name
+    moTkShared().last_open_dir = os.path.dirname(name)
 
 def doExit():
     print("doExit - sends signal.SIGINT")

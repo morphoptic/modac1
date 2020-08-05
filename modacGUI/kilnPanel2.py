@@ -165,6 +165,7 @@ class kilnPanel():
         self.updating = False
 
     def setCurSegDisplay(self):
+        # update elements based on current Script Status
         if self.curSegIdx < 0 or self.curSegIdx >= self.kilnScript.numSteps():
             log.error("curSegIdx " + str(self.curSegIdx) + " out of range max "+ str(self.kilnScript.numSteps()))
         self.updating = True
@@ -198,6 +199,7 @@ class kilnPanel():
         self.stateName = self.kilnStatus[keyForState()]
         self.kilnState = KilnState[self.stateName]
         self.scriptStateName = self.kilnStatus[keyForKilnScriptState()]
+
         if self.kilnState == KilnState.RunningScript:
              # kiln thinks it is running, so lock out edits and up date display from values
              self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
@@ -349,18 +351,10 @@ class kilnPanel():
         print("filename: ",dialog.get_filename(), " folder:", self.last_open_dir)
 
         if response != Gtk.ResponseType.CANCEL:
-            self.gatherValues()
             self.kilnScript.saveScript(self.filename)
             print("wrote file")
 
         dialog.destroy()
-
-    def gatherValues(self):
-        # grab values, should have set using on_...
-        # simulate
-        # exhaust
-        # support
-        pass
 
     def on_KilnTargetTemp_value_changed(self, button):
         if self.updating == True: return # avoid repeated triggers and stack overflow

@@ -34,6 +34,7 @@ class moTkWindow():
         # put in the common Modac Menu
         self.menu = moTkMenu(self.window)
 
+        ##################################################################
         # status bar below Menu
         self.moStatus = tk.StringVar()
         self.moStatus.set("ModacStatus: notYet " )
@@ -43,27 +44,33 @@ class moTkWindow():
         self.topFrame = tk.Frame(self.window, bg="blue")
         # self.l1 = ttk.Label(self.topFrame, text=self.str_modacStatus)#, textvariable=self.moStatus)
         mostat = tk.Label(self.topFrame, textvariable=self.moStatus)
-        mostat.grid(row=0, column=0,sticky='NW')
+        mostat.pack(side=tk.LEFT,fill=tk.X, padx=2, expand=1)
         self.moStatus.set("ModacStatus: waiting for data.")
 
         self.adStatusLabel = tk.Label(self.topFrame, textvariable=self.ad16Status)
         self.ad16Status.set("Ad16: tk starting")
-        self.adStatusLabel.grid(row=0, column=2,sticky='NE')
-        self.topFrame.grid(row=0, sticky='NW')
+        self.adStatusLabel.pack(side=tk.RIGHT,fill=tk.X, padx=1, expand=1)
+        self.topFrame.pack(side=tk.TOP, pady=2, expand=1, fill=tk.X)
+        #self.topFrame.grid(row=0, sticky='NW')
 
-        # Tabbed Notebook
+        ##################################################################
+        # Tabbed Notebook in center; addTab() will add more tabs
         self.nb = ttk.Notebook(self.window)
-        self.nb.grid(row=1, sticky='NSEW')
+        #self.nb.grid(row=1, sticky='NSEW')
+        self.nb.pack(fill=tk.BOTH, expand=1, side=tk.TOP)
 
+        ##################################################################
         # bottom status (last message received)
         # status bar below Menu?
         self.moUpdateStr = tk.StringVar()
-        self.moStatus.set("No Data Yet")
+        self.moUpdateStr.set("No Data Yet")
         self.bottomFrame = tk.Frame(self.window,bg="green")
-        self.l2 = ttk.Label(self.bottomFrame,  textvariable=self.moUpdateStr)
-        self.l2.grid(column=0, sticky='NW')
-        self.bottomFrame.grid(row=2, sticky='NSEW')
-        self.moStatus.set("No Data Yet")
+        self.bottomLabel = ttk.Label(self.bottomFrame,  textvariable=self.moUpdateStr)
+        self.bottomLabel.pack(fill=tk.BOTH, padx=1, expand=1)
+
+        #self.bottomFrame.grid(row=2, sticky='NSEW')
+        self.bottomFrame.pack(side=tk.BOTTOM, pady=2, expand=1, fill=tk.X)
+        #self.moUpdateStr.set("No Data Yet")
 
         self.dataCount = 0
 

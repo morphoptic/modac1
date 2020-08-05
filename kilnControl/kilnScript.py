@@ -162,7 +162,7 @@ class KilnScript:
                 (keyForScriptSegments(), self.segmentsAsDict()),
             ]
         d = OrderedDict(a)
-        print ("script dict:",d)
+        #print ("script dict:",d)
         # print(str(d))
         return d
 

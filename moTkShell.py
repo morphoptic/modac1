@@ -28,6 +28,7 @@ import trio #adding async functions use the Trio package
 from modac import moData, moClient, moCSV
 from moTkGui.moTKWindow import moTkWindow
 from moTkGui.moTabAllData import moTabAllData
+from moTkGui.moTabKiln import moTabKiln
 from moTkGui.moTkShared import *
 
 ###############
@@ -54,9 +55,13 @@ def createTKWindow():
     #tab1 = tk.Frame(this.moWindow.notebook(), bg="red")
     #this.moWindow.addTab(tab1,frameTitle="Tab1")
 
-    tab2 = tk.Frame(this.moWindow.notebook(), bg="cyan")
-    this.allDataTab = moTabAllData(tab2)
-    this.moWindow.addTab(tab2,moObject=this.allDataTab,frameTitle="AllData")
+    kilnFrame = tk.Frame(this.moWindow.notebook(), bg="cyan")
+    this.kilnTab = moTabKiln(kilnFrame)
+    this.moWindow.addTab(kilnFrame,moObject=this.kilnTab,frameTitle="Kiln Control")
+
+    allDataFrame = tk.Frame(this.moWindow.notebook(), bg="cyan")
+    this.allDataTab = moTabAllData(allDataFrame)
+    this.moWindow.addTab(allDataFrame,moObject=this.allDataTab,frameTitle="AllData")
 
     log.debug("createTKWindow() end")
 
@@ -123,11 +128,11 @@ async def modacAsyncLoop(sendChannel):
     log.info("Begin modacAsyncLoop")
     count = 0
     while not this.__killLoops:
-        log.debug("top modacAsyncLoop")
+        #log.debug("top modacAsyncLoop")
         try:
             count += 1
             # wait for one receive or timeout
-            log.debug("modacAsyncLoop receive count %d"%(count))
+            #log.debug("modacAsyncLoop receive count %d"%(count))
             rcvd = await moClient.asyncClientReceive()
             #client received something. log it?
             if rcvd == True:
