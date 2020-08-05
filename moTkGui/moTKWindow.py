@@ -26,7 +26,7 @@ class moTkWindow():
     def __init__(self, title="MODAC Tk Gui", closeMethod= None):
         self.window = tk.Tk()  # could be root instead of window
         self.setCloseMethod(closeMethod)
-        self.window.geometry('800x600')
+        #self.window.geometry('800x800') dont specify, let it fill out
         self.window.title(title)
         self.moObjects = [] # an array into which we will store panels that hold modac data
         self.shared = moTkShared()

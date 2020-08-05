@@ -236,6 +236,11 @@ class moTabKiln():
         #log.debug("KilnPanel setData Reported state: "+self.stateName)
 
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
+        scrollPoint = self.scrolledBox.index("@0,0")
+        self.scrolledBox.delete(1.0,tk.END)
+        self.scrolledBox.insert(tk.END, textScriptStatus)
+        self.scrolledBox.see(scrollPoint)
+
         #self.scriptStatusBuffer.set_text(textScriptStatus)
 
     # called on setup and when MoData is updated by server msg
