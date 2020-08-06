@@ -24,7 +24,10 @@ class moTabAllData():
     def updateFromMoData(self):
         # TODO: remember scroll position and reset to there
         moMsg = moData.asJson() #grab the whole thing and stuff it in scrolled text
+        index = self.scrolledBox.index("@0,0")
         self.scrolledBox.delete(1.0, tk.END)
         self.scrolledBox.insert(tk.END, moMsg)
+        self.scrolledBox.see(index)
+        index = self.scrolledBox.index("@0,0")
         pass
 
