@@ -55,20 +55,18 @@ class moTabKiln():
         self.timestamp = "none yet"
         self.dataCount = 0
         self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
-        self.last_open_dir = "."
+        self.last_open_dir = "./kilnScripts"
         self.kilnState = KilnState.Closed
         self.lastState = KilnState.Closed
         self.prevkilnState = KilnState.Closed
 
-        # statusFrame: simulate CkBox; KilnState; KilnScriptState
-        # infoFrame: scriptBtnFrame; scriptNameDescrFrame
-        #    infoBtnFrame: Load; Save; Run Stop
-        #    infoTxtFrame: Name; Description
-        # scriptStepFrame: stepBtnFrame; stepDataFrame; stepScrollFrame
-        #    stepBtnFrame: stepSelect; Add; Remove
-        #    stepDataFrame: TargetTempSelect; displacement; holdTime; exhaust;support; 12v; pidStepTime
-        #    scrollFrame: scroll box of kilnStatus json
-        # precreate some vars needed below
+        # TODO: stateName/scriptStateName could be tk.StringVar()
+        self.stateName = str(self.kilnState)
+        self.scriptStateName = str(KilnScriptState.Unknown)
+
+        self.curSegIdx = 0
+        self.kilnStatus = None # returned by moData
+        # some vars needed by UI elements
         self.temperatureSV = tk.StringVar(self.frame)
         self.stepTimeSV = tk.StringVar(self.frame)
         self.displacementSV = tk.StringVar(self.frame)
@@ -78,6 +76,15 @@ class moTabKiln():
         self.exhaustCk = None
         self.supportCk = None
         self.twelvevCk = None
+
+        # statusFrame: simulate CkBox; KilnState; KilnScriptState
+        # infoFrame: scriptBtnFrame; scriptNameDescrFrame
+        #    infoBtnFrame: Load; Save; Run Stop
+        #    infoTxtFrame: Name; Description
+        # scriptStepFrame: stepBtnFrame; stepDataFrame; stepScrollFrame
+        #    stepBtnFrame: stepSelect; Add; Remove
+        #    stepDataFrame: TargetTempSelect; displacement; holdTime; exhaust;support; 12v; pidStepTime
+        #    scrollFrame: scroll box of kilnStatus json
 
         ############
         self.build_StatusFrame()
@@ -258,8 +265,8 @@ class moTabKiln():
             self.simulateCk.config(bg="white")
 
         # assuming kilnScript is a KilnScript object
-        # self.nameTxtBox.delete(1.0,tk.END)
-        # self.nameTxtBox.insert(1.0,self.kilnScript.name)
+        self.nameTxtBox.delete(1.0,tk.END)
+        self.nameTxtBox.insert(1.0,self.kilnScript.name)
         self.descrTxtBox.delete(1.0, tk.END)
         self.descrTxtBox.insert(1.0, self.kilnScript.description)
 
@@ -280,7 +287,7 @@ class moTabKiln():
         return self.tabTitle
 
     def getKilnStatus(self):
-        # status message recieved: update text and perhaps some others
+        # status message received: update text and perhaps some others
         self.kilnStatus = moData.getValue(keyForKilnStatus())
         self.stateName = self.kilnStatus[keyForState()]
 
@@ -297,6 +304,8 @@ class moTabKiln():
     def setCurSegDisplay(self):
         # update elements based on current Script Status
         # update UI from current script and moData
+        # if runningScript, then update ScriptData but
+        # if kiln is Idle, then dont update from moData
         self.simulateVar.set(self.kilnScript.simulate)
 
         if self.curSegIdx < 0 or self.curSegIdx >= self.kilnScript.numSteps():
@@ -318,14 +327,15 @@ class moTabKiln():
         self.temperatureSV.set(str(self.curSeg.targetTemperature))
         self.displacementSV.set(str(self.curSeg.targetDistanceChange))
         self.holdTimeSV.set(str(self.curSeg.holdTimeMinutes))
-        self.stepTimeSV.set(str(self.curSeg.stepTime))
-        # self.exhaustFanBtn.set_active(self.curSeg.exhaustFan)
-        # self.supportFanBtn.set_active(self.curSeg.supportFan)
-        # self.v12RelayBtn.set_active(self.curSeg.v12Relay)
-        # self.updating = False
+        self.exhaustBV.set(self.curSeg.exhaustFan)
+        self.supportBV.set(curSeg.supportFan)
+        self.twelvevBV.set(self.curSeg.v12Relay)
+        self.updating = False
 
     def setData(self):
-        # most of kilnStatus (all?) becomes put JSON text into ScriptStatus box
+        # from moData, we only want to update the kilnStatus, unless KilnScriptRunning
+        # then we want to update the script state idx, and show that one
+        #
         self.getKilnStatus()
         self.setCurSegDisplay()
 
@@ -337,13 +347,16 @@ class moTabKiln():
         self.prevkilnState = self.kilnState
 
         # state is the name or string rep of KilnState
-        # log.debug("KilnPanel setData Reported state: "+self.stateName)
+        log.debug("KilnPanel setData Reported state: "+self.stateName)
 
+        self.updateScriptStatusBox()
+
+    def updateScriptStatusBox(self):
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
-        # scrollPoint = self.scrolledBox.index("@0,0") # save and restore scroll point
-        # self.scrolledBox.delete(1.0,tk.END)
-        # self.scrolledBox.insert(tk.END, textScriptStatus)
-        # self.scrolledBox.see(scrollPoint)
+        scrollPoint = self.scrolledBox.index("@0,0")  # save and restore scroll point
+        self.scrolledBox.delete(1.0, tk.END)
+        self.scrolledBox.insert(tk.END, textScriptStatus)
+        self.scrolledBox.see(scrollPoint)
 
     # called on setup and when MoData is updated by server msg
     def updateFromMoData(self):
@@ -352,9 +365,9 @@ class moTabKiln():
 
     def endScript(self):
         log.debug("Kiln endScript")
-        self.resetRunStop()
         self.curSegIdx = 0
         self.kilnScript.getSegment(0)
+        self.resetRunStop()
 
     def on_SimulateCk_activate(self):
         # ck box updated, move value to script
@@ -386,10 +399,17 @@ class moTabKiln():
         self.endScript()
         moCommand.cmdStopKilnScript()
 
+    def setEditing(self, boolState):
+        log.debug("setEditing :"+ str(boolState))
+        # if True, enable all edit boxes
+        # if False, disable all edits
+
+        pass
     def setRunStop(self):
         self.runBtn.config(state=tk.DISABLED)
         self.stopBtn.config(state=tk.ENABLED)
-        # TODO may also want to disable editing script entirely at this point
+        # TODO need to disable editing script entirely at this point
+        self.setEditing(False)
         # perhaps something akin to the resetBtn stuff
 
     def resetRunStop(self):
@@ -397,10 +417,11 @@ class moTabKiln():
         self.stopBtn.config(state=tk.DISABLED)
         self.runBtn.config(state=tk.ENABLED)
         # TODO reset editing of current step
+        self.setEditing(True)
 
     def on_LoadKilnScript_clicked(self):
         log.debug("on_LoadKilnScript_clicked")
-        name = fd.askopenfilename(initialdir=moTkShared().last_open_dir,
+        name = fd.askopenfilename(initialdir=self.last_open_dir,
                                   title="Kiln Script File To Open",
                                   filetypes=[('JSON files', '.json')],
                                   defaultextension='.json')
@@ -408,7 +429,7 @@ class moTabKiln():
             return  # canceled
         self.filename = name
         log.debug("Load Script from file: " + str(self.filename))
-        moTkShared().last_open_dir = os.path.dirname(name)
+        self.last_open_dir = os.path.dirname(name)
         try:
             retVal = loadScriptFromFile(self.filename)
         except:
@@ -426,7 +447,7 @@ class moTabKiln():
         log.debug("on_SaveKilnScript_clicked")
         # ask for Filename, using last directory, and *.csv as filters; if supported
         self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
-        name = fd.asksaveasfilename(initialdir=moTkShared().last_open_dir,
+        name = fd.asksaveasfilename(initialdir=self.last_open_dir,
                                     title="File to Save Script",
                                     initialfile=self.filename,
                                     filetypes=[('JSON files', '.json')],
@@ -437,7 +458,7 @@ class moTabKiln():
             return
         self.filename = name
         log.debug("saveScript to file: " + str(self.filename))
-        moTkShared().last_open_dir = os.path.dirname(name)
+        self.last_open_dir = os.path.dirname(name)
         self.kilnScript.saveScript(self.filename)
 
     def on_stepSelectorChanged(self):
