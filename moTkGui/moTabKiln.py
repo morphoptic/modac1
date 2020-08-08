@@ -49,9 +49,10 @@ class moTabKiln():
         self.frame = frame
         self.tabTitle = "Kiln Control"
 
-        # some generic variables
-        self.kilnScript = KilnScript()  # need at least one simple
         self.updating = True  # used when updating current script gui to avoid stack overflow
+
+        # some generic variables
+        self.curSegIdx = 0
         self.timestamp = "none yet"
         self.dataCount = 0
         self.filename = datetime.datetime.now().strftime("kilnScript_%Y%m%d_%H_%M.json")
@@ -60,11 +61,13 @@ class moTabKiln():
         self.lastState = KilnState.Closed
         self.prevkilnState = KilnState.Closed
 
+        self.kilnScript = KilnScript()  # need at least one simple
+        self.curSeg = self.kilnScript.segments[self.curSegIdx]
+
         # TODO: stateName/scriptStateName could be tk.StringVar()
-        self.stateName = str(self.kilnState)
+        self.kilnStateName = str(self.kilnState)
         self.scriptStateName = str(KilnScriptState.Unknown)
 
-        self.curSegIdx = 0
         self.kilnStatus = None # returned by moData
         # some vars needed by UI elements
         self.temperatureSV = tk.StringVar(self.frame)
@@ -72,11 +75,35 @@ class moTabKiln():
         self.displacementSV = tk.StringVar(self.frame)
         self.exhaustBV = tk.BooleanVar(self.frame, False)
         self.supportBV = tk.BooleanVar(self.frame, False)
+        self.holdTimeSV = tk.StringVar(self.frame)
         self.twelvevBV = tk.BooleanVar(self.frame, False)
+        self.simulateVar = tk.BooleanVar(self.frame, False)
+        # fwd reference ui elements as None (also keeps list to set Disable/Normal)
+        self.simulateCk = None
+        self.kilnStateLabel = None
+        self.kilnScriptStateLabel = None
+        self.nameTxtBox = None
+        self.descrTxtBox = None
+        self.LoadBtn = None
+        self.SaveBtn = None
+        self.runBtn = None
+        self.stopBtn = None
+        self.stepIofNLabel = None
+        self.stepSelector = None
+        self.addBtn = None
+        self.removeBtn = None
+
+        self.targetTempEntry = None
+        self.displacementEntry = None
+        self.holdTimeEntry = None
+        self.stepTimeEntry = None
+
         self.exhaustCk = None
         self.supportCk = None
-        self.twelvevCk = None
+        self.twelveVCk = None
 
+
+        # now build the UI Panel
         # statusFrame: simulate CkBox; KilnState; KilnScriptState
         # infoFrame: scriptBtnFrame; scriptNameDescrFrame
         #    infoBtnFrame: Load; Save; Run Stop
@@ -112,90 +139,8 @@ class moTabKiln():
         self.scriptStepFrame.pack(side=tk.BOTTOM, pady=2, expand=1, fill=tk.BOTH)
 
         ############
-        self.setFromScript()  # coming back from this will have self.updating=False
-        # fill in the readOnly values
-        self.updateFromMoData()
+        self.updateFromScript()  # coming back from this will have self.updating=False
         self.frame.pack(fill=tk.BOTH, expand=1)
-
-    def build_StepDataFrame(self, parent):
-        # stepDataFrame in middle
-        # lable step N of N
-        # TargetTemp (comboBox by 5?)
-        # TargetDisplacement (combobox by 1mm)
-        # HoldTime (comboBox by 5)
-        # Exhaust Fan ckbox
-        # supportFan ckbox
-        # 12vRelay ckbox
-        # PID StepTime (seconds by 1)
-        stepDataFrame = tk.Frame(parent)
-        self.stepIofNLabel = tk.Label(stepDataFrame, text="Step x of y")
-        self.stepIofNLabel.pack()
-        ## each item is a row/Frame w label, tk.StrVar,tk.Entry
-        ## entry gets validated, StrVar gets a Write trace (changed) to callback()
-        targetTempFrame = tk.Frame(stepDataFrame)
-        tempLabel = tk.Label(targetTempFrame, text="Temp DegC:")
-        tempLabel.pack(side=tk.LEFT)
-        self.temperatureSV.trace_add("write", self.on_TargetTempChanged)
-        tempEntry = tk.Entry(targetTempFrame, textvariable=self.temperatureSV, validatecommand=validPositiveInt)
-        tempEntry.pack(side=tk.RIGHT)
-        targetTempFrame.pack()
-        #
-        displacementFrame = tk.Frame(stepDataFrame)
-        displacementLabel = tk.Label(displacementFrame, text="Displacement (mm):")
-        displacementLabel.pack(side=tk.LEFT)
-        self.displacementSV.trace_add("write", self.on_DisplacemenChanged)
-        displacementEntry = tk.Entry(displacementFrame, textvariable=self.displacementSV,
-                                     validatecommand=validPositiveFloat)
-        displacementEntry.pack(side=tk.RIGHT)
-        displacementFrame.pack()
-        #
-        self.holdTimeSV = tk.StringVar(self.frame)
-        holdTimeFrame = tk.Frame(stepDataFrame)
-        holdTimeLabel = tk.Label(holdTimeFrame, text="Hold Time (minutes):")
-        holdTimeLabel.pack(side=tk.LEFT)
-        self.holdTimeSV.trace_add("write", self.on_holdTimeChanged)
-        holdTimeEntry = tk.Entry(holdTimeFrame, textvariable=self.holdTimeSV,
-                                 validatecommand=validPositiveInt)
-        holdTimeEntry.pack(side=tk.RIGHT)
-        holdTimeFrame.pack()
-        #
-        stepTimeFrame = tk.Frame(stepDataFrame)
-        stepTimeLabel = tk.Label(stepTimeFrame, text="PID Step Time (seconds):")
-        stepTimeLabel.pack(side=tk.LEFT)
-        self.stepTimeSV.trace_add("write", self.on_stepTimeChanged)
-        stepTimeEntry = tk.Entry(stepTimeFrame, textvariable=self.stepTimeSV,
-                                 validatecommand=validPositiveInt)
-        stepTimeEntry.pack(side=tk.RIGHT)
-        stepTimeFrame.pack()
-        # CheckBox vars and standins created in __init__
-        self.exhaustCk = tk.Checkbutton(stepDataFrame, text='Exhaust Fan',
-                                        variable=self.exhaustBV, onvalue=True, offvalue=False,
-                                        command=self.on_exhaustCk_activate)
-        self.exhaustCk.pack(fill=tk.X)
-        self.supportCk = tk.Checkbutton(stepDataFrame, text='Support Fan',
-                                        variable=self.supportBV, onvalue=True, offvalue=False,
-                                        command=self.on_SupportFan_toggled)
-        self.supportCk.pack(fill=tk.X)
-        self.twelvevCk = tk.Checkbutton(stepDataFrame, text='KilnHeater 12V',
-                                        variable=self.twelvevBV, onvalue=True, offvalue=False,
-                                        command=self.on_12vRelay_toggled)
-        self.twelvevCk.pack(fill=tk.X)
-
-        stepDataFrame.pack(fill=tk.BOTH, expand=1)
-
-    def build_StepBtnFrame(self, parentFrame):
-        stepBtnFrame = tk.Frame(parentFrame)
-        scriptStepsLabel = tk.Label(stepBtnFrame, text="Script Steps")
-        scriptStepsLabel.pack(side=tk.TOP)
-        self.stepSelector = ttk.Combobox(stepBtnFrame, values=["0"], exportselection=0,
-                                         state="readonly", justify="center", width=4)
-        self.stepSelector.bind("<<ComboboxSelected>>", self.on_stepSelectorChanged)
-        self.stepSelector.pack(fill=tk.X)
-        self.addBtn = tk.Button(stepBtnFrame, text="Add", command=self.on_AddButton_clicked)
-        self.addBtn.pack(fill=tk.X)
-        self.removeBtn = tk.Button(stepBtnFrame, text="Remove", command=self.on_RemoveButton_clicked)
-        self.removeBtn.pack(fill=tk.X)
-        stepBtnFrame.pack(side=tk.LEFT, fill=tk.Y)
 
     def build_InfoFrame(self):
         # infoFrame: scriptBtnFrame; scriptNameDescrFrame
@@ -204,13 +149,17 @@ class moTabKiln():
         infoFrame = tk.Frame(self.frame, bg='azure')
         ##
         infoBtnFrame = tk.Frame(infoFrame, bg='azure2')
-        self.LoadBtn = tk.Button(infoBtnFrame, text="Load Script", command=self.on_LoadKilnScript_clicked)
+        self.LoadBtn = tk.Button(infoBtnFrame, text="Load Script",
+                                 command=self.on_LoadKilnScript_clicked)
         self.LoadBtn.pack()
-        self.SaveBtn = tk.Button(infoBtnFrame, text="Save Script", command=self.on_SaveKilnScript_clicked)
+        self.SaveBtn = tk.Button(infoBtnFrame, text="Save Script",
+                                 command=self.on_SaveKilnScript_clicked)
         self.SaveBtn.pack()
-        self.runBtn = tk.Button(infoBtnFrame, text="Run Script", command=self.on_RunKilnScript_clicked)
+        self.runBtn = tk.Button(infoBtnFrame, text="Run Script",
+                                command=self.on_RunKilnScript_clicked)
         self.runBtn.pack()
-        self.stopBtn = tk.Button(infoBtnFrame, text="Stop Script", command=self.on_StopKilnScript_clicked,
+        self.stopBtn = tk.Button(infoBtnFrame, text="Stop Script",
+                                 command=self.on_StopKilnScript_clicked,
                                  state=tk.DISABLED)
         self.stopBtn.pack()
         infoBtnFrame.pack(side=tk.LEFT)
@@ -236,11 +185,91 @@ class moTabKiln():
         ##
         infoFrame.pack(pady=2, fill=tk.X)
 
+    def build_StepBtnFrame(self, parentFrame):
+        stepBtnFrame = tk.Frame(parentFrame)
+        scriptStepsLabel = tk.Label(stepBtnFrame, text="Script Steps")
+        scriptStepsLabel.pack(side=tk.TOP)
+        self.stepSelector = ttk.Combobox(stepBtnFrame, values=["0"], exportselection=0,
+                                         state="readonly", justify="center", width=4)
+        self.stepSelector.bind("<<ComboboxSelected>>", self.on_stepSelectorChanged)
+        self.stepSelector.pack(fill=tk.X)
+        self.addBtn = tk.Button(stepBtnFrame, text="Add",
+                                command=self.on_AddButton_clicked)
+        self.addBtn.pack(fill=tk.X)
+        self.removeBtn = tk.Button(stepBtnFrame, text="Remove",
+                                   command=self.on_RemoveButton_clicked)
+        self.removeBtn.pack(fill=tk.X)
+        stepBtnFrame.pack(side=tk.LEFT, fill=tk.Y)
+
+    def build_StepDataFrame(self, parent):
+        # stepDataFrame in middle
+        # lable step N of N
+        # TargetTemp (comboBox by 5?)
+        # TargetDisplacement (combobox by 1mm)
+        # HoldTime (comboBox by 5)
+        # Exhaust Fan ckbox
+        # supportFan ckbox
+        # 12vRelay ckbox
+        # PID StepTime (seconds by 1)
+        stepDataFrame = tk.Frame(parent)
+        self.stepIofNLabel = tk.Label(stepDataFrame, text="Step x of y")
+        self.stepIofNLabel.pack()
+        ## each item is a row/Frame w label, tk.StrVar,tk.Entry
+        ## entry gets validated, StrVar gets a Write trace (changed) to callback()
+        targetTempFrame = tk.Frame(stepDataFrame)
+        tempLabel = tk.Label(targetTempFrame, text="Temp DegC:")
+        tempLabel.pack(side=tk.LEFT)
+        self.temperatureSV.trace_add("write", self.on_TargetTempChanged)
+        self.targetTempEntry = tk.Entry(targetTempFrame, textvariable=self.temperatureSV,
+                                        validatecommand=validPositiveInt)
+        self.targetTempEntry.pack(side=tk.RIGHT)
+        targetTempFrame.pack()
+        #
+        displacementFrame = tk.Frame(stepDataFrame)
+        displacementLabel = tk.Label(displacementFrame, text="Displacement (mm):")
+        displacementLabel.pack(side=tk.LEFT)
+        self.displacementSV.trace_add("write", self.on_DisplacemenChanged)
+        self.displacementEntry = tk.Entry(displacementFrame, textvariable=self.displacementSV,
+                                     validatecommand=validPositiveFloat)
+        self.displacementEntry.pack(side=tk.RIGHT)
+        displacementFrame.pack()
+        #
+        holdTimeFrame = tk.Frame(stepDataFrame)
+        holdTimeLabel = tk.Label(holdTimeFrame, text="Hold Time (minutes):")
+        holdTimeLabel.pack(side=tk.LEFT)
+        self.holdTimeSV.trace_add("write", self.on_holdTimeChanged)
+        self.holdTimeEntry = tk.Entry(holdTimeFrame, textvariable=self.holdTimeSV,
+                                 validatecommand=validPositiveInt)
+        self.holdTimeEntry.pack(side=tk.RIGHT)
+        holdTimeFrame.pack()
+        #
+        stepTimeFrame = tk.Frame(stepDataFrame)
+        stepTimeLabel = tk.Label(stepTimeFrame, text="PID Step Time (seconds):")
+        stepTimeLabel.pack(side=tk.LEFT)
+        self.stepTimeSV.trace_add("write", self.on_stepTimeChanged)
+        self.stepTimeEntry = tk.Entry(stepTimeFrame, textvariable=self.stepTimeSV,
+                                 validatecommand=validPositiveInt)
+        self.stepTimeEntry.pack(side=tk.RIGHT)
+        stepTimeFrame.pack()
+        # CheckBox vars and standins created in __init__
+        self.exhaustCk = tk.Checkbutton(stepDataFrame, text='Exhaust Fan',
+                                        variable=self.exhaustBV, onvalue=True, offvalue=False,
+                                        command=self.on_exhaustCk_activate)
+        self.exhaustCk.pack(fill=tk.X)
+        self.supportCk = tk.Checkbutton(stepDataFrame, text='Support Fan',
+                                        variable=self.supportBV, onvalue=True, offvalue=False,
+                                        command=self.on_SupportFan_toggled)
+        self.supportCk.pack(fill=tk.X)
+        self.twelveVCk = tk.Checkbutton(stepDataFrame, text='KilnHeater 12V',
+                                        variable=self.twelvevBV, onvalue=True, offvalue=False,
+                                        command=self.on_12vRelay_toggled)
+        self.twelveVCk.pack(fill=tk.X)
+
+        stepDataFrame.pack(fill=tk.BOTH, expand=1)
+
     def build_StatusFrame(self):
         statusFrame = tk.Frame(self.frame, bg="blue")
         #
-        self.simulateVar = tk.BooleanVar(self.frame, False)
-        self.simulateCk = None
         self.simulateCk = tk.Checkbutton(statusFrame, text='Simulate?',
                                          variable=self.simulateVar, onvalue=True, offvalue=False,
                                          command=self.on_SimulateCk_activate)
@@ -253,7 +282,7 @@ class moTabKiln():
         #
         statusFrame.pack(side=tk.TOP, pady=2, fill=tk.X)  # expand=1,
 
-    def setFromScript(self):
+    def updateFromScript(self):
         # used in init and after loading script
         # Tk uses *Var while GTK and various set methods
         self.updating = True  # avoid infinite loops
@@ -270,52 +299,55 @@ class moTabKiln():
         self.descrTxtBox.delete(1.0, tk.END)
         self.descrTxtBox.insert(1.0, self.kilnScript.description)
 
-        self.getKilnStatus()  # grabs rest from moData?
-
-        # self.currSegmentIdex is lable so rest value with
         # keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
-        self.curSegIdx = self.kilnScript.curSegmentIdx
-        #
+        self.curSegIdx = 0
         indicies = [i for i in range(0, self.kilnScript.numSteps())]
         self.stepSelector.config(values=indicies)
 
-        self.setCurSegDisplay()
+        self.updateScriptElements()
 
         self.updating = False
 
     def getTitle(self):
         return self.tabTitle
 
-    def getKilnStatus(self):
+    def getKilnStatusFromMoData(self):
         # status message received: update text and perhaps some others
+        # kilnStatus is Dictionary from Json msg from MODAC Server
         self.kilnStatus = moData.getValue(keyForKilnStatus())
-        self.stateName = self.kilnStatus[keyForState()]
 
-        self.kilnState = KilnState[self.stateName]
+        # extract variables we need
+        self.timestamp = self.kilnStatus[keyForTimeStamp()]
+        self.kilnStateName = self.kilnStatus[keyForState()]
+        self.kilnState = KilnState[self.kilnStateName]
         self.scriptStateName = self.kilnStatus[keyForKilnScriptState()]
+
         if self.kilnState == KilnState.RunningScript:
             # kiln thinks it is running, so lock out edits and up date display from values
             self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
-        self.timestamp = self.kilnStatus[keyForTimeStamp()]
 
         # print("KilnStatus", self.kilnStatus)
         return True
 
-    def setCurSegDisplay(self):
+    def updateScriptElements(self):
         # update elements based on current Script Status
         # update UI from current script and moData
-        # if runningScript, then update ScriptData but
-        # if kiln is Idle, then dont update from moData
-        self.simulateVar.set(self.kilnScript.simulate)
 
         if self.curSegIdx < 0 or self.curSegIdx >= self.kilnScript.numSteps():
             msg = "curSegIdx " + str(self.curSegIdx) + " out of range max " + str(self.kilnScript.numSteps())
             log.error(msg)
             mb.showerror("Segment Index Out of Range", message=msg)
             self.curSegIdx = 0
+        # if runningScript, then update ScriptData but
+        # if kiln is Idle (or other), then dont update from moData
+        if self.kilnState :
+            log.debug("setCurSegDisplay but running script, so dont")
+            return
+        self.simulateVar.set(self.kilnScript.simulate)
+
         self.updating = True
         self.curSeg = self.kilnScript.segments[self.curSegIdx]
-        self.kilnStateLabel.config(text="KilnState:" + self.stateName)
+        self.kilnStateLabel.config(text="KilnState:" + self.kilnStateName)
         self.kilnScriptStateLabel.config(text="Kiln ScriptState:" + self.scriptStateName)
 
         self.stepSelector.current(self.curSegIdx)
@@ -328,17 +360,30 @@ class moTabKiln():
         self.displacementSV.set(str(self.curSeg.targetDistanceChange))
         self.holdTimeSV.set(str(self.curSeg.holdTimeMinutes))
         self.exhaustBV.set(self.curSeg.exhaustFan)
-        self.supportBV.set(curSeg.supportFan)
+        self.supportBV.set(self.curSeg.supportFan)
         self.twelvevBV.set(self.curSeg.v12Relay)
         self.updating = False
 
-    def setData(self):
+    def setData_DEFUNCT(self):
         # from moData, we only want to update the kilnStatus, unless KilnScriptRunning
         # then we want to update the script state idx, and show that one
         #
-        self.getKilnStatus()
-        self.setCurSegDisplay()
+        self.updateScriptElements()
 
+    def updateScriptStatusElements(self):
+        # kilnStatus Elements
+        self.kilnStateLabel.config(text="KilnState: "+self.kilnStateName)
+        self.kilnScriptStateLabel.config(text="KilnState: "+self.scriptStateName)
+        # basically only the scroll box showing the status from moData and thus MODAC Server
+        textScriptStatus = json.dumps(self.kilnStatus, indent=4)
+        scrollPoint = self.scrolledBox.index("@0,0")  # save and restore scroll point
+        self.scrolledBox.delete(1.0, tk.END)
+        self.scrolledBox.insert(tk.END, textScriptStatus)
+        self.scrolledBox.see(scrollPoint)
+
+    # called when MoData is updated by server msg
+    def updateFromMoData(self):
+        self.getKilnStatusFromMoData()
         if self.prevkilnState == KilnState.RunningScript and self.kilnState == KilnState.Idle:
             # really should have gotten EndScript command but...
             log.debug("noticed kilnState went back to Idle, so endScript")
@@ -347,20 +392,15 @@ class moTabKiln():
         self.prevkilnState = self.kilnState
 
         # state is the name or string rep of KilnState
-        log.debug("KilnPanel setData Reported state: "+self.stateName)
+        log.debug("KilnPanel setData Reported state: " + self.kilnStateName)
 
-        self.updateScriptStatusBox()
+        if self.kilnState == KilnState.RunningScript:
+            # only update the script elements when running; to show current segment
+            self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
+            self.updateScriptElements()
 
-    def updateScriptStatusBox(self):
-        textScriptStatus = json.dumps(self.kilnStatus, indent=4)
-        scrollPoint = self.scrolledBox.index("@0,0")  # save and restore scroll point
-        self.scrolledBox.delete(1.0, tk.END)
-        self.scrolledBox.insert(tk.END, textScriptStatus)
-        self.scrolledBox.see(scrollPoint)
+        self.updateScriptStatusElements()  # json scrolling text box
 
-    # called on setup and when MoData is updated by server msg
-    def updateFromMoData(self):
-        self.setData()
         pass
 
     def endScript(self):
@@ -399,25 +439,67 @@ class moTabKiln():
         self.endScript()
         moCommand.cmdStopKilnScript()
 
-    def setEditing(self, boolState):
-        log.debug("setEditing :"+ str(boolState))
+    def setEditingAllowed(self, boolState):
+        log.debug("setEditingAllowed :"+ str(boolState))
         # if True, enable all edit boxes
         # if False, disable all edits
+        if boolState:
+            # state=tk.NORMAL, bg="light grey"
+            self.LoadBtn.config(state=tk.NORMAL, bg="light grey")
+            self.simulateCk.config(state=tk.NORMAL, bg="light grey")
+            self.nameTxtBox.config(state=tk.NORMAL, bg="light grey")
+            self.descrTxtBox.config(state=tk.NORMAL, bg="light grey")
+            self.LoadBtn.config(state=tk.NORMAL, bg="light grey")
+            self.SaveBtn.config(state=tk.NORMAL, bg="light grey")
+            self.stepIofNLabel.config(state=tk.NORMAL, bg="light grey")
+            self.stepSelector.config(state=tk.NORMAL, bg="light grey")
+            self.addBtn.config(state=tk.NORMAL, bg="light grey")
+            self.removeBtn.config(state=tk.NORMA, bg="light grey")
+
+            self.targetTempEntry.config(state=tk.NORMAL, bg="light grey")
+            self.displacementEntry.config(state=tk.NORMAL, bg="light grey")
+            self.holdTimeEntry.config(state=tk.NORMAL, bg="light grey")
+            self.stepTimeEntry.config(state=tk.NORMAL, bg="light grey")
+
+            self.exhaustCk.config(state=tk.NORMAL, bg="light grey")
+            self.supportCk.config(state=tk.NORMAL, bg="light grey")
+            self.twelveVCk.config(state=tk.NORMAL, bg="light grey")
+        else: # state=tk.DISABLED, bg="bisque4"
+            self.LoadBtn.config(state=tk.DISABLED, bg="bisque4")
+            self.simulateCk.config(state=tk.DISABLED, bg="bisque4")
+            self.nameTxtBox.config(state=tk.DISABLED, bg="bisque4")
+            self.descrTxtBox.config(state=tk.DISABLED, bg="bisque4")
+            self.LoadBtn.config(state=tk.DISABLED, bg="bisque4")
+            self.SaveBtn.config(state=tk.DISABLED, bg="bisque4")
+            self.stepIofNLabel.config(state=tk.DISABLED, bg="bisque4")
+            self.stepSelector.config(state=tk.DISABLED, bg="bisque4")
+            self.addBtn.config(state=tk.DISABLED, bg="bisque4")
+            self.removeBtn.config(state=tk.DISABLED, bg="bisque4")
+
+            self.targetTempEntry.config(state=tk.DISABLED, bg="bisque4")
+            self.displacementEntry.config(state=tk.DISABLED, bg="bisque4")
+            self.holdTimeEntry.config(state=tk.DISABLED, bg="bisque4")
+            self.stepTimeEntry.config(state=tk.DISABLED, bg="bisque4")
+
+            self.exhaustCk.config(state=tk.DISABLED, bg="bisque4")
+            self.supportCk.config(state=tk.DISABLED, bg="bisque4")
+            self.twelveVCk.config(state=tk.DISABLED, bg="bisque4")
 
         pass
+
     def setRunStop(self):
         self.runBtn.config(state=tk.DISABLED)
-        self.stopBtn.config(state=tk.ENABLED)
+        self.stopBtn.config(state=tk.NORMAL)
         # TODO need to disable editing script entirely at this point
-        self.setEditing(False)
+        self.setEditingAllowed(False)
         # perhaps something akin to the resetBtn stuff
 
     def resetRunStop(self):
         log.debug("Reset Abort/Run Buttons")
         self.stopBtn.config(state=tk.DISABLED)
-        self.runBtn.config(state=tk.ENABLED)
+        self.runBtn.config(state=tk.NORMAL)
         # TODO reset editing of current step
-        self.setEditing(True)
+        self.setEditingAllowed(True)
 
     def on_LoadKilnScript_clicked(self):
         log.debug("on_LoadKilnScript_clicked")
@@ -441,7 +523,7 @@ class moTabKiln():
         log.debug("on_LoadScript  succeeded file: " + self.filename)
         self.kilnScript = retVal
         self.kilnScript.curSegmentIdx = 0  # force load to step 0
-        self.setFromScript()
+        self.updateFromScript()
 
     def on_SaveKilnScript_clicked(self):
         log.debug("on_SaveKilnScript_clicked")
@@ -472,13 +554,13 @@ class moTabKiln():
         else:
             log.debug("new current, update")
             self.kilnScript.getSegment(curId)
-            self.setFromScript()
+            self.updateFromScript()
 
     def on_AddButton_clicked(self):
         # add one to end, update display
         log.debug("before Add Segment script is: " + str(self.kilnScript))
         self.kilnScript.addNewSegment()
-        self.setFromScript()
+        self.updateFromScript()
         log.debug("after Add Segment script is: " + str(self.kilnScript))
         pass
 
@@ -486,7 +568,7 @@ class moTabKiln():
         # remove current, update display
         log.debug("before Remove Segment script is: " + str(self.kilnScript))
         self.kilnScript.removeCurrentSegment()
-        self.setFromScript()
+        self.updateFromScript()
         log.debug("after Remove Segment script is: " + str(self.kilnScript))
         pass
 

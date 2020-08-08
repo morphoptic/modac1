@@ -122,7 +122,7 @@ async def tkAsyncLoop(receive_channel):
 ##############################
 
 def log_data():
-    log.info(moData.asJson())
+    log.info("moData.asJson:"+moData.asJson())
 
 async def modacAsyncLoop(sendChannel):
     log.info("Begin modacAsyncLoop")
