@@ -380,10 +380,17 @@ class Kiln:
                 self.lastCheckHeatingTemp = self.kilnTemps[0]
             else :
                 if (currentTime - self.lastCheckHeatingTime).total_seconds() > self.overHeatTime:
-                    log.error("emergency!!! temperature too high, shutting down")
-                    self.terminateScript()
-                    moHardware.EmergencyOff()
-                    return
+                    # its been a while since we checked; has temp changed?
+                    if self.lastCheckHeatingTemp < self.kilnTemps[0]:
+                        # its heating, so we good
+                        self.lastCheckHeatingTime = currentTime
+                        self.lastCheckHeatingTemp = self.kilnTemps[0]
+                    else:
+                        # no change in temp? something wrong
+                        log.error("Temperatures didnt change but supposed to be Heating - ERROR!!!")
+                        self.terminateScript()
+                        moHardware.EmergencyOff()
+                        return
 
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
         if enableEStop:
