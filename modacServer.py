@@ -77,11 +77,12 @@ async def modac_ReadPubishLoop():
             moServer.sendShutdown()
             modacExit()
             break;
-        moHardware.update()
-        # any logging?
+        if not moHardware.update():
+            log.error("Error in moHardware Update, suicide")
+            moData.setStatusError()
+            this.okToRunMainLoop = False
 
-        #moData.logData() # log info as json to stdOut/console + logfile
-        # publish data
+        # publish data (includes final Error status)
         await moServer.publish()
         currentTime = datetime.datetime.now()
         #sinceLastLog = (currentTime-lastTime).total_seconds()
@@ -104,6 +105,9 @@ async def modac_ReadPubishLoop():
         except trio.Cancelled:
             log.warning("***Trio Cancelled caught in ReadPublish Loop")
             break
+        if moData.getStatus() == moData.moDataStatus.Error:
+            log.error("Modata is in error- die")
+            modacExit()
     # after Forever
     log.info("somehow we exited the ReadPublish Forever Loop")
 

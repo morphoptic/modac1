@@ -103,7 +103,7 @@ def update():
     #assert not moData.getValue(keyForAD24()) == None
     #assert not moData.getValue(keyForEnviro()) == None
     if not this.simulation:
-        # not a simulation=  watch for sensor errors
+        # not a simulation=  watch for sensor errors (done in asArray)
         moData.update(keyForKType(), asArray())
     else:
         assert not this.simulator == None
@@ -133,7 +133,7 @@ def asArray():
     # these are in 0-5v, need in mV range for use with conversion library
     # it is not clear if we should be using the roomTemp as zero point
     # that might need to be a constant from testing with ice water
-    roomTemp = enviro.degC()
+    #roomTemp = enviro.degC()
     # only look at the ad24 that are identified by the kTypeIdx array
     for adIdx in kTypeIdx:
         try:

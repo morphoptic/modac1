@@ -2,7 +2,7 @@
 if __name__ == "__main__":
     print("moHardware has no self test")
     exit(0)
-    
+
 # cute hack to use module namespace this.fIO this.value should work
 import sys
 this = sys.modules[__name__]
@@ -34,21 +34,34 @@ async def init(nursery):
     this.__initialized = True  # : return
     moData.setStatusInitialized()
     # force at least one update so moData is populated
-    update()
+    if not this.update():
+        log.error("Failed to update on init")
+        this.__initialized = False
+        moData.setStatusError()
     log.debug("moData initialized")
 
 
 def update():
     if not __initialized == True: return
 
-    # get our own timestamp
-    moData.updateTimestamp()
-    enviro.update()
-    binaryOutputs.update()
-    ad24.update()
-    ad16.update()
-    kType.update()
-    leicaDisto.update()
+    try:
+        # get our own timestamp
+        moData.updateTimestamp()
+        enviro.update()
+        binaryOutputs.update()
+        ad24.update()
+        ad16.update()
+        kType.update()
+        leicaDisto.update()
+        return True
+    except:
+        log.error("Exception in MoHardware Update")
+        exc = traceback.format_exc()
+        log.error("Traceback is: " + exc)
+        moData.setStatusError()
+        return False
+
+
 #    if not leicaDisto.isRunning():
 #        #leicaDisto.update() # leica updates happen in other thread
 #        # but if it is dead, try again
@@ -66,7 +79,7 @@ def shutdown():
 
 # TODO should not have two of these!
 def allOff():
-    binaryOutputs.allOff()    
+    binaryOutputs.allOff()
 def allOffCmd():
     binaryOutputs.allOff()
 
@@ -88,8 +101,9 @@ def simulateKiln(onOff=True):
     # leica simulation - done inside kiln
     from kilnControl import kiln
     kiln.setSimulation(onOff)
-    
+
 def EmergencyOff():
     from kilnControl import kiln
-    log.warn("EMERGENCY OFF tiggered")
+    log.warning("EMERGENCY OFF tiggered")
+    moData.setStatusError()
     kiln.emergencyShutOff()
