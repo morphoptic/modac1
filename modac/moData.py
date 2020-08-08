@@ -49,6 +49,7 @@ import datetime, json
 
 from enum import Enum
 class moDataStatus(Enum):
+    Error = -2
     Shutdown = -1
     Startup = 0
     Initialized = 0
@@ -107,8 +108,16 @@ def init(client=False):
 def setStatusInitialized():
     update(keyForStatus(),moDataStatus.Initialized.name)
 
+def setStatusError():
+    update(keyForStatus(),moDataStatus.Error.name)
+
 def setStatusRunning():
     update(keyForStatus(),moDataStatus.Running.name)
+
+def getStatus():
+    statusName = getValue(keyForStatus())
+    status = moDataStatus[statusName]
+    return status
 
 def updateTimestamp():
     update(keyForTimeStamp(), datetime.datetime.now())
