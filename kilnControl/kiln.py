@@ -160,6 +160,7 @@ class Kiln:
         self.processRunnable = False
         self.state = KilnState.Closed
         self.simulation = False
+        self.overHeatTime = 5*60 # temp doenst change in 5min
         self.reset()
         log.debug("Kiln initialized")
         self.state = KilnState.Starting
@@ -201,6 +202,8 @@ class Kiln:
         self.pidOut = [0, 0, 0, 0]
         self.pids = [None, None, None, None]
         self.pids[0] = pidController.PIDController()
+        self.lastCheckHeatingTime = None
+        self. lastCheckHeatingTemp = 0
         if not self.useSinglePID:
             self.pids[1] = pidController.PIDController()
             self.pids[2] = pidController.PIDController()
@@ -319,6 +322,15 @@ class Kiln:
         self.processRunnable = True
         self.state = KilnState.Idle
         while self.processRunnable:
+            if moData.getStatus() == moData.moDataStatus.Error:
+                log.error("kilnControl: noting error in moData, so kill process")
+                self.processRunnable = False
+                self.terminateScript()
+                self.state = KilnState.Error
+                self.updateStatus()
+                self.publishStatus()
+                break
+
             self.kilnStep()
             #self.sleepThisStep = self.time_step   # TODO set this in KilnStep
             self.publishStatus()
@@ -350,6 +362,8 @@ class Kiln:
             if self.scriptState == KilnScriptState.Holding:
                 self.timeInHoldSeconds = (currentTime - self.startHoldTime).total_seconds()
                 self.timeInHoldMinutes = self.timeInHoldSeconds/60
+                self.lastCheckHeatingTime = None
+                self.lastCheckHeatingTemp = 0
 
         # Update Data (heaters, fans, temperture, distance)
         self.updateBinaryDevices()
@@ -359,11 +373,23 @@ class Kiln:
         log.debug("KilnStep top; state: "+str(self.state)+ " curSeg:"+str(self.scriptIndex)+"\n    heaters:"+str(self.reportedHeaterStates)
                   +" temp:"+str(self.kilnTemps) +" heaters:"+str(self.reportedHeaterStates)+
                   " relays: e="+str(self.exhaustFanState)+" s="+str(self.supportFanState)+" 12v:"+str(self.v12RelayState))
-        
+
+        if self.scriptState == KilnScriptState.Heating:
+            if self.lastCheckHeatingTime is None:
+                self.lastCheckHeatingTime = currentTime
+                self.lastCheckHeatingTemp = self.kilnTemps[0]
+            else :
+                if (currentTime - self.lastCheckHeatingTime).total_seconds() > self.overHeatTime:
+                    log.error("emergency!!! temperature too high, shutting down")
+                    self.terminateScript()
+                    moHardware.EmergencyOff()
+                    return
+
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
         if enableEStop:
             if (self.kilnTemps[0] >= emergency_shutoff_temp):
                 log.error("emergency!!! temperature too high, shutting down")
+                self.terminateScript()
                 moHardware.EmergencyOff()
                 return
             
