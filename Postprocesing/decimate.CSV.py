@@ -24,7 +24,7 @@ def processLine (row):
     #print("processing line ",count, row)
     dtStr = row[timestampKey]
     dt = datetime.strptime(dtStr,"%Y-%m-%d %H:%M:%S")
-    if this.lastDateTime== None :
+    if this.lastDateTime is None :
         this.lastDateTime = dt
     elif dt.time().minute == this.lastDateTime.time().minute:
         # skip same minute
