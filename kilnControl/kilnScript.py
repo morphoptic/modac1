@@ -69,7 +69,7 @@ class KilnScript:
         self.curSegmentIdx = 0  # used to indicate current segment
         #self.simulate = False
         self.simulate = True
-        if dict == None:
+        if dict is None:
             # create a new empty one
             self.addNewSegment()
         else:
@@ -233,7 +233,7 @@ class KilnScriptSegment:
             return 0 # default to integer zero
 
     def updateFromDict(self, d):
-        if d == None:
+        if d is None:
             log.error("update from Dict given None")
             return
         self.stepIdx = self.valueFromDict(d,keyForSegmentIndex())

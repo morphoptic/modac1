@@ -21,7 +21,7 @@ timeKey = "time"
 timeFormat = "%I:%M:%S%p"
 
 def isOpen():
-    if this._csvWriter == None:
+    if this._csvWriter is None:
         return False
     return True
 
@@ -38,7 +38,7 @@ def init(filename="modacDataLog.csv"):
     pass
 
 def close():
-    if this._csvFile == None:
+    if this._csvFile is None:
         return
     this._csvFile.close()
     del this._csvFile

@@ -156,7 +156,7 @@ async def csvLogger():
         log.debug("top csvLogger")
         if moTkShared().csvActive:
             now = datetime.datetime.now()
-            if moTkShared().lastCsvStep == None:
+            if moTkShared().lastCsvStep is None:
                 log.debug("First row to CSV")
                 moCSV.addRow()
                 moTkShared().lastCsvStep = now

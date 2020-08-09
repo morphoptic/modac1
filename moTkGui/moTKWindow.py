@@ -87,7 +87,7 @@ class moTkWindow():
     def addTab(self, frame,moObject=None, frameTitle=None):
         #try and get name from frame
         print("AddTab", frame, moObject, frameTitle)
-        if frameTitle == None:
+        if frameTitle is None:
             try:
                 title = moObject.getTitle()
             except:

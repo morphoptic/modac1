@@ -69,10 +69,10 @@ class moAD16Device:
             return
         print("Init AD16Device at i2c address", address)
         
-#        if this.get_i2c() == None:
+#        if this.get_i2c() is None:
 #            logger.debug("AD16Device initializing busio I2C")
 #            __ad16_i2c = busio.I2C(board.SCL, board.SDA)
-        if this.get_i2c() == None:
+        if this.get_i2c() is None:
             log.error("moAD16device error getting i2c bus")
             this.__status = moStatus.Error
             return
@@ -86,12 +86,12 @@ class AD16Channel:
     analogIn = None
     
     def __init__(self, dev, devChan):
-        assert not dev == None
+        assert not dev is None
         assert isinstance(dev, moAD16Device)
         #print("InitAD16Channel dev ", dev)
         #print("InitAD16Channel devChan ", devChan)
         self.myDevice = dev.device
-        assert not self.myDevice == None
+        assert not self.myDevice is None
         self.deviceChannel = devChan
         self.analogIn = AnalogIn(ads=self.myDevice, positive_pin=self.deviceChannel)
                 
@@ -111,7 +111,7 @@ def init():
     log.warning("initialize AD16 - 16bit A-D converter")
     # init the adafruit i2c bus
     this.__ad16_i2c = busio.I2C(board.SCL, board.SDA)
-    if this.__ad16_i2c == None:
+    if this.__ad16_i2c is None:
         log.error("error getting i2c bus for AD16")
         this.__status = moStatus.Error
         moData.update(keyForAD16(), this.__values)
@@ -127,7 +127,7 @@ def init():
             this.__status = moStatus.Error
 
         this.__ad16dev.append(d)
-        if d == None:
+        if d is None:
             log.error("No AD16 device found")
             this.__status = moStatus.Error
 
@@ -153,7 +153,7 @@ def init():
         moDevice = this.__ad16dev[deviceIdx]
         #print("device= ",moDevice)
         chanId = t[1]
-        if moDevice == None or moDevice.device == None:
+        if moDevice is None or moDevice.device is None:
             channel = None
         else:
             channel = AD16Channel(moDevice, chanId)
@@ -172,7 +172,7 @@ def init():
     #print("__values ",__values)
      
 def update():
-    if this.__ad16_i2c == None:
+    if this.__ad16_i2c is None:
         return
     if this.__isAlive == False:
         return

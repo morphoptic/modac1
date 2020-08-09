@@ -42,14 +42,14 @@ def getServerIPaddr():
 # these need to be visible by both sides of pubSub/Pair1
 # note these specify protocol (TCP) in url address
 def pubSubAddress():
-    if this.__pubAddress == None:
+    if this.__pubAddress is None:
         #initialize it
         getServerIPaddr()
         this.__pubAddress = 'tcp://'+ this.__serverIPAddress +':31313'
     return this.__pubAddress
 
 def cmdAddress():
-    if this.__cmdAddress == None:
+    if this.__cmdAddress is None:
         #initialize it
         getServerIPaddr()
         this.__cmdAddress = 'tcp://'+ this.__serverIPAddress +':21212'

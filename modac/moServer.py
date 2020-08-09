@@ -37,7 +37,7 @@ def shutdownServer():
     sendShutdown()
 
     this.__killCmdListener = True # this should stop the serverReceive() from pair1
-    if not this.__Publisher == None:
+    if not this.__Publisher is None:
         this.publish() # one last time
         this.__Publisher.close()
         this.__Publisher = None
@@ -62,7 +62,7 @@ async def publish():
     await publishData(keyForAllData(), moData.asDict())
 
 async def publishData(key, value):
-    if this.__Publisher == None:
+    if this.__Publisher is None:
         log.debug("publisher offline "+key)
         return
     #print("publish: key/value: ", key, value)
@@ -72,7 +72,7 @@ async def publishData(key, value):
     log.debug("sendTopic %s"%msg)
 
 def publishKilnScriptEnded():
-    if this.__Publisher == None:
+    if this.__Publisher is None:
         log.debug("publisher offline publishKilnScriptEnded")
         return
     log.debug("publish: publishKilnScriptEnded")
@@ -106,13 +106,13 @@ async def cmdListenLoop():
         if not retval:
             this.__killCmdListener = True
     log.error("***cmdListenLoop stopping")
-    if not this.__CmdListener == None:
+    if not this.__CmdListener is None:
         this.__CmdListener.close()
         this.__CmdListener = None
     pass
 
 async def serverReceive():
-    if this.__CmdListener == None:
+    if this.__CmdListener is None:
         log.error("aserverReceive() but CmdListener not initialized")
         this.__killCmdListener = True
         return False
@@ -185,7 +185,7 @@ def serverDispatch(topic,body):
     elif topic == keyForStopKilnScript():
         print("\n====== doing Kiln Abort script :", topic)
         log.info("Received StopKilnScript Command")
-        if kiln.kilnInstance == None:
+        if kiln.kilnInstance is None:
             log.info("no kiln object, ignore abort")
             return
         kiln.handleEndKilnScriptCmd()

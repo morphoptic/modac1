@@ -409,7 +409,7 @@ class moTabKiln():
 
     def on_SimulateCk_activate(self):
         # ck box updated, move value to script
-        if self.simulateCk == None:
+        if self.simulateCk is None:
             return
         self.kilnScript.simulate = self.simulateVar.get()
         if self.kilnScript.simulate:

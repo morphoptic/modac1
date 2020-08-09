@@ -48,7 +48,7 @@ def init():
     print("ad24Bit init() scaling 0-5V by %10.9f"%(__adsRawToV*1000))
     log.debug("ad24Bit init() ")
     this.__ads1256 = ADS1256.ADS1256()
-    if this.__ads1256 == None:
+    if this.__ads1256 is None:
         log.error("error creating ads1256 A-D Converter")
     else:
         initRet = this.__ads1256.ADS1256_init()
@@ -65,7 +65,7 @@ def init():
 def update():
     #log.debug("ad24Bit update()")
     # currently crude get all 8 with same default configutatoin
-    if this.__ads1256 == None:
+    if this.__ads1256 is None:
         log.error("No device present, maybe shutdown")
         return
     if this.__isAlive == False:

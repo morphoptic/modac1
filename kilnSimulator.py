@@ -49,7 +49,7 @@ def signalExit(*args):
     #exit(0)
     log.error("signal exit! someone hit ctrl-C?")
     with moData.getNursery() as nursery:
-        if nursery == None:
+        if nursery is None:
             log.info("signal exit, no nursery")
         else:
             print("nursery still contains ", nursery.child_tasks)

@@ -27,7 +27,7 @@ def startJsonLog(baseName = "modacJSON"):
     this.__jsonFile.flush()    
     
 def snapshot():
-    if this.__jsonFile == None:
+    if this.__jsonFile is None:
         log.error("no json file for snapshot")
         return
     dataSnap = moData.asDict()

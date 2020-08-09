@@ -234,7 +234,7 @@ def __appendAName(key):
 
 def arrayColNames():
     log.debug("modData.arrayColNames - for moCSV")
-    if not this.__namesOfColumns == None:
+    if not this.__namesOfColumns is None:
         return this.__namesOfColumns
     this.__namesOfColumns = []
     this.__namesOfColumns.append(keyForTimeStamp())
@@ -277,7 +277,7 @@ def arrayColNames():
 
 def arrayNameOnlyAD24():
     log.debug("modData.arrayNameOnlyAD24 - for testAD24")
-    if not this.__namesOfColumns == None:
+    if not this.__namesOfColumns is None:
         log.error("moData columns already named")
         return this.__namesOfColumns
     this.__namesOfColumns = []

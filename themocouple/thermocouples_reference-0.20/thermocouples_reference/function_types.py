@@ -14,7 +14,7 @@ from .units import *
 optimize = None
 def ensure_import_optimize():
     global optimize
-    if optimize == None:
+    if optimize is None:
         try:
             import scipy.optimize as optimize
         except ImportError:
@@ -196,7 +196,7 @@ class Polynomial_Gaussian_Piecewise_Function(object):
 
         ensure_import_optimize()
         
-        if Tstart == None:
+        if Tstart is None:
             Tstart = 0.5*(self.minT + self.maxT)
         V = float(V)
         

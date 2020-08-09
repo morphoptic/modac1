@@ -60,7 +60,7 @@ def setCSVFile():
                                 defaultextension='.csv')
     print(name)
     # if ok, then
-    if name == None or name == "":
+    if name is None or name == "":
         return
     moTkShared().csvFilename = name
     moTkShared().last_open_dir = os.path.dirname(name)

@@ -308,7 +308,7 @@ class kilnPanel():
                 pass
 
             print("loaded file? ", str(retVal))
-            if retVal == None:
+            if retVal is None:
                 log.error("on_LoadScript failed, file: " + self.filename )
             else:
                 log.debug("on_LoadScript  succeeded file: " + self.filename )

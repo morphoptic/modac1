@@ -88,7 +88,7 @@ def binaryCmd(channel,onoff):
     binaryOutputs.setOutput(channel,onoff)
 
 def resetLeicaCmd():
-    if this.__nursery == None:
+    if this.__nursery is None:
         return
     # dont block like in init(), do it async
     if leicaDisto.isRunning():
