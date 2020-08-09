@@ -76,7 +76,7 @@ class moTabKiln():
         self.exhaustBV = tk.BooleanVar(self.frame, False)
         self.supportBV = tk.BooleanVar(self.frame, False)
         self.holdTimeSV = tk.StringVar(self.frame)
-        self.twelvevBV = tk.BooleanVar(self.frame, False)
+        self.v12RelayBV = tk.BooleanVar(self.frame, False)
         self.simulateVar = tk.BooleanVar(self.frame, False)
         # fwd reference ui elements as None (also keeps list to set Disable/Normal)
         self.simulateCk = None
@@ -261,7 +261,7 @@ class moTabKiln():
                                         command=self.on_SupportFan_toggled)
         self.supportCk.pack(fill=tk.X)
         self.twelveVCk = tk.Checkbutton(stepDataFrame, text='KilnHeater 12V',
-                                        variable=self.twelvevBV, onvalue=True, offvalue=False,
+                                        variable=self.v12RelayBV, onvalue=True, offvalue=False,
                                         command=self.on_12vRelay_toggled)
         self.twelveVCk.pack(fill=tk.X)
 
@@ -283,6 +283,7 @@ class moTabKiln():
         statusFrame.pack(side=tk.TOP, pady=2, fill=tk.X)  # expand=1,
 
     def updateFromScript(self):
+        log.debug("Update From Script ")
         # used in init and after loading script
         # Tk uses *Var while GTK and various set methods
         self.updating = True  # avoid infinite loops
@@ -300,7 +301,7 @@ class moTabKiln():
         self.descrTxtBox.insert(1.0, self.kilnScript.description)
 
         # keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
-        self.curSegIdx = 0
+        self.curSegIdx = self.kilnScript.curSegmentIdx
         indicies = [i for i in range(0, self.kilnScript.numSteps())]
         self.stepSelector.config(values=indicies)
 
@@ -332,6 +333,7 @@ class moTabKiln():
     def updateScriptElements(self):
         # update elements based on current Script Status
         # update UI from current script and moData
+        log.debug("updateScript Elements")
 
         if self.curSegIdx < 0 or self.curSegIdx >= self.kilnScript.numSteps():
             msg = "curSegIdx " + str(self.curSegIdx) + " out of range max " + str(self.kilnScript.numSteps())
@@ -340,7 +342,7 @@ class moTabKiln():
             self.curSegIdx = 0
         # if runningScript, then update ScriptData but
         # if kiln is Idle (or other), then dont update from moData
-        if self.kilnState :
+        if self.kilnState == KilnState.RunningScript :
             log.debug("setCurSegDisplay but running script, so dont")
             return
         self.simulateVar.set(self.kilnScript.simulate)
@@ -361,14 +363,10 @@ class moTabKiln():
         self.holdTimeSV.set(str(self.curSeg.holdTimeMinutes))
         self.exhaustBV.set(self.curSeg.exhaustFan)
         self.supportBV.set(self.curSeg.supportFan)
-        self.twelvevBV.set(self.curSeg.v12Relay)
+        log.debug("Set 12v Relay BV and thus ckbox "+str(self.curSeg.v12Relay))
+        self.v12RelayBV.set(self.curSeg.v12Relay)
+        self.stepTimeSV.set(str(self.curSeg.stepTime))
         self.updating = False
-
-    def setData_DEFUNCT(self):
-        # from moData, we only want to update the kilnStatus, unless KilnScriptRunning
-        # then we want to update the script state idx, and show that one
-        #
-        self.updateScriptElements()
 
     def updateScriptStatusElements(self):
         # kilnStatus Elements
@@ -407,7 +405,7 @@ class moTabKiln():
         log.debug("Kiln endScript")
         self.curSegIdx = 0
         self.kilnScript.getSegment(0)
-        self.resetRunStop()
+        self.setEditingAllowed(state=True)
 
     def on_SimulateCk_activate(self):
         # ck box updated, move value to script
@@ -429,7 +427,7 @@ class moTabKiln():
         param = str(self.kilnScript)
 
         # Disable Run, Enable Terminate
-        self.setRunStop()
+        self.setEditingAllowed(state=False)
 
         print("\n**** Send RunKiln: ", param)
         moCommand.cmdRunKilnScript(param)
@@ -438,6 +436,7 @@ class moTabKiln():
         log.debug("onTerminateRun")
         self.endScript()
         moCommand.cmdStopKilnScript()
+        self.setEditingAllowed(state=True)
 
     def setEditingAllowed(self, boolState):
         log.debug("setEditingAllowed :"+ str(boolState))
@@ -445,6 +444,8 @@ class moTabKiln():
         # if False, disable all edits
         if boolState:
             # state=tk.NORMAL, bg="light grey"
+            self.runBtn.config(state=tk.NORMAL)
+            self.stopBtn.config(state=tk.DISABLED)
             self.LoadBtn.config(state=tk.NORMAL, bg="light grey")
             self.simulateCk.config(state=tk.NORMAL, bg="light grey")
             self.nameTxtBox.config(state=tk.NORMAL, bg="light grey")
@@ -465,6 +466,8 @@ class moTabKiln():
             self.supportCk.config(state=tk.NORMAL, bg="light grey")
             self.twelveVCk.config(state=tk.NORMAL, bg="light grey")
         else: # state=tk.DISABLED, bg="bisque4"
+            self.runBtn.config(state=tk.DISABLED)
+            self.stopBtn.config(state=tk.NORMAL)
             self.LoadBtn.config(state=tk.DISABLED, bg="bisque4")
             self.simulateCk.config(state=tk.DISABLED, bg="bisque4")
             self.nameTxtBox.config(state=tk.DISABLED, bg="bisque4")
@@ -487,27 +490,13 @@ class moTabKiln():
 
         pass
 
-    def setRunStop(self):
-        self.runBtn.config(state=tk.DISABLED)
-        self.stopBtn.config(state=tk.NORMAL)
-        # TODO need to disable editing script entirely at this point
-        self.setEditingAllowed(False)
-        # perhaps something akin to the resetBtn stuff
-
-    def resetRunStop(self):
-        log.debug("Reset Abort/Run Buttons")
-        self.stopBtn.config(state=tk.DISABLED)
-        self.runBtn.config(state=tk.NORMAL)
-        # TODO reset editing of current step
-        self.setEditingAllowed(True)
-
     def on_LoadKilnScript_clicked(self):
         log.debug("on_LoadKilnScript_clicked")
         name = fd.askopenfilename(initialdir=self.last_open_dir,
                                   title="Kiln Script File To Open",
                                   filetypes=[('JSON files', '.json')],
                                   defaultextension='.json')
-        if name == None or name == "":
+        if name is None or name == "":
             return  # canceled
         self.filename = name
         log.debug("Load Script from file: " + str(self.filename))
@@ -536,19 +525,19 @@ class moTabKiln():
                                     defaultextension='.json')
         print("saveScript to file", name)
         # if ok, then
-        if name == None or name == "":
+        if name is None or name == "":
             return
         self.filename = name
         log.debug("saveScript to file: " + str(self.filename))
         self.last_open_dir = os.path.dirname(name)
         self.kilnScript.saveScript(self.filename)
 
-    def on_stepSelectorChanged(self):
+    def on_stepSelectorChanged(self, event):
         if self.updating == True:
             return  # avoid repeated triggers and stack overflow
         # a step was selected... make that index current
-        curId = selector.current()
-        log.debug("stepSelector Changed")
+        curId = self.stepSelector.current()
+        log.debug("stepSelector Changed id now "+str(curId)+" was "+str(self.kilnScript.curSegmentIdx))
         if curId == self.kilnScript.curSegmentIdx:
             log.debug("same as current, ignore")
         else:
@@ -620,7 +609,7 @@ class moTabKiln():
 
     def on_12vRelay_toggled(self, button):
         if self.updating: return  # avoid repeated triggers and stack overflow
-        if self.exhaustCk is None: return
+        if self.twelveVCk is None: return
         curSeg = self.kilnScript.getCurrentSegment()
-        curSeg.v12Relay = self.twelvevBV.get()
+        curSeg.v12Relay = self.v12RelayBV.get()
         log.info("after toggle v12Relay: " + str(curSeg.v12Relay))

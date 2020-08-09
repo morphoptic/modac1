@@ -89,6 +89,7 @@ class KilnScript:
                 s.updateFromDict(segAsDict)
                 self.segments.append(s)
             log.debug("initialized kilnScript from dict " + str(self))
+        self.renumber()
 
     def __str__(self):
         return json.dumps(self.asDict(), indent=4)
@@ -125,6 +126,7 @@ class KilnScript:
         if self.curSegmentIdx < 0:
             self.addNewSegment()  # cant have it empty
         # TODO - renumber segments
+        self.renumber()
 
     def insertSegmentBefore(self, beforeIdx):
         #TODO not tested
