@@ -374,10 +374,11 @@ class moTabKiln():
         self.kilnScriptStateLabel.config(text="KilnState: "+self.scriptStateName)
         # basically only the scroll box showing the status from moData and thus MODAC Server
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
+        # TODO: index/see should scroll back to same point but doesnt
         scrollPoint = self.scrolledBox.index("@0,0")  # save and restore scroll point
         self.scrolledBox.delete(1.0, tk.END)
         self.scrolledBox.insert(tk.END, textScriptStatus)
-        self.scrolledBox.see(scrollPoint)
+        self.scrolledBox.see("end")#str(scrollPoint))
 
     # called when MoData is updated by server msg
     def updateFromMoData(self):
@@ -405,7 +406,7 @@ class moTabKiln():
         log.debug("Kiln endScript")
         self.curSegIdx = 0
         self.kilnScript.getSegment(0)
-        self.setEditingAllowed(state=True)
+        self.setEditingAllowed(True)
 
     def on_SimulateCk_activate(self):
         # ck box updated, move value to script
@@ -427,7 +428,7 @@ class moTabKiln():
         param = str(self.kilnScript)
 
         # Disable Run, Enable Terminate
-        self.setEditingAllowed(state=False)
+        self.setEditingAllowed(False)
 
         print("\n**** Send RunKiln: ", param)
         moCommand.cmdRunKilnScript(param)
@@ -436,7 +437,7 @@ class moTabKiln():
         log.debug("onTerminateRun")
         self.endScript()
         moCommand.cmdStopKilnScript()
-        self.setEditingAllowed(state=True)
+        self.setEditingAllowed(True)
 
     def setEditingAllowed(self, boolState):
         log.debug("setEditingAllowed :"+ str(boolState))
@@ -444,8 +445,8 @@ class moTabKiln():
         # if False, disable all edits
         if boolState:
             # state=tk.NORMAL, bg="light grey"
-            self.runBtn.config(state=tk.NORMAL)
-            self.stopBtn.config(state=tk.DISABLED)
+            self.runBtn.config(state=tk.NORMAL, bg="light grey")
+            self.stopBtn.config(state=tk.DISABLED, bg="pink")
             self.LoadBtn.config(state=tk.NORMAL, bg="light grey")
             self.simulateCk.config(state=tk.NORMAL, bg="light grey")
             self.nameTxtBox.config(state=tk.NORMAL, bg="light grey")
@@ -453,9 +454,9 @@ class moTabKiln():
             self.LoadBtn.config(state=tk.NORMAL, bg="light grey")
             self.SaveBtn.config(state=tk.NORMAL, bg="light grey")
             self.stepIofNLabel.config(state=tk.NORMAL, bg="light grey")
-            self.stepSelector.config(state=tk.NORMAL, bg="light grey")
+            self.stepSelector.config(state=tk.NORMAL)#, bg="light grey")
             self.addBtn.config(state=tk.NORMAL, bg="light grey")
-            self.removeBtn.config(state=tk.NORMA, bg="light grey")
+            self.removeBtn.config(state=tk.NORMAL, bg="light grey")
 
             self.targetTempEntry.config(state=tk.NORMAL, bg="light grey")
             self.displacementEntry.config(state=tk.NORMAL, bg="light grey")
@@ -465,28 +466,28 @@ class moTabKiln():
             self.exhaustCk.config(state=tk.NORMAL, bg="light grey")
             self.supportCk.config(state=tk.NORMAL, bg="light grey")
             self.twelveVCk.config(state=tk.NORMAL, bg="light grey")
-        else: # state=tk.DISABLED, bg="bisque4"
-            self.runBtn.config(state=tk.DISABLED)
-            self.stopBtn.config(state=tk.NORMAL)
-            self.LoadBtn.config(state=tk.DISABLED, bg="bisque4")
-            self.simulateCk.config(state=tk.DISABLED, bg="bisque4")
-            self.nameTxtBox.config(state=tk.DISABLED, bg="bisque4")
-            self.descrTxtBox.config(state=tk.DISABLED, bg="bisque4")
-            self.LoadBtn.config(state=tk.DISABLED, bg="bisque4")
-            self.SaveBtn.config(state=tk.DISABLED, bg="bisque4")
-            self.stepIofNLabel.config(state=tk.DISABLED, bg="bisque4")
-            self.stepSelector.config(state=tk.DISABLED, bg="bisque4")
-            self.addBtn.config(state=tk.DISABLED, bg="bisque4")
-            self.removeBtn.config(state=tk.DISABLED, bg="bisque4")
+        else: # state=tk.DISABLED, bg="pink"
+            self.runBtn.config(state=tk.DISABLED, bg="pink")
+            self.stopBtn.config(state=tk.NORMAL, bg="light grey")
+            self.LoadBtn.config(state=tk.DISABLED, bg="pink")
+            self.simulateCk.config(state=tk.DISABLED, bg="pink")
+            self.nameTxtBox.config(state=tk.DISABLED, bg="pink")
+            self.descrTxtBox.config(state=tk.DISABLED, bg="pink")
+            self.LoadBtn.config(state=tk.DISABLED, bg="pink")
+            self.SaveBtn.config(state=tk.DISABLED, bg="pink")
+            self.stepIofNLabel.config(state=tk.DISABLED, bg="pink")
+            self.stepSelector.config(state=tk.DISABLED)#, bg="pink")
+            self.addBtn.config(state=tk.DISABLED, bg="pink")
+            self.removeBtn.config(state=tk.DISABLED, bg="pink")
 
-            self.targetTempEntry.config(state=tk.DISABLED, bg="bisque4")
-            self.displacementEntry.config(state=tk.DISABLED, bg="bisque4")
-            self.holdTimeEntry.config(state=tk.DISABLED, bg="bisque4")
-            self.stepTimeEntry.config(state=tk.DISABLED, bg="bisque4")
+            self.targetTempEntry.config(state=tk.DISABLED, bg="pink")
+            self.displacementEntry.config(state=tk.DISABLED, bg="pink")
+            self.holdTimeEntry.config(state=tk.DISABLED, bg="pink")
+            self.stepTimeEntry.config(state=tk.DISABLED, bg="pink")
 
-            self.exhaustCk.config(state=tk.DISABLED, bg="bisque4")
-            self.supportCk.config(state=tk.DISABLED, bg="bisque4")
-            self.twelveVCk.config(state=tk.DISABLED, bg="bisque4")
+            self.exhaustCk.config(state=tk.DISABLED, bg="pink")
+            self.supportCk.config(state=tk.DISABLED, bg="pink")
+            self.twelveVCk.config(state=tk.DISABLED, bg="pink")
 
         pass
 

@@ -24,6 +24,7 @@ class moTabAllData():
     def updateFromMoData(self):
         # TODO: remember scroll position and reset to there
         moMsg = moData.asJson() #grab the whole thing and stuff it in scrolled text
+        # TODO: index/see should scroll back to same point but doesnt
         index = self.scrolledBox.index("@0,0")
         self.scrolledBox.delete(1.0, tk.END)
         self.scrolledBox.insert(tk.END, moMsg)

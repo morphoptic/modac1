@@ -111,7 +111,7 @@ async def tkAsyncLoop(receive_channel):
             log.error("Exception caught in the nursery loop: " + str(sys.exc_info()[0]))
             exc = traceback.format_exc()
             log.error("Traceback is: " + exc)
-            # TODO need to handle Ctl-C on server better
+            # TODO need to handle Ctl-C on server better?
             # trio has ways to catch it, then we need to properly shutdown spawns
             print("Exception somewhere in modac_io_server event loop.")
             print(exc)
