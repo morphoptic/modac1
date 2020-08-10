@@ -81,6 +81,7 @@ def init(client=False):
     # in server individual devices will post their own init values
     # client needs to fake em - which may be maintance issue to keep consistent
     if client == True:
+        log.debug("Initialize moData in Client")
         def_env = {keyForTimeStamp():"No Data Yet",
          keyForHumidity():0,
          keyForTemperature():0,
@@ -130,7 +131,6 @@ def update(key,value):
         if isinstance(value, datetime.datetime):
             value = value.strftime(getTimeFormat())
     this.__moDataDictionary[key] = value
-    # modac_BLE_Laser.update()
     pass
 
 def getTimestamp():

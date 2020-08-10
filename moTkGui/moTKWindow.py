@@ -89,7 +89,7 @@ class moTkWindow():
         print("AddTab", frame, moObject, frameTitle)
         if frameTitle is None:
             try:
-                title = moObject.getTitle()
+                frameTitle = moObject.getTitle()
             except:
                 log.error("addTab doesnt seem to have a getTabTitle")
                 frameTitle = "None"

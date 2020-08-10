@@ -29,6 +29,7 @@ from modac import moData, moClient, moCSV
 from moTkGui.moTKWindow import moTkWindow
 from moTkGui.moTabAllData import moTabAllData
 from moTkGui.moTabKiln import moTabKiln
+from moTkGui.moPanelTempPlot import moPanelTempPlot
 from moTkGui.moTkShared import *
 
 ###############
@@ -55,9 +56,13 @@ def createTKWindow():
     #tab1 = tk.Frame(this.moWindow.notebook(), bg="red")
     #this.moWindow.addTab(tab1,frameTitle="Tab1")
 
-    kilnFrame = tk.Frame(this.moWindow.notebook(), bg="cyan")
+    tempDistFrame = tk.Frame(this.moWindow.notebook(), bg="green")
+    this.TempDistTab = moPanelTempPlot(tempDistFrame)
+    this.moWindow.addTab(tempDistFrame,moObject=this.TempDistTab)
+
+    kilnFrame = tk.Frame(this.moWindow.notebook(), bg="blue")
     this.kilnTab = moTabKiln(kilnFrame)
-    this.moWindow.addTab(kilnFrame,moObject=this.kilnTab,frameTitle="Kiln Control")
+    this.moWindow.addTab(kilnFrame,moObject=this.kilnTab)
 
     allDataFrame = tk.Frame(this.moWindow.notebook(), bg="cyan")
     this.allDataTab = moTabAllData(allDataFrame)
@@ -204,7 +209,7 @@ if __name__ == "__main__":
     # watch for signals
     signal.signal(signal.SIGINT, signalExit)
 
-    moData.init()
+    moData.init(client=True)
     moClient.startClient()  # open hailing frequencies (pynng comms w/server)
     createTKWindow() # builds the UI
     try:

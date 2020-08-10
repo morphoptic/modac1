@@ -16,12 +16,6 @@ from modac import moCommand, moClient
 from kilnControl.kilnScript import *
 from .moTkShared import *
 
-defaultTargetTemp = 100.0
-defaultDisplacement = 5.0
-defaultMaxTime = (60 * 24)
-defaultStepTime = 2
-
-
 ### couple validators for TextEntry widgets
 def validPositiveInt(s):  # validates string holds positive int
     try:
@@ -44,6 +38,9 @@ def validPositiveFloat(s):
 
 
 class moTabKiln():
+    def getTitle(self):
+        return self.tabTitle
+
     def __init__(self, frame):
         # TODO build out by copying in from kilnPanel2.py (GTK)
         self.frame = frame
@@ -101,7 +98,6 @@ class moTabKiln():
         self.exhaustCk = None
         self.supportCk = None
         self.twelveVCk = None
-
 
         # now build the UI Panel
         # statusFrame: simulate CkBox; KilnState; KilnScriptState
@@ -308,9 +304,6 @@ class moTabKiln():
         self.updateScriptElements()
 
         self.updating = False
-
-    def getTitle(self):
-        return self.tabTitle
 
     def getKilnStatusFromMoData(self):
         # status message received: update text and perhaps some others
