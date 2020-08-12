@@ -1,15 +1,20 @@
 #moPanelTempPlot a tab for moTkShell to display temperature table and matplot
+from datetime import datetime
 import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers, traceback
+# import colorlog
+# handler = colorlog.StreamHandler()
+# handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+# log = colorlog.getLogger(__name__)
+# log.addHandler(handler)
+
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
 
 import tkinter as tk
 from tkinter import ttk
 
-import numpy as np
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -17,6 +22,7 @@ from matplotlib.figure import Figure
 from modac.moKeys import *
 from modac import moData
 
+log.setLevel(logging.DEBUG)
 
 class moPanelTempPlot():
     def getTitle(self):
@@ -29,25 +35,37 @@ class moPanelTempPlot():
         self.tabTitle = "K-type+Dist"
         self.maxRows = 100  # __plotWidth # for some reason it is not accepting __plotWidth
 
+        now = datetime.now()
         self.count = 0
-        self.columnNames = ("time", "AvgT", "Lower", "Middle", "Upper", "Distance")
+        self.columnNames = ("time", "AvgT", "Lower", "Middle", "Upper")
         self.n_col = len(self.columnNames)
         print("self.columnNames", self.columnNames,self.n_col)
-        self.times = [0]*self.maxRows
-        self.data = [[0] * self.maxRows] * self.n_col
+        self.times = [now]*self.maxRows
+        #self.data = [[0] * self.maxRows] * self.n_col
+        # we know what we got, and can skip the 2d array
+        self.avgT = [0]*self.maxRows
+        self.lowerT = [0]*self.maxRows
+        self.middleT = [0]*self.maxRows
+        self.upperT = [0]*self.maxRows
+        self.distance = [0]*self.maxRows
+        self.minData = 1000 # instead of using numpy min/max just keep em on the fly
+        self.maxData = 0 # although this may be an issue when overall min/max scroll off
         self.stateName = None
 
         self.upperPanel = None
         self.lowerPanel = None
         self.treeView = None
+        self.fig = None
+        self.canvas = None
+        self.subplot = None
 
         self.buildTablePanel()
         self.buildGraphPanel()
-        self.updateFromMoData()
+        self.updateFromMoData()  # fill in from whatever is in the data
 
     def buildTablePanel(self):
         self.upperPanel = tk.Frame(self.frame, bg="blue")
-        self.treeView = ttk.Treeview(self.upperPanel, columns=self.columnNames)
+        self.treeView = ttk.Treeview(self.upperPanel, columns=self.columnNames, height=8)
         self.treeView['show'] = 'headings'
         for colName in self.columnNames:
             self.treeView.column(colName, width=10, anchor='c')
@@ -55,11 +73,11 @@ class moPanelTempPlot():
 
         vScroll = ttk.Scrollbar(self.upperPanel,
                                    orient=tk.VERTICAL,
-                                   command=self.treeView)
+                                   command=self.treeView.yview)
 
         # Calling pack method w.r.to verical
         # scrollbar
-        vScroll.pack(side=tk.LEFT, fill=tk.X)
+        vScroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Configuring treeview
         self.treeView.configure(yscrollcommand=vScroll.set)
@@ -67,7 +85,7 @@ class moPanelTempPlot():
 
         # placeholder = tk.Label(self.upperPanel, text="Table will go here")
         # placeholder.pack()
-        self.upperPanel.pack(side=tk.TOP, pady=2, fill=tk.X)
+        self.upperPanel.pack(side=tk.TOP, fill=tk.X)
 
     def selectColumn(self, colName):
         print("In Select Column ", colName)
@@ -78,59 +96,108 @@ class moPanelTempPlot():
         self.fig = Figure(figsize=(6, 4))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.lowerPanel)  # a Gtk.DrawingArea
 
-        self.ax = self.fig.add_subplot(1, 1, 1)
-        line, = self.ax.plot(self.times, self.data[1])  # plot the first row
-
-        #placeholder = tk.Label(self.lowerPanel, text="Graph will go here")
-        #placeholder.pack()
-        self.lowerPanel.pack(side=tk.BOTTOM, pady=2, fill=tk.X)
+        # put something in the graph. it will replave on frist updateFromMoData()/plotAll()
+        self.subplot = self.fig.add_subplot(1, 1, 1)
+        line, = self.subplot.plot(self.times, self.avgT)  # plot the first column
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH)
+        self.lowerPanel.pack(side=tk.BOTTOM, fill=tk.X)
 
     def updateFromMoData(self):
         # TODO: remember scroll position and reset to there
         kilnStatus = moData.getValue(keyForKilnStatus())
         print("Kilnstatus:", kilnStatus)
         self.timestamp = moData.getValue(keyForTimeStamp())
-
+        try:
+            dtime = datetime.strptime(self.timestamp, moData.getTimeFormat() )
+        except ValueError:
+            # probably first one with NoDataYet
+            dtime = datetime.now()
         ktypes = kilnStatus[keyForKilnTemperatures()]
         distance = kilnStatus[keyForCurrentDisplacement()]
 
         self.count = self.count+1
-        self.times.append(self.count)
-        self.times = self.times[-self.maxRows:]
+        #self.times.append(self.count)
+        self.times.append(dtime)
+        self.times.pop(0)
 
-        row = [self.timestamp]
-        for i in range(len(ktypes)):
-            v = ktypes[i]
-            self.data[i].append(v)
-            self.data[i] = self.data[i][-self.maxRows:]
-            row.append(str(v))
-        row.append(str(distance))
+        if self.count % (self.maxRows/2) == 0:
+            log.debug("hit count mod maxRows, so recalc max/min")
+            self.recalcDataMaxMin()
+
+        a = ktypes[0]
+        b = ktypes[1]
+        m = ktypes[2]
+        t = ktypes[3]
+        self.minMax(a)
+        self.minMax(b)
+        self.minMax(m)
+        self.minMax(t)
+        self.avgT.append(a)
+        self.avgT.pop(0)
+        self.lowerT.append(b)
+        self.lowerT.pop(0)
+        self.middleT.append(m)
+        self.middleT.pop(0)
+        self.upperT.append(t)
+        self.upperT.pop(0)
+
+        row = [self.timestamp, str(a), str(b), str(m), str(t)]
         self.treeView.insert("", 0, values=row)
+        # now remove last/oldest row
         children = self.treeView.get_children()
         if len(children) > self.maxRows:
             lastIID = children[-1]
-            print("Childre ", children,"LastIID", lastIID)
             self.treeView.delete(lastIID)
+
         self.plotTemps()
 
     def plotTemps(self):
-        mi = np.min(self.data)
-        ma = np.max(self.data)
-        print("data has:", len(self.data), self.data)
-        print("min has:", len(mi), mi)
-        print("max has:", len(ma), ma)
-        r = (ma-mi) * 0.01
-        if r < ma*0.5:
-            r+=ma*0.5
-        mi -= r
-        ma += r
-        print("plotAll min",mi, "max", ma)
-        self.ax.clear()
-        self.ax.set_title("All kType Thermocouples")
-        self.ax.set_ylim(mi,ma) # 10% under and over
-        for colIdx in range(self.n_col):
-            self.ax.plot(self.times, self.data[colIdx], label= self.columnNames[colIdx+1])
-        self.ax.legend(loc=2)
+        mi = self.minData - (self.minData * 0.1)
+        ma = self.maxData + (self.maxData*0.1)
+        if ma < 100:
+            ma = 100 # min size is 0-100
+        print("plotAll mi ",mi, "ma", ma)
+        if mi < 0:
+            mi = self.minData
+        self.subplot.clear()
+        self.subplot.set_title("All kType Thermocouples")
+        self.subplot.set_ylim(mi, ma)
+        # subplot.xaxis.set_major_locator(matplotlib.dates.YearLocator())
+        # subplot.xaxis.set_minor_locator(matplotlib.dates.MonthLocator((1, 4, 7, 10)))
+        # subplot.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("\n%Y"))
+        # subplot.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter("%b"))
+        self.subplot.set_xticks(self.times)
+        xfmt = matplotlib.dates.DateFormatter('%a %H:%M:%S')
+        self.subplot.xaxis.set_major_formatter(xfmt)
+        self.subplot.plot(self.times, self.avgT, label="averageT")
+        self.subplot.plot(self.times, self.lowerT, label="lowerT")
+        self.subplot.plot(self.times, self.middleT, label="middleT")
+        self.subplot.plot(self.times, self.upperT, label="upperT")
+        # dates = matplotlib.dates.date2num(self.times)
+        # self.subplot.plot_date(dates, self.avgT, label="averageT")
+        # self.subplot.plot_date(dates, self.lowerT, label="lowerT")
+        # self.subplot.plot_date(dates, self.middleT, label="middleT")
+        # self.subplot.plot_date(dates, self.upperT, label="upperT")
+        self.subplot.legend(loc=2)
+        self.fig.autofmt_xdate()
         self.canvas.draw()
         pass
+
+    def recalcDataMaxMin(self):
+        log.debug("recalcDataMaxMin count:", str(self.count), "was min", str(self.minData) , " max ",str(self.maxData))
+        self.minData = 1000 # instead of using numpy min/max just keep em on the fly
+        self.maxData = 0 # although this may be an issue when overall min/max scroll off
+        for i in range(self.maxRows):
+            self.minMax(self.avgT[i])
+            self.minMax(self.lowerT[i])
+            self.minMax(self.middleT[i])
+            self.minMax(self.upperT[i])
+        log.debug("recalcDataMaxMin new min/max "+str(self.minData) + ":" + str(self.maxData))
+
+    def minMax(self,datum):
+        if datum < self.minData:
+            self.minData = datum
+        if datum > self.maxRows:
+            self.maxData = datum
+
 

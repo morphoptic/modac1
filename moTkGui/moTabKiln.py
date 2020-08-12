@@ -15,6 +15,7 @@ from modac import moData, moLogger
 from modac import moCommand, moClient
 from kilnControl.kilnScript import *
 from .moTkShared import *
+from .moPanelTempPlot import moPanelTempPlot
 
 ### couple validators for TextEntry widgets
 def validPositiveInt(s):  # validates string holds positive int
@@ -108,6 +109,7 @@ class moTabKiln():
         #    stepBtnFrame: stepSelect; Add; Remove
         #    stepDataFrame: TargetTempSelect; displacement; holdTime; exhaust;support; 12v; pidStepTime
         #    scrollFrame: scroll box of kilnStatus json
+        # tempPlotFrame: moPanelTempPlot
 
         ############
         self.build_StatusFrame()
@@ -126,13 +128,18 @@ class moTabKiln():
         self.build_StepDataFrame(leftFrame)
         leftFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-        stepScrollFrame = tk.Frame(self.scriptStepFrame, bg="green")
-        self.scrolledBox = tk.scrolledtext.ScrolledText(stepScrollFrame)
+        stepScrollFrame = tk.Frame(self.scriptStepFrame, bg="blue")
+        self.scrolledBox = tk.scrolledtext.ScrolledText(stepScrollFrame, height=12)
         self.scrolledBox.insert(tk.END, "This is\n the first\n text")
-        self.scrolledBox.pack(fill=tk.Y, expand=1)
-        stepScrollFrame.pack(side=tk.RIGHT, expand=1, fill=tk.BOTH)
+        self.scrolledBox.pack(fill=tk.Y,)
+        stepScrollFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
 
-        self.scriptStepFrame.pack(side=tk.BOTTOM, pady=2, expand=1, fill=tk.BOTH)
+        #self.scriptStepFrame.pack(side=tk.BOTTOM, pady=2, expand=1, fill=tk.BOTH)
+        self.scriptStepFrame.pack( pady=1,expand=1, fill=tk.BOTH)
+
+        self.temperatureFrame = tk.Frame(self.frame, bg="blue")
+        self.moTempPanel = moPanelTempPlot(self.temperatureFrame)
+        self.temperatureFrame.pack(side=tk.BOTTOM, expand=1, fill=tk.BOTH)
 
         ############
         self.updateFromScript()  # coming back from this will have self.updating=False
@@ -179,7 +186,7 @@ class moTabKiln():
         descrFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
         infoTxtFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
         ##
-        infoFrame.pack(pady=2, fill=tk.X)
+        infoFrame.pack(pady=1,fill=tk.X)
 
     def build_StepBtnFrame(self, parentFrame):
         stepBtnFrame = tk.Frame(parentFrame)
@@ -333,11 +340,11 @@ class moTabKiln():
             log.error(msg)
             mb.showerror("Segment Index Out of Range", message=msg)
             self.curSegIdx = 0
-        # if runningScript, then update ScriptData but
+        # if runningScript, then elements should be read only, so update from script
         # if kiln is Idle (or other), then dont update from moData
-        if self.kilnState == KilnState.RunningScript :
-            log.debug("setCurSegDisplay but running script, so dont")
-            return
+        # if self.kilnState == KilnState.RunningScript :
+        #     log.debug("setCurSegDisplay but running script, so dont")
+        #     return
         self.simulateVar.set(self.kilnScript.simulate)
 
         self.updating = True
@@ -390,8 +397,10 @@ class moTabKiln():
             # only update the script elements when running; to show current segment
             self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
             self.updateScriptElements()
+            print("Script is in segment "+str(self.curSegIdx))
 
         self.updateScriptStatusElements()  # json scrolling text box
+        self.moTempPanel.updateFromMoData()
 
         pass
 

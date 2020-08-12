@@ -10,12 +10,14 @@ import datetime
 import sys
 import os
 import logging, logging.handlers, traceback
+import colorlog
+
 
 __loggerInit = False
 def init(name="modac", level=logging.DEBUG):
     print("setupLogging")
     if this.__loggerInit :
-        logging.warn("Duplicate call to setupLogging()")
+        logging.warning("Duplicate call to setupLogging()")
         return
     # process any parameters ?
     #
@@ -40,14 +42,24 @@ def init(name="modac", level=logging.DEBUG):
     rootLogger = logging.getLogger()
     
     logFormatter = logging.Formatter(logFormatStr)
+
+    # tried to add colorlog but it seems to be not working right
+    #handler = colorlog.StreamHandler()
+    handler = logging.StreamHandler()
+    handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s'+logFormatStr))
+    #logging.StreamHandler().setFormatter(colorlog.ColoredFormatter('%(log_color)s'+logFormatStr))
+
     #consoleHandler = logging.StreamHandler()
     #consoleHandler.setFormatter(logFormatter)
     #rootLogger.addHandler(consoleHandler);
+
     # chain rotating file handler so logs go to stderr as well as logName file
     fileHandler = logging.handlers.RotatingFileHandler(logName, maxBytes=maxLogSize, backupCount=100)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
-    
+
+    #rootLogger.addHandler(handler)
+
     logging.captureWarnings(True)
     logging.info("Logging Initialized")
     print("Logging Initialized? should have echo'd on line above")

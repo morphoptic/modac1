@@ -98,7 +98,7 @@ class tempDistPanel():
         self.temperatureBox.canvas = FigureCanvas(self.temperatureBox.fig)  # a Gtk.DrawingArea
         self.temperatureBox.pack_end(self.temperatureBox.canvas, True, True, 0)
 
-        self.temperatureBox.ax = self.fig.add_subplot(1,1,1)
+        self.temperatureBox.subplot = self.fig.add_subplot(1, 1, 1)
         
         self.temperatureBox.plotColumn = 1 # use first column, 
         self.temperatureBox.line, = self.ax.plot(self.times, self.temperatureBox.col[self.temperatureBox.plotColumn])  # plot the first row

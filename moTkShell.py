@@ -56,9 +56,9 @@ def createTKWindow():
     #tab1 = tk.Frame(this.moWindow.notebook(), bg="red")
     #this.moWindow.addTab(tab1,frameTitle="Tab1")
 
-    tempDistFrame = tk.Frame(this.moWindow.notebook(), bg="green")
-    this.TempDistTab = moPanelTempPlot(tempDistFrame)
-    this.moWindow.addTab(tempDistFrame,moObject=this.TempDistTab)
+    # tempDistFrame = tk.Frame(this.moWindow.notebook(), bg="green")
+    # this.TempDistTab = moPanelTempPlot(tempDistFrame)
+    # this.moWindow.addTab(tempDistFrame,moObject=this.TempDistTab)
 
     kilnFrame = tk.Frame(this.moWindow.notebook(), bg="blue")
     this.kilnTab = moTabKiln(kilnFrame)

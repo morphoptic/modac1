@@ -13,7 +13,7 @@ from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
 
 from .moTkShared import *
-from modac import moCSV
+from modac import moCSV, moCommand
 
 def setCSVTiming():
     print("setCSVTiming")
@@ -27,8 +27,9 @@ def setCSVTiming():
     pass
 
 def terminateServer():
-    print("setCSVTiming")
     # send command TerminateServer
+    log.debug("Shutdown Server Activated")
+    moCommand.cmdShutdown()
     pass
 
 def stopCSVRecording():
