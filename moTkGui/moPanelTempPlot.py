@@ -65,7 +65,7 @@ class moPanelTempPlot():
 
     def buildTablePanel(self):
         self.upperPanel = tk.Frame(self.frame, bg="blue")
-        self.treeView = ttk.Treeview(self.upperPanel, columns=self.columnNames, height=8)
+        self.treeView = ttk.Treeview(self.upperPanel, columns=self.columnNames, height=5)
         self.treeView['show'] = 'headings'
         for colName in self.columnNames:
             self.treeView.column(colName, width=10, anchor='c')
@@ -92,18 +92,20 @@ class moPanelTempPlot():
         print("column is",self.treeView.columns[colName])
 
     def buildGraphPanel(self):
-        self.lowerPanel = tk.Frame(self.frame, bg="green")
+        self.lowerPanel = tk.Frame(self.frame, bg="green", height=360)
         self.fig = Figure(figsize=(6, 4))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.lowerPanel)  # a Gtk.DrawingArea
 
         # put something in the graph. it will replave on frist updateFromMoData()/plotAll()
         self.subplot = self.fig.add_subplot(1, 1, 1)
+        self.subplot.set_title("All kType Thermocouples")
+        self.subplot.legend(loc=2)
+
         line, = self.subplot.plot(self.times, self.avgT)  # plot the first column
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH)
-        self.lowerPanel.pack(side=tk.BOTTOM, fill=tk.X)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=1)
+        self.lowerPanel.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
 
     def updateFromMoData(self):
-        # TODO: remember scroll position and reset to there
         kilnStatus = moData.getValue(keyForKilnStatus())
         print("Kilnstatus:", kilnStatus)
         self.timestamp = moData.getValue(keyForTimeStamp())
@@ -159,28 +161,31 @@ class moPanelTempPlot():
         print("plotAll mi ",mi, "ma", ma)
         if mi < 0:
             mi = self.minData
+
         self.subplot.clear()
-        self.subplot.set_title("All kType Thermocouples")
         self.subplot.set_ylim(mi, ma)
-        # subplot.xaxis.set_major_locator(matplotlib.dates.YearLocator())
-        # subplot.xaxis.set_minor_locator(matplotlib.dates.MonthLocator((1, 4, 7, 10)))
-        # subplot.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("\n%Y"))
-        # subplot.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter("%b"))
-        self.subplot.set_xticks(self.times)
-        xfmt = matplotlib.dates.DateFormatter('%a %H:%M:%S')
-        self.subplot.xaxis.set_major_formatter(xfmt)
+
+        # xfmt = matplotlib.dates.DateFormatter('%a %H:%M:%S')
+        # self.subplot.xaxis.set_major_formatter(xfmt)
+        # formatting could be done in creation, not each rebuild
+        self.subplot.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%a %H:%M:%S'))
+        # self.subplot.xaxis.set_major_locator(matplotlib.dates.HourLocator())
+        self.subplot.xaxis.set_major_locator(matplotlib.ticker.MaxNLocator(10))
+        # self.subplot.xaxis.set_major_locator(matplotlib.dates.MinuteLocator(byminute=range(60,5)))
+        # self.subplot.xaxis.set_minor_formatter(matplotlib.dates.DateFormatter("%M:%S"))
+        self.subplot.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator())
+
+
+        #self.subplot.set_xticks(self.times)
         self.subplot.plot(self.times, self.avgT, label="averageT")
         self.subplot.plot(self.times, self.lowerT, label="lowerT")
         self.subplot.plot(self.times, self.middleT, label="middleT")
         self.subplot.plot(self.times, self.upperT, label="upperT")
-        # dates = matplotlib.dates.date2num(self.times)
-        # self.subplot.plot_date(dates, self.avgT, label="averageT")
-        # self.subplot.plot_date(dates, self.lowerT, label="lowerT")
-        # self.subplot.plot_date(dates, self.middleT, label="middleT")
-        # self.subplot.plot_date(dates, self.upperT, label="upperT")
-        self.subplot.legend(loc=2)
+
         self.fig.autofmt_xdate()
         self.canvas.draw()
+        log.debug("plot frame height "+ str(self.lowerPanel.winfo_height()))
+
         pass
 
     def recalcDataMaxMin(self):

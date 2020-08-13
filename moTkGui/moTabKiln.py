@@ -17,6 +17,7 @@ from kilnControl.kilnScript import *
 from .moTkShared import *
 from .moPanelTempPlot import moPanelTempPlot
 
+
 ### couple validators for TextEntry widgets
 def validPositiveInt(s):  # validates string holds positive int
     try:
@@ -25,8 +26,18 @@ def validPositiveInt(s):  # validates string holds positive int
             return False
         return True
     except ValueError:
+        if validPositiveFloat(s):
+            return True
         return False
 
+def asPositiveInt(s):
+    if validPositiveFloat(s):
+        f = float(s)
+        i = int(f)
+        return i
+    if validPositiveInt(s):
+        return int(s)
+    return 0
 
 def validPositiveFloat(s):
     try:
@@ -43,7 +54,7 @@ class moTabKiln():
         return self.tabTitle
 
     def __init__(self, frame):
-        # TODO build out by copying in from kilnPanel2.py (GTK)
+        log.debug(" initialize moTabKiln top")
         self.frame = frame
         self.tabTitle = "Kiln Control"
 
@@ -66,8 +77,10 @@ class moTabKiln():
         self.kilnStateName = str(self.kilnState)
         self.scriptStateName = str(KilnScriptState.Unknown)
 
-        self.kilnStatus = None # returned by moData
+        self.kilnStatus = None  # returned by moData
         # some vars needed by UI elements
+        self.nameSV = tk.StringVar(self.frame)
+        self.descriptionSV = tk.StringVar(self.frame)
         self.temperatureSV = tk.StringVar(self.frame)
         self.stepTimeSV = tk.StringVar(self.frame)
         self.displacementSV = tk.StringVar(self.frame)
@@ -100,6 +113,8 @@ class moTabKiln():
         self.supportCk = None
         self.twelveVCk = None
 
+        log.debug(" initialize moTabKiln build UI panels")
+
         # now build the UI Panel
         # statusFrame: simulate CkBox; KilnState; KilnScriptState
         # infoFrame: scriptBtnFrame; scriptNameDescrFrame
@@ -116,6 +131,8 @@ class moTabKiln():
         ############
         self.build_InfoFrame()
 
+        log.debug(" initialize moTabKiln build script Step")
+
         ############
         # scriptStepFrame: stepBtnFrame; stepDataFrame; stepScrollFrame
         #    stepBtnFrame: stepSelect; Add; Remove
@@ -131,24 +148,27 @@ class moTabKiln():
         stepScrollFrame = tk.Frame(self.scriptStepFrame, bg="blue")
         self.scrolledBox = tk.scrolledtext.ScrolledText(stepScrollFrame, height=12)
         self.scrolledBox.insert(tk.END, "This is\n the first\n text")
-        self.scrolledBox.pack(fill=tk.Y,)
+        self.scrolledBox.pack(fill=tk.Y, )
         stepScrollFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
 
-        #self.scriptStepFrame.pack(side=tk.BOTTOM, pady=2, expand=1, fill=tk.BOTH)
-        self.scriptStepFrame.pack( pady=1,expand=1, fill=tk.BOTH)
+        # self.scriptStepFrame.pack(side=tk.BOTTOM, pady=2, expand=1, fill=tk.BOTH)
+        self.scriptStepFrame.pack(pady=1, expand=1, fill=tk.BOTH)
 
         self.temperatureFrame = tk.Frame(self.frame, bg="blue")
         self.moTempPanel = moPanelTempPlot(self.temperatureFrame)
         self.temperatureFrame.pack(side=tk.BOTTOM, expand=1, fill=tk.BOTH)
 
         ############
-        self.updateFromScript()  # coming back from this will have self.updating=False
+        self.updateFromScript()
+        self.updating = False  # used when updating current script gui to avoid stack overflow
         self.frame.pack(fill=tk.BOTH, expand=1)
 
     def build_InfoFrame(self):
         # infoFrame: scriptBtnFrame; scriptNameDescrFrame
         #    infoBtnFrame: Load; Save; Run Stop
         #    infoTxtFrame: Name; Description
+        log.debug(" build_InfoFrame top")
+
         infoFrame = tk.Frame(self.frame, bg='azure')
         ##
         infoBtnFrame = tk.Frame(infoFrame, bg='azure2')
@@ -169,24 +189,33 @@ class moTabKiln():
         ##
         infoTxtFrame = tk.Frame(infoFrame, bg='azure2')
         #
+        log.debug(" build_InfoFrame b4 name")
+
         nameFrame = tk.Frame(infoTxtFrame, bg='azure3')
         nameLabel = tk.Label(nameFrame, text="Name:")
-        nameLabel.pack(side=tk.LEFT, fill=tk.BOTH)
-        self.nameTxtBox = tk.Text(nameFrame, height=2)
+        nameLabel.pack(side=tk.LEFT, fill=tk.X)
+        self.nameSV.trace_add("write", self.on_NameChanged)
+        self.nameTxtBox = tk.Entry(nameFrame, textvariable=self.nameSV)
         self.nameTxtBox.insert(tk.END, "nameTxtBox tk starting")
-        self.nameTxtBox.pack(side=tk.RIGHT)
+        self.nameTxtBox.pack(side=tk.RIGHT, fill=tk.X, expand=1)
         nameFrame.pack(side=tk.TOP, fill=tk.X)
         #
+        log.debug(" build_InfoFrame b4 descrFrame")
         descrFrame = tk.Frame(infoTxtFrame, bg='azure4')
         descrLabel = tk.Label(descrFrame, text="Description:")
         descrLabel.pack(side=tk.LEFT, fill=tk.BOTH)
-        self.descrTxtBox = tk.Text(descrFrame, height=4)
+        # while Entry can have textvariable; Text/ScrolledText cannot
+        # so we try a lil magic from
+        # https://stackoverflow.com/questions/10593027/how-can-i-connect-a-stringvar-to-a-text-widget-in-python-tkinter
+        self.descrTxtBox = tk.Text(descrFrame, height=4)#, textvariable=self.descriptionSV)
         self.descrTxtBox.insert(tk.END, "descrTxtBox tk starting")
-        self.descrTxtBox.pack(side=tk.RIGHT)
-        descrFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
+        self.descrTxtBox.bind('<KeyRelease>', self.on_DescriptionChanged)
+        self.descrTxtBox.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+        descrFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
         infoTxtFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
         ##
-        infoFrame.pack(pady=1,fill=tk.X)
+        infoFrame.pack(pady=1, fill=tk.X)
+        log.debug(" build_InfoFrame done")
 
     def build_StepBtnFrame(self, parentFrame):
         stepBtnFrame = tk.Frame(parentFrame)
@@ -233,7 +262,7 @@ class moTabKiln():
         displacementLabel.pack(side=tk.LEFT)
         self.displacementSV.trace_add("write", self.on_DisplacemenChanged)
         self.displacementEntry = tk.Entry(displacementFrame, textvariable=self.displacementSV,
-                                     validatecommand=validPositiveFloat)
+                                          validatecommand=validPositiveFloat)
         self.displacementEntry.pack(side=tk.RIGHT)
         displacementFrame.pack()
         #
@@ -242,7 +271,7 @@ class moTabKiln():
         holdTimeLabel.pack(side=tk.LEFT)
         self.holdTimeSV.trace_add("write", self.on_holdTimeChanged)
         self.holdTimeEntry = tk.Entry(holdTimeFrame, textvariable=self.holdTimeSV,
-                                 validatecommand=validPositiveInt)
+                                      validatecommand=validPositiveInt)
         self.holdTimeEntry.pack(side=tk.RIGHT)
         holdTimeFrame.pack()
         #
@@ -251,7 +280,7 @@ class moTabKiln():
         stepTimeLabel.pack(side=tk.LEFT)
         self.stepTimeSV.trace_add("write", self.on_stepTimeChanged)
         self.stepTimeEntry = tk.Entry(stepTimeFrame, textvariable=self.stepTimeSV,
-                                 validatecommand=validPositiveInt)
+                                      validatecommand=validPositiveInt)
         self.stepTimeEntry.pack(side=tk.RIGHT)
         stepTimeFrame.pack()
         # CheckBox vars and standins created in __init__
@@ -298,15 +327,15 @@ class moTabKiln():
             self.simulateCk.config(bg="white")
 
         # assuming kilnScript is a KilnScript object
-        self.nameTxtBox.delete(1.0,tk.END)
-        self.nameTxtBox.insert(1.0,self.kilnScript.name)
+        self.nameSV.set(self.kilnScript.name)
+
         self.descrTxtBox.delete(1.0, tk.END)
         self.descrTxtBox.insert(1.0, self.kilnScript.description)
 
         # keyForScriptCurrentSegmentIdx(): kilnScript.curSegmentIdx,
         self.curSegIdx = self.kilnScript.curSegmentIdx
-        indicies = [i for i in range(0, self.kilnScript.numSteps())]
-        self.stepSelector.config(values=indicies)
+        indices = [i for i in range(0, self.kilnScript.numSteps())]
+        self.stepSelector.config(values=indices)
 
         self.updateScriptElements()
 
@@ -340,14 +369,11 @@ class moTabKiln():
             log.error(msg)
             mb.showerror("Segment Index Out of Range", message=msg)
             self.curSegIdx = 0
-        # if runningScript, then elements should be read only, so update from script
-        # if kiln is Idle (or other), then dont update from moData
-        # if self.kilnState == KilnState.RunningScript :
-        #     log.debug("setCurSegDisplay but running script, so dont")
-        #     return
-        self.simulateVar.set(self.kilnScript.simulate)
 
         self.updating = True
+
+        self.simulateVar.set(self.kilnScript.simulate)
+
         self.curSeg = self.kilnScript.segments[self.curSegIdx]
         self.kilnStateLabel.config(text="KilnState:" + self.kilnStateName)
         self.kilnScriptStateLabel.config(text="Kiln ScriptState:" + self.scriptStateName)
@@ -363,22 +389,22 @@ class moTabKiln():
         self.holdTimeSV.set(str(self.curSeg.holdTimeMinutes))
         self.exhaustBV.set(self.curSeg.exhaustFan)
         self.supportBV.set(self.curSeg.supportFan)
-        log.debug("Set 12v Relay BV and thus ckbox "+str(self.curSeg.v12Relay))
+        log.debug("Set 12v Relay BV and thus ckbox " + str(self.curSeg.v12Relay))
         self.v12RelayBV.set(self.curSeg.v12Relay)
         self.stepTimeSV.set(str(self.curSeg.stepTime))
         self.updating = False
 
     def updateScriptStatusElements(self):
         # kilnStatus Elements
-        self.kilnStateLabel.config(text="KilnState: "+self.kilnStateName)
-        self.kilnScriptStateLabel.config(text="KilnState: "+self.scriptStateName)
+        self.kilnStateLabel.config(text="KilnState: " + self.kilnStateName)
+        self.kilnScriptStateLabel.config(text="KilnState: " + self.scriptStateName)
         # basically only the scroll box showing the status from moData and thus MODAC Server
         textScriptStatus = json.dumps(self.kilnStatus, indent=4)
         # TODO: index/see should scroll back to same point but doesnt
         scrollPoint = self.scrolledBox.index("@0,0")  # save and restore scroll point
         self.scrolledBox.delete(1.0, tk.END)
         self.scrolledBox.insert(tk.END, textScriptStatus)
-        self.scrolledBox.see("end")#str(scrollPoint))
+        self.scrolledBox.see("end")  # str(scrollPoint))
 
     # called when MoData is updated by server msg
     def updateFromMoData(self):
@@ -397,7 +423,7 @@ class moTabKiln():
             # only update the script elements when running; to show current segment
             self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
             self.updateScriptElements()
-            print("Script is in segment "+str(self.curSegIdx))
+            print("Script is in segment " + str(self.curSegIdx))
 
         self.updateScriptStatusElements()  # json scrolling text box
         self.moTempPanel.updateFromMoData()
@@ -442,7 +468,7 @@ class moTabKiln():
         self.setEditingAllowed(True)
 
     def setEditingAllowed(self, boolState):
-        log.debug("setEditingAllowed :"+ str(boolState))
+        log.debug("setEditingAllowed :" + str(boolState))
         # if True, enable all edit boxes
         # if False, disable all edits
         if boolState:
@@ -456,7 +482,7 @@ class moTabKiln():
             self.LoadBtn.config(state=tk.NORMAL, bg="light grey")
             self.SaveBtn.config(state=tk.NORMAL, bg="light grey")
             self.stepIofNLabel.config(state=tk.NORMAL, bg="light grey")
-            self.stepSelector.config(state=tk.NORMAL)#, bg="light grey")
+            self.stepSelector.config(state=tk.NORMAL)  # , bg="light grey")
             self.addBtn.config(state=tk.NORMAL, bg="light grey")
             self.removeBtn.config(state=tk.NORMAL, bg="light grey")
 
@@ -468,7 +494,7 @@ class moTabKiln():
             self.exhaustCk.config(state=tk.NORMAL, bg="light grey")
             self.supportCk.config(state=tk.NORMAL, bg="light grey")
             self.twelveVCk.config(state=tk.NORMAL, bg="light grey")
-        else: # state=tk.DISABLED, bg="pink"
+        else:  # state=tk.DISABLED, bg="pink"
             self.runBtn.config(state=tk.DISABLED, bg="pink")
             self.stopBtn.config(state=tk.NORMAL, bg="light grey")
             self.LoadBtn.config(state=tk.DISABLED, bg="pink")
@@ -478,7 +504,7 @@ class moTabKiln():
             self.LoadBtn.config(state=tk.DISABLED, bg="pink")
             self.SaveBtn.config(state=tk.DISABLED, bg="pink")
             self.stepIofNLabel.config(state=tk.DISABLED, bg="pink")
-            self.stepSelector.config(state=tk.DISABLED)#, bg="pink")
+            self.stepSelector.config(state=tk.DISABLED)  # , bg="pink")
             self.addBtn.config(state=tk.DISABLED, bg="pink")
             self.removeBtn.config(state=tk.DISABLED, bg="pink")
 
@@ -516,6 +542,7 @@ class moTabKiln():
         self.kilnScript = retVal
         self.kilnScript.curSegmentIdx = 0  # force load to step 0
         self.updateFromScript()
+        log.debug("after Load update is "+str(self.updating))
 
     def on_SaveKilnScript_clicked(self):
         log.debug("on_SaveKilnScript_clicked")
@@ -540,7 +567,7 @@ class moTabKiln():
             return  # avoid repeated triggers and stack overflow
         # a step was selected... make that index current
         curId = self.stepSelector.current()
-        log.debug("stepSelector Changed id now "+str(curId)+" was "+str(self.kilnScript.curSegmentIdx))
+        log.debug("stepSelector Changed id now " + str(curId) + " was " + str(self.kilnScript.curSegmentIdx))
         if curId == self.kilnScript.curSegmentIdx:
             log.debug("same as current, ignore")
         else:
@@ -564,16 +591,44 @@ class moTabKiln():
         log.debug("after Remove Segment script is: " + str(self.kilnScript))
         pass
 
+    def on_NameChanged(self, name='', index='', mode=''):
+        log.debug("on_NameChanged top" + self.temperatureSV.get())
+        if self.updating:
+            # log.debug("on_NameChanged updating")
+            return  # avoid repeated triggers and stack overflow
+        self.kilnScript.name = self.nameSV.get()
+        #log.debug("on_NameChanged after" + self.temperatureSV.get())
+
+
+    def on_DescriptionChanged(self, event):
+        # log.debug("on_DescriptionChanged top")
+        #print("on_DescriptionChanged top", event)
+        if self.updating:
+            # log.debug("on_DescriptionChanged updating")
+            return  # avoid repeated triggers and stack overflow
+        self.kilnScript.description = self.descrTxtBox.get("1.0", tk.END)
+
     def on_TargetTempChanged(self, name='', index='', mode=''):
-        if self.updating == True: return  # avoid repeated triggers and stack overflow
-        log.info("TargetTempChanged " + self.temperatureSV.get())
+        # log.debug("TargetTempChanged top" + self.temperatureSV.get())
+        if self.updating:
+            # log.debug("TargetTempChanged updating")
+            return  # avoid repeated triggers and stack overflow
+        if not validPositiveInt(self.temperatureSV.get()):
+            log.debug("TargetTempChanged not positive int")
+            return
+        log.debug("TargetTempChanged middle" + self.temperatureSV.get())
         curSeg = self.kilnScript.getCurrentSegment()
-        curSeg.targetTemperature = int(self.temperatureSV.get())
-        log.info("after set temp: " + str(curSeg.targetTemperature))
+        i = asPositiveInt(self.temperatureSV.get())
+        curSeg.targetTemperature = i
+        # log.info("after set temp: " + str(curSeg.targetTemperature))
+        # log.debug("Segment now reads:" + str(curSeg))
+        # log.debug("Compare :" + str(self.kilnScript.getCurrentSegment()))
         pass
 
     def on_DisplacemenChanged(self, name='', index='', mode=''):
-        if self.updating == True: return  # avoid repeated triggers and stack overflow
+        if self.updating: return  # avoid repeated triggers and stack overflow
+        if not validPositiveFloat(self.temperatureSV.get()):
+            return
         log.info("Target displacement Changed " + self.displacementSV.get())
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.targetDistanceChange = float(self.displacementSV.get())
@@ -581,36 +636,44 @@ class moTabKiln():
         pass
 
     def on_holdTimeChanged(self, name='', index='', mode=''):
-        if self.updating == True: return  # avoid repeated triggers and stack overflow
+        if self.updating: return  # avoid repeated triggers and stack overflow
+        if not validPositiveInt(self.temperatureSV.get()):
+            return
         log.info("Hold Time Changed " + self.holdTimeSV.get())
         curSeg = self.kilnScript.getCurrentSegment()
-        curSeg.holdTimeMinutes = int(self.holdTimeSV.get())
+        i = asPositiveInt(self.holdTimeSV.get())
+        curSeg.holdTimeMinutes = i
         log.info("after set hold: " + str(curSeg))
         pass
 
     def on_stepTimeChanged(self, name='', index='', mode=''):
-        if self.updating == True: return  # avoid repeated triggers and stack overflow
+        if self.updating: return  # avoid repeated triggers and stack overflow
+        if not validPositiveInt(self.temperatureSV.get()):
+            return
         print("PIDStepTime Changed " + self.stepTimeSV.get())
         curSeg = self.kilnScript.getCurrentSegment()
-        curSeg.stepTime = int(self.stepTimeSV.get())
+        i = asPositiveInt(self.stepTimeSV.get())
+        if i < 1: # asPositive might make it 0
+            i = 1
+        curSeg.stepTime = i
         log.info("after set pid: " + str(curSeg))
         pass
 
-    def on_exhaustCk_activate(self, button):
+    def on_exhaustCk_activate(self):  # , button):
         if self.updating: return  # avoid repeated triggers and stack overflow
         if self.exhaustCk is None: return
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.exhaustFan = self.exhaustBV.get()
         log.info("after toggle exhaust: " + str(curSeg.exhaustFan))
 
-    def on_SupportFan_toggled(self, button):
+    def on_SupportFan_toggled(self):  # , button):
         if self.updating: return  # avoid repeated triggers and stack overflow
         if self.exhaustCk is None: return
         curSeg = self.kilnScript.getCurrentSegment()
         curSeg.supportFan = self.supportBV.get()
         log.info("after toggle support: " + str(curSeg.supportFan))
 
-    def on_12vRelay_toggled(self, button):
+    def on_12vRelay_toggled(self):  # , button):
         if self.updating: return  # avoid repeated triggers and stack overflow
         if self.twelveVCk is None: return
         curSeg = self.kilnScript.getCurrentSegment()
