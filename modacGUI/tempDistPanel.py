@@ -95,10 +95,10 @@ class tempDistPanel():
     def getData(self):
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
-        self.kilnStatus = moData.getValue(keyForKilnStatus())
-        if self.kilnStatus == keyForNotStarted():
-            self.stateName = keyForNotStarted()
-            return False
+        # self.kilnStatus = moData.getValue(keyForKilnStatus())
+        # if self.kilnStatus == keyForNotStarted():
+        #     self.stateName = keyForNotStarted()
+        #     return False
         self.timestamp = moData.getValue(keyForTimeStamp())
         kilnStatus = moData.getValue(keyForKilnStatus())
         

@@ -69,7 +69,7 @@ class KilnScript:
         self.curSegmentIdx = 0  # used to indicate current segment
         #self.simulate = False
         self.simulate = True
-        if dict == None:
+        if dict is None:
             # create a new empty one
             self.addNewSegment()
         else:
@@ -89,6 +89,7 @@ class KilnScript:
                 s.updateFromDict(segAsDict)
                 self.segments.append(s)
             log.debug("initialized kilnScript from dict " + str(self))
+        self.renumber()
 
     def __str__(self):
         return json.dumps(self.asDict(), indent=4)
@@ -125,6 +126,7 @@ class KilnScript:
         if self.curSegmentIdx < 0:
             self.addNewSegment()  # cant have it empty
         # TODO - renumber segments
+        self.renumber()
 
     def insertSegmentBefore(self, beforeIdx):
         #TODO not tested
@@ -162,7 +164,7 @@ class KilnScript:
                 (keyForScriptSegments(), self.segmentsAsDict()),
             ]
         d = OrderedDict(a)
-        print ("script dict:",d)
+        #print ("script dict:",d)
         # print(str(d))
         return d
 
@@ -231,7 +233,7 @@ class KilnScriptSegment:
             return 0 # default to integer zero
 
     def updateFromDict(self, d):
-        if d == None:
+        if d is None:
             log.error("update from Dict given None")
             return
         self.stepIdx = self.valueFromDict(d,keyForSegmentIndex())

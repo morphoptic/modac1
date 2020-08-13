@@ -12,11 +12,18 @@ import argparse
 import json
 import signal
 import trio #adding async functions use the Trio package
+import logging, logging.handlers, traceback
 
-# my stuff
+# modac stuff
 from modac import moData, moClient, moLogger,moCSV
-import logging
-moLogger.init("netLogger")
+# moLogger is our frontend/startup to usual Python logging
+# we want it to run in main()__main__ before any libraries might
+# or they may capture the first call to logging.xxConfig()
+# and our main needs priority
+
+if __name__ == "__main__":
+    moLogger.init()
+
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.setLevel(logging.INFO)
@@ -40,12 +47,6 @@ def log_data():
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     log.error("signal exit! someone hit ctrl-C?")
-    # with moData.getNursery() as nursery:
-    #     if nursery == None:
-    #         log.info("signal exit, no nursery")
-    #     else:
-    #         print("nursery still contains ", nursery.child_tasks)
-
     modacExit()
 
 def modac_ClientEventLoop():

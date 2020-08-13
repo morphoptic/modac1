@@ -19,7 +19,7 @@ from binascii import hexlify, unhexlify
 #import rest of modac
 from .moKeys import *
 from . import moData
-from .ping import ping
+from .ping  import *
 # locally required for this module
 
 # TODO: convert us from raw ip to a zeroConf address
@@ -34,10 +34,9 @@ __cmdAddress = None
 def getServerIPaddr():
     # try to find the server IP address
     if ping(__eth0Address) == 0:
-        this.__serverIPAddress = __noNetAddress
+        __serverIPAddress = __noNetAddress
     else:
-        this.__serverIPAddress = __eth0Address
-    log.debug("Server IP Address will be:"+this.__serverIPAddress)
+        __serverIPAddress = __eth0Address
     pass
 
 # these need to be visible by both sides of pubSub/Pair1
@@ -57,7 +56,7 @@ def cmdAddress():
     return this.__cmdAddress
 
 # ms timeout for cmd recieve. CmdListener loop delays any checks this long
-def rcvTimeout(): return 500 # was 2*1000
+def rcvTimeout(): return 2*1000
 def sendTimeout(): return 10
 
 #################################

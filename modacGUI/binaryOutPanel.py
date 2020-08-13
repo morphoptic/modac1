@@ -40,7 +40,7 @@ class binaryOutPanel():
             state = states[i]
             relayName = "Relay"+str(i)
             btn = builder.get_object(relayName)
-            assert not btn == None
+            assert not btn is None
             btn.set_active(state)
             btn.connect("toggled", self.on_toggled_button, i)
             self.relayBtns.append(btn)
@@ -49,7 +49,7 @@ class binaryOutPanel():
             labelName = "label"+str(i)
             #print("labelName", labelName)
             label = builder.get_object(labelName)
-            assert not label == None
+            assert not label is None
             self.relayLabels.append(label)
             self.updateLabel(i, state)
             pass
@@ -98,7 +98,7 @@ class binaryOutPanel():
         
     def updateLabel(self, idx, state):
         label = self.relayLabels[idx]
-        assert not label == None
+        assert not label is None
         nameState = "Relay ["+str(idx) + "] = " 
         if state:
             nameState += "ON  "
@@ -109,7 +109,7 @@ class binaryOutPanel():
     
     def updateBtn(self,idx,state):
         btn = self.relayBtns[idx]
-        assert not btn == None
+        assert not btn is None
         nameState = "Relay ["+str(idx) + "] = " 
         if state: # changed to active
             nameState += "ON  "

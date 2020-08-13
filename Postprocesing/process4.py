@@ -74,7 +74,7 @@ def processLine (row):
     #Decimate no- do that in decimateCSV then merge w/kissC data
 #    dtStr = row[timestampKey]
 #    dt = datetime.strptime(dtStr,"%Y-%m-%d %H:%M:%S")
-#    if this.lastDateTime== None :
+#    if this.lastDateTime is None :
 #        this.lastDateTime = dt
 #    elif dt.time().minute == this.lastDateTime.time().minute:
 #        # skip same minute

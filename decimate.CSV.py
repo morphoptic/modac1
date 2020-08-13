@@ -26,7 +26,7 @@ def processLine (row):
     hours = row[timestampKey]
     dtStr = days + " " + hours # original had one field, now we have two
     dt = datetime.strptime(dtStr,"%Y-%m-%d %H:%M:%S")
-    if this.lastDateTime== None :
+    if this.lastDateTime is None :
         this.lastDateTime = dt
     elif dt.time().minute == this.lastDateTime.time().minute:
         # skip same minute

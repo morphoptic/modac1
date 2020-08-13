@@ -77,10 +77,10 @@ def init():
 #####################
 # use command to start kiln process
 async def startKilnControlProcess(nursery=None):
-    if this.kilnInstance == None:
+    if this.kilnInstance is None:
         this.init()
 
-    if nursery == None:
+    if nursery is None:
         nursery = moData.getNursery()
 
     if enableKilnControl:
@@ -92,7 +92,7 @@ async def startKilnControlProcess(nursery=None):
 
 def endKilnControlProcess():
     '''terminate the kiln thread'''
-    if this.kilnInstance == None:
+    if this.kilnInstance is None:
         log.debug("endKiln, no kiln")
         return
     this.kilnInstance.terminateScript()  #  stops run, doesnt terminate thread
@@ -105,7 +105,7 @@ def endKilnControlProcess():
 def handleRunKilnScriptCmd(params):
     '''handler for interprocess command to run a kiln script. params is dictionary of Keys'''
     log.info("\n\n*****runKilnScriptCmd" +params)
-    if this.kilnInstance == None:
+    if this.kilnInstance is None:
         log.error("No Kiln found")
         return
     try:
@@ -248,7 +248,7 @@ class Kiln:
         startTimeStr = self.processStartTime.strftime(keyForTimeFormat())
 
         status = moData.getValue(keyForKilnStatus())
-        if status == None:
+        if status is None:
             log.debug("first status, get default")
             status = defaultKilnRuntimeStatus()
 
@@ -639,7 +639,7 @@ class Kiln:
         log.info("async kiln loop should pick this up")
 
     def loadScriptStep(self):
-        if self.myScript == None:
+        if self.myScript is None:
             log.error("no kiln script for loading step")
             return
         curSeg = self.myScript.getSegment(self.scriptIndex)

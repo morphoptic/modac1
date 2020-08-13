@@ -100,13 +100,13 @@ def init():
     pass
 
 def update():
-    #assert not moData.getValue(keyForAD24()) == None
-    #assert not moData.getValue(keyForEnviro()) == None
+    #assert not moData.getValue(keyForAD24()) is None
+    #assert not moData.getValue(keyForEnviro()) is None
     if not this.simulation:
         # not a simulation=  watch for sensor errors (done in asArray)
         moData.update(keyForKType(), asArray())
     else:
-        assert not this.simulator == None
+        assert not this.simulator is None
         #print("\n\n************\n")
         this.status = moStatus.Simulated
         this.simulator.update()

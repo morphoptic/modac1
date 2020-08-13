@@ -11,6 +11,7 @@
             "KilnHoldTimeMin": 1,
             "ExhaustFan": 0,
             "SupportFan": 0,
+            "12vRelay": true,
             "PIDStepTime": 10,
             "KilnMaxTime": 4320
         },
@@ -21,6 +22,7 @@
             "KilnHoldTimeMin": 1,
             "ExhaustFan": 0,
             "SupportFan": 0,
+            "12vRelay": true,
             "PIDStepTime": 10,
             "KilnMaxTime": 4320
         },
@@ -31,6 +33,7 @@
             "KilnHoldTimeMin": 1,
             "ExhaustFan": 0,
             "SupportFan": 0,
+            "12vRelay": true,
             "PIDStepTime": 10,
             "KilnMaxTime": 4320
         },
@@ -41,6 +44,7 @@
             "KilnHoldTimeMin": 1,
             "ExhaustFan": true,
             "SupportFan": true,
+            "12vRelay": false,
             "PIDStepTime": 10,
             "KilnMaxTime": 4320
         }

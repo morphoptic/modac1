@@ -255,7 +255,7 @@ class gattProcess:
         '''closes down the pexpect state Closed or Error'''
         log.info("gatt process close() start")
         self.dumpDebug()
-        if not self.gatt == None:
+        if not self.gatt is None:
             # still out there? kill it
             log.info("leica send SIGINT to its spawn")
             self.gatt.sendintr() # SIGINT CtrlC to gatttool, might block a bit
@@ -338,7 +338,7 @@ def reset():
     this._state = LeicaState.Closed
     this.__leicaRestartsThisSession = 0
     this.__leicaTimeoutsThisSession = 0
-    if not this.__gattProc == None:
+    if not this.__gattProc is None:
         this.__gattProc.close()
     this.__gattProc = None
     init()
@@ -359,14 +359,14 @@ def init():
         log.error("trying to Init Leica when not Closed, needs Reset")
         return
     this._state = LeicaState.Offline
-    if not this.__gattProc == None:
+    if not this.__gattProc is None:
         log.error("we have a gattProc but are in init, ERROR")
         dumpDebug()
         this._state = LeicaState.Error
         return
     # get address string from config?
     # this *should* be in the module, not gattProcess
-    if this.getLeicaAddress() == None:
+    if this.getLeicaAddress() is None:
         this.setAddress() # use default
     pass
 
@@ -399,7 +399,7 @@ async def runLoop():
         try:
             log.debug("runLoop top restarts="+str(this.getRestartsThisSession()))
             this.__gattProc = gattProcess() #init object
-            if this.__gattProc == None:
+            if this.__gattProc is None:
                 log.error("Error creating gattProc, break from runLoop outter")
                 dumpDebug()
                 break
@@ -407,7 +407,7 @@ async def runLoop():
             await this.__gattProc.open() # spawn process, wake Leica
             log.debug(" outter loop after try Proc Open")
             
-            if this.__gattProc == None:
+            if this.__gattProc is None:
                 log.debug("gattProc is gone?! end canRun loop")
                 break;
             
@@ -463,7 +463,7 @@ async def runLoop():
             else:
                 this._state = LeicaState.Offline
 #                dumpDebug()
-            if not this.__gattProc == None:
+            if not this.__gattProc is None:
                 log.debug("bottom of outer while loop, close and discard gattProc") 
                 this.__gattProc.close()
                 del this.__gattProc
@@ -497,7 +497,7 @@ def canRun():
 
 def close():
     this._state = LeicaState.CloseRequested
-    if not this.__gattProc == None:
+    if not this.__gattProc is None:
         this.__gattProc.close()
     
 def isRunning():
@@ -517,7 +517,7 @@ def dumpDebug():
 #    print("  address:",this.__leicaAddressStr )
 #    print("  timeouts This Session: %d"%this.getTimeoutsThisSession())
 #    print("  restarts this session: %d"%this.getRestartsThisSession())
-#    if this.__gattProc== None:
+#    if this.__gattProcis None:
 #        print("  gattProc is None")
 #    else:
 #        print("  gattProc: ", this.__gattProc)

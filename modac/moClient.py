@@ -31,7 +31,7 @@ def setKilnCallback(function):
     this.__kilnCallback = function
 
 def shutdownClient():
-    if not this.__CmdSender == None:
+    if not this.__CmdSender is None:
         this.__CmdSender.close()
     for s in this.__subscribers:
         s.close()
@@ -61,7 +61,7 @@ def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnSt
     timeout = 100
     log.debug("startClientSubscriber keys: %r"%keys)
     subscriber = Sub0(dial=moNetwork.pubSubAddress(), recv_timeout=moNetwork.rcvTimeout(), topics=keys)
-    if subscriber == None:
+    if subscriber is None:
         log.error("client failed to connect to publisher")
     this.__subscribers.append(subscriber)
     # this doesnt format log.debug("startSubscriber: ", subscriber.toString())
@@ -106,16 +106,17 @@ async def asyncClientReceive():
             clientHandleRecievedMsg(msgRaw)
             msgReceived = True
         # trio closed exceptions not caught here
+        except Timeout:
+            log.debug("receive timeout on subscriber %d" % (i))
         except pynng.exceptions.Closed:
             log.debug("Closed: subscriber %d - so terminate" % (i))
             return False
-        except Timeout:
-            log.debug("receive timeout on subscriber %d" % (i))
+        except trio.Cancelled:
+            return False
         except:
             log.exception("Some other exception! on subscriber %d " % (i))
             return False
     return msgReceived
-
 
 def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
@@ -126,7 +127,7 @@ def clientDispatch(topic,body):
         moData.update(keyForKilnStatus(), body)
     elif topic == keyForKilnScriptEnded():
         log.debug("Topic = ScriptEnded try calling kilnCallback")
-        if not this.__kilnCallback == None:
+        if not this.__kilnCallback is None:
             log.info("yep one set, call it")
             this.__kilnCallback(topic, body)
         else:
@@ -142,7 +143,7 @@ def clientDispatch(topic,body):
 def sendCommand(key, value):
     print("moClient sendCommand key value ", key, value)
     log.debug("moClient sendCommand key value "+ key+" " +str( value))
-    if this.__CmdSender == None:
+    if this.__CmdSender is None:
         log.error("attempt to sendCommand from non-client")
         return False
     #log.info("send command: key %s"%key)

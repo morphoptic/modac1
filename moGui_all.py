@@ -89,11 +89,11 @@ class ModacAppWindow(object):
         self.statusbar.push(self.context_id, status_text)   
 
         self.aboutdialog = builder.get_object("AboutMODAC_Dialog")
-        if self.aboutdialog == None:
+        if self.aboutdialog is None:
             log.debug("no aboutdialog")
 
         self.notebook = builder.get_object("notebook")
-        if self.notebook == None:
+        if self.notebook is None:
             log.debug("ERROR no notebook")
 
         # populate sub panels
@@ -154,8 +154,8 @@ class ModacAppWindow(object):
         #Gtk.main_quit()
 
     def on_notebook1_switch_page(self,  notebook, page, page_num, data=None):
-        assert not notebook == None
-        assert not page == None
+        assert not notebook is None
+        assert not page is None
         assert page_num >= 0
         log.debug("Switch page "+str(page_num)+" "+str(notebook)+" "+str( page))
         #return
@@ -267,13 +267,13 @@ class ModacAppWindow(object):
             # no data received
             return True
         timestamp = moData.getValue(keyForTimeStamp())
-        if timestamp == None:
+        if timestamp is None:
             timestamp = "no data yet"
         #text = "Random number = " + str(random.randint(1,101))
         self.setStatus("Data Updated: #%d at "%self.dataCount +timestamp)
         # do we need to do CSV row?       self.csvTime()
         now = datetime.datetime.now()
-        if self.lastCsvStep == None:
+        if self.lastCsvStep is None:
             moCSV.addRow()
             self.lastCsvStep = now
         timeDiff = now - self.lastCsvStep

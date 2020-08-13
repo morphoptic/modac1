@@ -126,9 +126,9 @@ class ktypePanel():
     def plotAll(self):
         mi = np.min(self.data)
         ma = np.max(self.data)
-        r = (ma-mi) *0.01
+        r = (ma-mi) * 0.01
         if r < ma*0.5:
-            r+=ma*0.5
+            r += ma*0.5
         mi -= r
         ma += r
         print("plotAll min",mi, "max", ma)

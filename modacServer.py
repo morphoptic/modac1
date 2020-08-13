@@ -190,12 +190,6 @@ def modac_loadConfig():
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     log.error("signal exit! someone hit ctrl-C?")
-    # with moData.getNursery() as nursery:
-    #     if nursery == None:
-    #         log.info("signal exit, no nursery")
-    #     else:
-    #         print("nursery still contains ", nursery.child_tasks)
-            
     modacExit()
     
 if __name__ == "__main__":
