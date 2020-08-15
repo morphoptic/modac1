@@ -1,26 +1,7 @@
 #!/bin/sh -v
-# install required modac packages
-sudo apt-get -y update
-sudo apt-get -y upgrade
-#sudo apt-get -y install build-essential checkinstall
-sudo apt-get -y install build-essential checkinstall libpq-dev libssl-dev openssl libffi-dev zlib1g-dev
-#
-#Python - see updateToPy37
-#sudo apt-get install python-dev python3-dev
-#
-sudo apt-get -y install i2c-tools
-sudo apt-get -y install python3-gpiozero
-sudo apt-get -y install rpi.gpio
-sudo apt-get -y install libffi-dev
-sudo apt-get install exfat-fuse
-#
-#sudo cp /usr/bin/pip3 /usr/bin/pip3.5
 sudo python3 -m pip install --upgrade pip setuptools wheel
 #
 # need latest numpy, scipy etc
-sudo apt install libatlas3-base
-sudo apt-get -y install python-numpy python-scipy python-matplotlib
-# why? do we really need both installs for these 3?
 sudo python3 -m pip install -U matplotlib scipy numpy
 #
 # hardware support
@@ -49,9 +30,6 @@ sudo pip3 install --upgrade trio
 sudo pip3 install --upgrade pylint
 sudo pip3 install --upgrade pynng
 sudo pip3 install --upgrade pytest
-#
-sudo apt-get install dosfstools
-sudo apt-get install hfsutils hfsprogs hfsutils
 #
 sudo pip3 install singleton_decorator
 #
