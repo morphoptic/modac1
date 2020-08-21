@@ -10,7 +10,7 @@ import datetime
 import sys
 import os
 import logging, logging.handlers, traceback
-import colorlog
+#import colorlog
 
 
 __loggerInit = False
@@ -45,8 +45,8 @@ def init(name="modac", level=logging.DEBUG):
 
     # tried to add colorlog but it seems to be not working right
     #handler = colorlog.StreamHandler()
-    handler = logging.StreamHandler()
-    handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s'+logFormatStr))
+    #handler = logging.StreamHandler()
+    ##handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s'+logFormatStr))
     #logging.StreamHandler().setFormatter(colorlog.ColoredFormatter('%(log_color)s'+logFormatStr))
 
     #consoleHandler = logging.StreamHandler()
