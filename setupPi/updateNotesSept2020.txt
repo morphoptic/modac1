@@ -1,0 +1,209 @@
+Sept Notes... 
+but for now the August notes - approx 180 lines
+---------------------------------
+
+updating to python3.7 so we can properly support tkinker in sync with Windows version
+
+18Aug...
+pynng needs this environment var
+.bash.rc
+  LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
+
+then there was a path thing getting scipy running so i ...
+
+  sudo ln -s /usr/include/python3.7m ./python3.7m
+
+scipy seems to require Fortran so
+  sudo apt install gfortran
+
+then retry 
+   sudo pip3 install scipy
+takes a Loooooong time
+
+gonna try a build from scratch - pi Buster starts at 3.7.3 so that would be better
+
+---------------------------
+restarting 19 Aug w fresh SD linux
+first boot,
+  set wifi, locale
+  raspi-config - set interfaces spi i2c
+copy lines from setupPi.sh
+dont do scipy just yet.
+seems to go ok until 
+  sudo pip3 install pylint
+gives errors....
+---------------------  
+Installing collected packages: toml, typed-ast, wrapt, lazy-object-proxy, astroid, pylint
+  Attempting uninstall: typed-ast
+    Found existing installation: typed-ast 1.3.1
+    Uninstalling typed-ast-1.3.1:
+      Successfully uninstalled typed-ast-1.3.1
+  Attempting uninstall: wrapt
+    Found existing installation: wrapt 1.10.11
+ERROR: Cannot uninstall 'wrapt'. It is a distutils installed project and thus we cannot accurately determine which files belong to it which would lead to only a partial uninstall.
+---------------------  
+but do we really need pylint?
+does pynng require cmake?
+  apparently yes it does.
+didnt link include dir yet
+pynng gives large errors...
+see Fail_installPynng1.txt
+try again w cmake installed
+ok that worked..
+next fail is scipy
+sudo pip3 install --upgrade scipy 
+----
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Collecting scipy
+  Downloading scipy-1.5.2.tar.gz (25.4 MB)
+     |████████████████████████████████| 25.4 MB 21 kB/s 
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+    Preparing wheel metadata ... error
+    ERROR: Command errored out with exit status 1:
+     command: /usr/bin/python3 /usr/local/lib/python3.7/dist-packages/pip/_vendor/pep517/_in_process.py prepare_metadata_for_build_wheel /tmp/tmpnqfvfwwq
+         cwd: /tmp/pip-install-mju0vds9/scipy
+    Complete output (117 lines):
+    lapack_opt_info:
+    lapack_mkl_info:
+    customize UnixCCompiler
+      libraries mkl_rt not found in ['/usr/local/lib', '/usr/lib', '/usr/lib/arm-linux-gnueabihf']
+      NOT AVAILABLE
+    
+    openblas_lapack_info:
+      libraries openblas not found in ['/usr/local/lib', '/usr/lib', '/usr/lib/arm-linux-gnueabihf']
+      NOT AVAILABLE
+    
+    openblas_clapack_info:
+      libraries openblas,lapack not found in ['/usr/local/lib', '/usr/lib', '/usr/lib/arm-linux-gnueabihf']
+      NOT AVAILABLE
+    
+    flame_info:
+      libraries flame not found in ['/usr/local/lib', '/usr/lib', '/usr/lib/arm-linux-gnueabihf']
+      NOT AVAILABLE
+    
+    atlas_3_10_threads_info:
+    Setting PTATLAS=ATLAS
+      libraries lapack_atlas not found in /usr/local/lib
+      libraries tatlas,tatlas not found in /usr/local/lib
+      libraries lapack_atlas not found in /usr/lib
+      libraries tatlas,tatlas not found in /usr/lib
+      libraries lapack_atlas not found in /usr/lib/arm-linux-gnueabihf/atlas
+      libraries tatlas,tatlas not found in /usr/lib/arm-linux-gnueabihf/atlas
+      libraries lapack_atlas not found in /usr/lib/arm-linux-gnueabihf
+      libraries tatlas,tatlas not found in /usr/lib/arm-linux-gnueabihf
+    <class 'numpy.distutils.system_info.atlas_3_10_threads_info'>
+      NOT AVAILABLE
+    
+ ....
+    numpy.distutils.system_info.NotFoundError: No lapack/blas resources found.
+    ----------------------------------------
+ERROR: Command errored out with exit status 1: /usr/bin/python3 /usr/local/lib/python3.7/dist-packages/pip/_vendor/pep517/_in_process.py prepare_metadata_for_build_wheel /tmp/tmpnqfvfwwq Check the logs for full command output.
+--------------------
+sudo ln -s /usr/include/python3.7m /usr/local/include/python3.7m
+try again?
+no change....
+       numpy.distutils.system_info.NotFoundError: No lapack/blas resources found.
+stackOverflow article recommends (may18)
+  sudo apt install -y libblas3 liblapack3 liblapack-dev libblas-dev
+  sudo apt install -y gfortran
+  sudo apt install -y libatlas-base-dev
+older 2016 so says build from source
+but we try the apt installs, except gfortran
+nope needs fortran
+runs waaay to long.
+other article says needs to increase swap
+
+  sudo dphys-swapfile swapoff
+  sudo nano /etc/dphys-swapfile
+  CONF_SWAPSIZE=1024
+  sudo dphys-swapfile swapon
+  reboot
+--- need to read more on dphys-swapfile .. 
+Build scipy etc
+# apk add --no-cache g++ gfortran openblas-dev bash
+   sudo pip install --no-cache-dir scipy
+AND IT WORKED!!
+now to test
+---------
+update network
+   sudo cp ~/Desktop/setupPi/hosts /etc
+   sudo cp  ~/Desktop/setupPi/hostname /etc
+   sudo cp  ~/Desktop/setupPi/dhcpcd.conf /etc
+
+Need /etc/dhcpcd.conf
+static ip of eth0
+----------
+testCode/nngTest  pair0Test.py
+fails because a library is not found "atomic_fetch_sub"
+needs the .bashrc 
+  cp ~/Desktop/setupPi/.bashrc ~
+
+and then pair0 works
+
+acid test - run server
+woops something needs colorlog... ahh that was moLogger... thought I removed it
+ugh get pyCharm, again
+  https://www.jetbrains.com/pycharm/download/#section=linux
+  snap doesnt seem to work
+sudo apt-get install snap
+sudo snap install pycharm-community --classic
+
+so download and extract from tar and put tar in /usr/loca/bin/pycharm...
+ahhh needs java JDK
+  sudo apt install default-jdk
+https://confluence.jetbrains.com/display/IDEADEV/Compiling+File+Watcher
+copied stuff to setupPi as pycharmNotifier
+run make.sh (may be there)
+cp to where ever pycharm was installed
+
+now how to get the icon back ... Tools/Create Desktop Entry...
+----
+forgot the theermocouple
+  sudo pip3 install thermocouples_reference 
+because it needed scipy and thus all that other crap
+pyCharm cant run nng stuff w/o the LD env var
+    LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
+hmm, editing the pyCharm project settings for environment doesnt do it
+maybe stuffing it into pycharm.sh ??
+nope
+runs ok from command line
+create pythonLD.sh in /etc/profile.d
+   export LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
+reboot
+File>settings>Build, Exec...>Console>PythonConsole... 
+add it on environmetn Variables space
+Ok solution...
+  Project settings, env vars = open editor or use ; to separate values
+  PYTHONUNBUFFERED=1;LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
+set that for python file tempalate and it works
+---------------------------------
+
+rebuilt my rPi hardware to diagnose and repair the AD115 issues with Waiakoa kiln version
+my pi has ad1115 on its i2c but wo differential repeater.
+borrowing the Enviro sensor from Waiakoa hw
+
+running in newer linux setup
+...
+trying TKShell also on my Desktop PC
+and on the linux
+and on the MorphPc
+
+Oddness - can run startModac.sh from Terminal window but cannot dbl click and Execute In Terminal
+no idea why. log dies
+both UI run ok.
+note the AD1115 starts off giving readings thru K-Type of 108C, so default run terminates immeadiately
+
+update network settings.
+/etc/dhcpcd.conf 
+(copy is in this setupPi folder)
+interface eth0
+  static ip_address=192.168.0.10/24
+  static ip6_address=fd51:42f8:caae:d92e::ff/64
+  static routers=192.168.0.1
+  static domain_name_servers=192.168.0.1 8.8.8.8 fd51:42f8:caae:d92e::1
+  metric 300
+----
+sept 6 - reconciling gits
+
+
