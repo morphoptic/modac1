@@ -116,7 +116,8 @@ sudo pip3 install --upgrade Rpi.bme280
 #sudo pip3 install adafruit-blinka
 #sudo pip3 install adafruit-circuitpython-bme280
 #sudo pip3 install Adafruit-SSD1306
-#sudo pip3 install adafruit-circuitpython-ads1x15
+# yes we still need this
+sudo pip3 install --upgrade adafruit-circuitpython-ads1x15
 #
 # getting GTK3 installed
 sudo apt install -y libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
@@ -140,4 +141,3 @@ sudo pip3 install singleton_decorator
 #
 sudo apt autoremove
 
->>>>>>> tkTesting

@@ -14,7 +14,7 @@ log.setLevel(logging.DEBUG)
 
 def doTest():
     data = []
-    for repeatCount in range(60):
+    for repeatCount in range(10):
         ad16.update()
         ADC_Value = ad16.values()
         print("values", ADC_Value)

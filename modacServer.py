@@ -15,6 +15,7 @@ import gpiozero # basic rPi GPIO using gpiozero technique first
 import json
 import signal
 import datetime
+import time
 
 import trio #adding async functions use the Trio package
 
@@ -112,7 +113,9 @@ async def modac_ReadPubishLoop():
     log.info("somehow we exited the ReadPublish Forever Loop")
 
 async def modac_asyncServer():
+    #await trio.sleep(2)
     log.info("start modac_asyncServer()")
+    #await trio.sleep(2)
     modac_loadConfig()
     # initialize data blackboard on which data is written and read from
     moData.init(client=False)
@@ -198,6 +201,7 @@ if __name__ == "__main__":
     log.info("that may be the 2nd logger init. not a problem")
     print("modac_io_server testbed for MODAC hardware server")
     signal.signal(signal.SIGINT, signalExit)
+    time.sleep(3)
     try:
         trio.run(modac_asyncServer)
     except trio.Cancelled:
