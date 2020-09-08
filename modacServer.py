@@ -12,6 +12,7 @@ import os
 import logging, logging.handlers, traceback
 import argparse
 import gpiozero # basic rPi GPIO using gpiozero technique first
+from gpiozero.pins.native import NativeFactory # so py installer finds em
 import json
 import signal
 import datetime
