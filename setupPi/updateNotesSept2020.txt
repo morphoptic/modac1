@@ -205,5 +205,13 @@ interface eth0
   metric 300
 ----
 sept 6 - reconciling gits
+sept 7 it works.
+using pyinstaller to create executables too.
+on Windows, need to use matplotlib==3.1.3
+pip install matplotlib==3.1.3
+or the installed app wont find the proper data files.
+Currently running the installer built server and client (pi and windows)
+prepare to move to morphoptic's win10 laptop.
+then clone SD card
 
 

@@ -1,4 +1,6 @@
-#!/bin/bash 
+#!/bin/sh -v
 cd /home/pi/MODAC_Dev/
-python3 /home/pi/MODAC_Dev/moGui_Kiln.py 
+PYTHONUNBUFFERED=1;LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1
+sleep 3
+LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1 python3 /home/pi/MODAC_Dev/moGui_Kiln.py 
 
