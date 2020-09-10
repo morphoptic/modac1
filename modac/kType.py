@@ -59,7 +59,7 @@ def mVToC(mV,tempRef=0.0):
 def adToC(adRead,tempRef=0.0):
     try:
         v = adOverGain(adRead)
-        print("adOverGain ad v: ", adRead, v)
+        #print("adOverGain ad v: ", adRead, v)
     except ValueError:
         log.error("adToC Value error in adOverGain", exc_info=True)
 
@@ -147,7 +147,7 @@ def asArray():
     for adIdx in kTypeIdx:
         t= 0
         try:
-            log.warning("Convert AD idx %d, %d"%(adIdx, adArray[adIdx]))
+            #log.warning("Convert AD idx %d, %d"%(adIdx, adArray[adIdx]))
             t = this.adToC(adArray[adIdx])#roomTemp)
             #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         except ValueError:

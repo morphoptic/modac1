@@ -201,6 +201,8 @@ def asRowArray():
     #     a += this.getValue(keyForAD24Raw())
     # if isValidKey(keyForAD24()):
     #     a += this.getValue(keyForAD24())
+    if isValidKey(keyForAD16Raw()):
+        a += this.getValue(keyForAD16Raw())
     if isValidKey(keyForAD16()):
         a += this.getValue(keyForAD16())
     if isValidKey(keyForKType()):
@@ -257,6 +259,8 @@ def arrayColNames():
     #     this.__appendAName(keyForAD24Raw())
     # if isValidKey(keyForAD24()):
     #     this.__appendAName(keyForAD24())
+    if isValidKey(keyForAD16Raw()):
+        this.__appendAName(keyForAD16Raw())
     if isValidKey(keyForAD16()):
         this.__appendAName(keyForAD16())
     if isValidKey(keyForKType()):
