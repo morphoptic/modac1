@@ -32,6 +32,8 @@ __status = moStatus.Default
 
 #7Sept2020 reduce to only one device w 4 channels on default channel
 __values = [0,0,0,0]
+__volts  = [0.0, 0.0, 0.0, 0.0]
+__numChannels = len(__volts)
 
 __moAD16Device = None
 __chan0 = None
@@ -67,8 +69,10 @@ def init():
         __isAlive = False
         if this.__status == moStatus.Error:
             this.__values = [0] * this.__numChannels
+            this.__volts  = [0.0] * this.__numChannels
         #
-        moData.update(keyForAD16(), this.__values)
+        moData.update(keyForAD16(), this.__volts)
+        moData.update(keyForAD16Raw(), this.__values)
         moData.update(keyForAD16Status(), this.__status.name)
         print("Bad Values "+str(this.__values))
         return
@@ -106,9 +110,13 @@ def update():
         this.__values[1] = this.__chan1.value
         this.__values[2] = this.__chan2.value
         this.__values[3] = this.__chan3.value
+
+        this.__volts[0] = this.__chan0.voltage
+        this.__volts[1] = this.__chan1.voltage
+        this.__volts[2] = this.__chan2.voltage
+        this.__volts[3] = this.__chan3.voltage
     except:
-        log.error(" Error reading AD16 values, disable device")
-        log.exception("Exception follows")
+        log.error(" Error reading AD16 values, disable device", exc_info=True)
         # need to put at least one record in moData
         moData.update(keyForAD16(), this.__values)
         this.__ad16_i2c = None
@@ -118,13 +126,20 @@ def update():
     # force error values
     if this.__status == moStatus.Error:
         this.__values = [0]* len(this.__values)
+        this.__volts = [0.0] * this.__numChannels
     #
-    moData.update(keyForAD16(), this.__values)
+    moData.update(keyForAD16(), this.__volts)
+    moData.update(keyForAD16Raw(), this.__values)
+    moData.update(keyForAD16Status(), this.__status.name)
+
 
 def values():
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
     #print (this.__values)
     return this.__values
+
+def volts():
+    return this.__volts
 
 def shutdown():
     #hmm release all the channels?

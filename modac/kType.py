@@ -31,7 +31,7 @@ status = moStatus.Default
 # Note length must match moData value returned by
 #kTypeIdx= [0,1,2,3,4,5,6,7]
 #kTypeIdx= [2,3,4,5,6,7]
-kTypeIdx= [3,4,5,6]
+#kTypeIdx= [3,4,5,6]
 kTypeIdx= [4,5,6]
 
 # mods to support data from 16bit AD instead
@@ -49,24 +49,33 @@ simulator = None
 __kTypeLookup = thermocouples['K']
 
 def adOverGain(adValue):
-    return (adValue- adOffset)/ampGain
+    return float(adValue - adOffset)/ampGain
 
-def mVToC(mV,tempRef=0):
+def mVToC(mV,tempRef=0.0):
     _mV = mV #fnMagic(mV)
     retVal = __kTypeLookup.inverse_CmV(_mV, Tref=tempRef)
     return retVal
 
-def adToC(adRead,tempRef=0):
-    v = adOverGain(adRead)
+def adToC(adRead,tempRef=0.0):
+    try:
+        v = adOverGain(adRead)
+        print("adOverGain ad v: ", adRead, v)
+    except ValueError:
+        log.error("adToC Value error in adOverGain", exc_info=True)
+
     mv = v*1000.0
-    c = mVToC(mv,tempRef)
+    c = 0
+    try:
+        c = mVToC(mv, tempRef)
+    except ValueError:
+        log.error("adToC Value error in mVToC", exc_info=True)
     #print ("ad v mv c: ", adRead, v, mv, c)
     return c
 
 def testCalc(mV):
     c0 = mVToC(mV, 0.0)
     c25 = mVToC(mV, 25.0)
-    msg = "Temp at mv"+ str(mV) + " = (0):" + str(c0) + " (25):" + str(c25)
+    msg = "Temp at mv "+ str(mV) + " = (0):" + str(c0) + " (25):" + str(c25)
     print(msg)
     #log.debug(msg)
     
@@ -81,7 +90,7 @@ def calc0_100_300():
     testCalc(mv)
     mv = 12.209
     testCalc(mv)
-    mv =     0.004037344783333*1000.0
+    mv = 0.004037344783333*1000.0
     testCalc(mv)
 
 #this can vary as we develop and test
@@ -136,14 +145,16 @@ def asArray():
     #roomTemp = enviro.degC()
     # only look at the ad24 that are identified by the kTypeIdx array
     for adIdx in kTypeIdx:
+        t= 0
         try:
+            log.warning("Convert AD idx %d, %d"%(adIdx, adArray[adIdx]))
             t = this.adToC(adArray[adIdx])#roomTemp)
             #print("asArray adidx, v, c",adIdx, adArray[adIdx], t)
         except ValueError:
-            log.error("Error converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]))
+            log.error("ValueError converting adIdx "+str(adIdx)+ "=> "+str(adArray[adIdx]), exc_info=True)
             t = 0
         except IndexError:
-            log.error("IndexError adIdx "+str(adIdx)+ " "+str(adArray))
+            log.error("IndexError adIdx "+str(adIdx)+ " "+str(adArray), exc_info=True)
         except:
             log.exception("exception in kType asArray()")
             break
