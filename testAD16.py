@@ -2,7 +2,7 @@
 import sys
 import logging
 from time import sleep
-from modac import ad16, moData
+from modac import ad16, moData, kType
 from modac.moKeys import *
 
 from modac import moLogger
@@ -17,10 +17,12 @@ def doTest():
     for repeatCount in range(10):
         ad16.update()
         ADC_Value = ad16.values()
+        ADC_volts = ad16.volts()
         print("values", ADC_Value)
-        for i in range(len(ADC_Value)):
-            print ("count %d chan %d AD16 = %lf"%(repeatCount, i, ADC_Value[i]))
-        print("moData:",moData.getValue(keyForAD16()))
+        kvalues = moData.getValue(keyForKType())
+        for i in range(3):#len(ADC_Value)):
+            print ("count %d chan %d AD16 = %ld v %lf kt: %f"%(repeatCount, i, ADC_Value[i], ADC_volts[i],kvalues[i]))
+        print("moData:",moData.getValue(keyForAD16()), moData.getValue(keyForAD16Raw()), kvalues)
         sleep(1)
         
 if __name__ == "__main__":
@@ -30,5 +32,6 @@ if __name__ == "__main__":
     logging.info("Logging Initialized for MO 16Bit AD  main unitTest")
     moData.init()
     ad16.init()
+    kType.init()
     doTest()
     

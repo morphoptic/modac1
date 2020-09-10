@@ -37,6 +37,7 @@ def keyForBinaryOut(): return "binaryOut"
 # Two types of AnalogDigital Converters, with minimal control provided
 # AD16 holds array of 16bit AD input channels  generally 0-5v measure
 def keyForAD16(): return "ad16"
+def keyForAD16Raw(): return "ad16Raw"
 
 # AD24 holds array of 24bit input channels  generally 0-5v measure
 def keyForAD24(): return "ad24"

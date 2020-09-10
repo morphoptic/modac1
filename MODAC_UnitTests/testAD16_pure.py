@@ -32,5 +32,5 @@ for i in range(10):
     readChan(chan1)
     readChan(chan2)
     readChan(chan3)
-    print("wait")
+    print("wait",i)
     time.sleep(0.5)

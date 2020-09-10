@@ -32,6 +32,7 @@ import trio
 from . import pidController
 
 from modac import moData, moHardware, moServer
+from modac import ad16
 from modac.moKeys import *
 from .kilnConfig import *
 from .kilnState import *
@@ -66,7 +67,7 @@ def emergencyShutOff():
     endKilnControlProcess() #terminate thread
     # error state tells it we not running
 
-criticalTemp = 600
+criticalTemp = 700
 
 def init():
     log.info("Init KilnControl.Kiln Package")
@@ -329,6 +330,9 @@ class Kiln:
                 self.state = KilnState.Error
                 self.updateStatus()
                 self.publishStatus()
+                break
+            if ad16.isError():
+                emergencyShutOff()
                 break
 
             self.kilnStep()

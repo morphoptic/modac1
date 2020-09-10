@@ -47,17 +47,17 @@ def update():
     try:
         # get our own timestamp
         moData.updateTimestamp()
-        enviro.update()
         binaryOutputs.update()
         ad24.update()
         ad16.update()
         kType.update()
         leicaDisto.update()
+        enviro.update()
         return True
     except:
-        log.error("Exception in MoHardware Update")
-        exc = traceback.format_exc()
-        log.error("Traceback is: " + exc)
+        log.error("Exception in MoHardware Update", exc_info=True)
+        #exc = traceback.format_exc()
+        #log.error("Traceback is: " + exc)
         moData.setStatusError()
         return False
 
