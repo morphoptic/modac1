@@ -5,7 +5,7 @@
 #   Listen Thread: async to listen for client commands and serverDispatch() them
 
 # cute hack to use module namespace this.fIO this.value should work
-import sys
+import sys, time
 this = sys.modules[__name__]
 # other system imports
 import logging, logging.handlers, traceback
@@ -39,6 +39,7 @@ def shutdownServer():
     this.__killCmdListener = True # this should stop the serverReceive() from pair1
     if not this.__Publisher is None:
         this.publish() # one last time
+        time.sleep(1)
         this.__Publisher.close()
         this.__Publisher = None
     this.__Shutdown = True
