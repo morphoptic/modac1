@@ -11,6 +11,7 @@ log.setLevel(logging.DEBUG)
 
 from .moKeys import *
 from . import moData
+from .moStatus import moStatus
 
 # locally required for this module
 import sys
@@ -22,28 +23,33 @@ import bme280
 
 # module global for BME280 device
 __eSensor = None
+__status = moStatus.Default
 
 def init():
     log.info("modac_BME280.init")
     try:
         this.__eSensor = moBME280()
     except:
-        log.error("cant initialize BME280")
-        log.error(str( sys.exc_info()[0]))
-        
+        log.error("cant initialize BME280", exc_info=True)
+
     if this.__eSensor is None:
         log.error(" no Enviro sensor BME280")
+        this.__status = moStatus.Error
         moData.update(keyForEnviro(), asDict())
         return
 
     #assert not this.__eSensor is None
     this.update()
+    this.__status = moStatus.Ok
+
 
 def update():
     if this.__eSensor is None:
         log.error(" no BME Enviro sensor ")
+        this.__status = moStatus.Error
         return
-    this.__eSensor.read()
+    else:
+        this.__eSensor.read()
     # removed global timestamp from here
     #moData.update(keyForTimeStamp(), timestampStr())
     moData.update(keyForEnviro(), asDict())
@@ -52,7 +58,8 @@ def asDict():
     d = {keyForTimeStamp():timestampStr(),
          keyForHumidity():humidity(),
          keyForTemperature():degC(),
-         keyForPressure():pressure()
+         keyForPressure():pressure(),
+         keyForStatus():this.__status.name
          }
     return d
 
@@ -60,7 +67,7 @@ def temperature():
     if this.__eSensor is None:
         return -1
     if not isinstance(this.__eSensor.temperature, float):
-        log.warn("bme280 temp is not a float")
+        log.warning("bme280 temp is not a float")
         return 0.0
     return this.__eSensor.temperature
 

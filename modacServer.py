@@ -44,6 +44,7 @@ csvActive = True
 jsonActive = False
 startKilnOnStartup = True
 okToRunMainLoop = False
+nosensors = False
 
 def modacExit():
     log.info("modacExit shutting down")
@@ -61,7 +62,7 @@ def modacExit():
     #exit(0)
 
 async def modac_ReadPubishLoop():
-    #print("event Loop")
+    print("modac_ReadPubishLoop")
     log.info("\n\nEnter Modac ReadPublish Loop")
     #for i in range(300):
     moData.setStatusRunning()
@@ -130,7 +131,7 @@ async def modac_asyncServer():
         moData.setNursery(nursery)
         
         # pass it nursery so it can start complex sensor monitors like Leica
-        await moHardware.init(nursery)
+        await moHardware.init(nursery, this.nosensors)
         
         # start the CSV server logging
         if csvActive:
@@ -156,13 +157,14 @@ async def modac_asyncServer():
         # now spawn the main ReadPublish Loop
         try:
             #   run event loop
+            log.warning("await ReadPublish Loop")
             await modac_ReadPubishLoop()
         except trio.Cancelled:
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
-            log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
-            exc = traceback.format_exc()
-            log.error("Traceback is: "+exc)
+            log.error("Exception caught in the nursery loop: ", exc_info=True)#+str( sys.exc_info()[0]))
+            # exc = traceback.format_exc()
+            # log.error("Traceback is: "+exc)
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
             print("Exception somewhere in modac_io_server event loop.")
@@ -197,6 +199,12 @@ def signalExit(*args):
     modacExit()
     
 if __name__ == "__main__":
+    # command line args
+    for i, arg in enumerate(sys.argv):
+        print("arg %d: %s"%(i, arg))
+        if arg == "nosensors":
+            this.nosensors = True
+            print("nosensors recognized")
     #modac_argparse() # capture cmd line args to modac_args dictionary for others
     moLogger.init() # start logging (could use cmd line args config files)
     log.info("that may be the 2nd logger init. not a problem")

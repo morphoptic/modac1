@@ -21,16 +21,23 @@ import datetime
 __initialized = False # : return
 
 __nursery = None
-async def init(nursery):
+async def init(nursery, nosensors = False):
     this.__nursery = nursery
-    enviro.init()
     binaryOutputs.init()
-    ad24.init()
-    ad16.init()
-    kType.init()
-    # leica distance sensor needs to run its own thread/process
-    leicaDisto.init()
-    nursery.start_soon(leicaDisto.runLoop)
+    try:
+        enviro.init()
+        ad24.init()
+        ad16.init()
+        kType.init()
+        # leica distance sensor needs to run its own thread/process
+        #support noLeica cli option?
+        leicaDisto.init()
+        nursery.start_soon(leicaDisto.runLoop)
+    except (ValueError, OSError) as e:
+        log.error("Error starting sensors ", exc_info=True)
+        if not nosensors:
+            #need to re-raise that
+            raise e
     this.__initialized = True  # : return
     moData.setStatusInitialized()
     # force at least one update so moData is populated

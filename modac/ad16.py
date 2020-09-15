@@ -59,9 +59,10 @@ def init():
     print("Create ADS1115")
     try:
         this.__moAD16Device = ADS.ADS1115(ad16_i2c)
-    except:
+    except (ValueError, OSError) as e:
         log.error(" Cant create ad16", exc_info=True)
         this.__status = moStatus.Error
+        raise e
         exit(0)
 
     if this.__status == moStatus.Error:
@@ -86,8 +87,9 @@ def init():
         this.__chan2 = AnalogIn(this.__moAD16Device, ADS.P2)
         this.__chan3 = AnalogIn(this.__moAD16Device, ADS.P3)
         readChans()
-    except:
+    except OSError as e:
         log.error("error creating channels", exc_info=True)
+        raise e
     this.__isAlive = True
     
     # now get initial values
@@ -155,3 +157,6 @@ def isError():
 
 def isAlive():
     return this.__isAlive()
+
+def status():
+    return this.__status
