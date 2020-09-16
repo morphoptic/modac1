@@ -1,0 +1,53 @@
+MODAC Potential Config
+early design notes for where configuration data is kept.
+all of it is python files
+
+moData:
+  numKType
+  numBinaryOut
+  numAD24
+  numAD16
+
+  CSV support to moCSV?
+
+kilnControl/Kiln
+  enableKilnControl
+  enableEStop
+
+kilnControl/kilnConfig
+  distanceEpsilon
+  temperatureEpsilon
+  relayPower (gpio of 12v power to relays)
+plus lots more...
+# heaters: idxs of BinaryOut pins
+heater_lower = 1
+heater_middle = 2
+heater_upper = 3
+heaters = [0, heater_lower, heater_middle, heater_upper]
+
+# fans are wired via 
+fan_support = 11  # jet to support glass
+fan_exhaust = 10  # heat exhaust fan
+
+#####################
+# kType thermocouples: may or may not be wired separate or combined
+# three ktypes are defined over there, and reported by the kType entry in moData
+# these are indices into the moData( kTypeKey ) array
+kType_lower = 0
+kType_middle = 1
+kType_upper = 2
+
+modacServer:
+  runTests
+  publishRate
+csvActive
+
+moGui_1:
+	timer_interval - clientReceive seconds
+
+moClient:
+  startSubscriber- timeout
+
+
+MoNetworkd
+ addresses, timeout
