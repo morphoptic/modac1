@@ -614,11 +614,11 @@ class Kiln:
         #log.debug("runKilnScript: "+str(scriptAsJson))
         self.myScript = newScriptFromText(scriptAsJson)
         self.scriptIndex = 0
-        self.loadScriptStep()
         self.simulation = self.myScript.simulate
         log.debug("runKilnScript: simulation:"+str(self.simulation))
         moHardware.simulateKiln(self.simulation)
         # moHardware should call this.setSimulation(self.simulation) # because it is in both places
+        self.loadScriptStep()
 
         if self.simulation:
             dist = 1000.0  # 1meter start dist in simulation
