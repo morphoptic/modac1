@@ -1,0 +1,293 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\froman\fcharset0 Times-Roman;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue233;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c93333;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{hyphen\}}{\leveltext\leveltemplateid2\'01\uc0\u8259 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{hyphen\}}{\leveltext\leveltemplateid3\'01\uc0\u8259 ;}{\levelnumbers;}\fi-360\li2160\lin2160 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid101\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{hyphen\}}{\leveltext\leveltemplateid102\'01\uc0\u8259 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listname ;}\listid2}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}}
+\margl1440\margr1440\vieww18960\viewh15200\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs34 \cf0 MODAC P3 Status\
+\'97\'97\
+13Aug demo went well with a few bugs.\
+Joe said bill for P2 so its on to P3\'85\
+\
+Issues from demo:\
+* need script+cmd to start GUI (feedback status updates didnt seem to be happening)\
+* DOCUMENTATION - how to run, work arounds, internals  (setupPi, .bashrc \'85)\
+DONE BinaryOut Panel: AllOff should clear the relay button states to off (how deal with other off cmd?)\
+* Reset Leica from GUI crashed the server?\
+DONE AD16 i2c wire broke - replace  (photos of fail)\
+* if AD16 not found, server won\'92t launch - i2c devices should not stop it\
+	should give warning and work around \
+* kiln: added 4th K-Type which is combo of all 3 on kiln, update GetTemperature\
+\
+Issues discussed for Phase 3\
+		\
+* Config file needed: wifi network, ad->k-type->kiln, binOut->heater\
+* PC connection - support zero config\
+* Scripting:  needs much work - clean it up for more\
+	* PID tuning\
+	* support 3 streams of temp/binaryOut\
+	* visual display of script state? \
+	* cmd:\
+		* Heat To N degC (cool to N degC)\
+		* Hold Deg for N min/till delta Distance reached\
+		* turn on/off blowers	\
+		* move on\
+* GUI to invoke & Monitor Script function\'85\
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural\partightenfactor0
+\ls1\ilvl1\cf0 {\listtext	\uc0\u8259 	}script is a python function user edits before/after\
+{\listtext	\uc0\u8259 	}script is python file to run?\
+\pard\tx1660\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li2160\fi-2160\pardirnatural\partightenfactor0
+\ls1\ilvl2\cf0 {\listtext	\uc0\u8259 	}code module\
+{\listtext	\uc0\u8259 	}Interactive Interpreter .runsource(source, filename="<input>", symbol="single")\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 * UI Redesign\
+	* review existing design and usability issues\
+	* what activities need to be supported really well\
+	* touch screen version?\
+* Containment Box\
+	* connectors\
+	* layout, rewire\
+* Documentation!!\
+	* walk thru power on, startup and basic use (soon - ifs UX design review time!!)\
+	* creation of new SD card & software install\
+	* hardware setup, wiring diagram\
+\
+Further future  code cleanup and development\
+\'97\
+28 Aug\'85\
+reviewing hardware setup.\
+* Need panel mounts for hdmi, usb, ethernet, power (ac to brick, usbMicro for pi) \
+* plus ways to expose the relay, thermocouple, A/D connections, etc\
+* include OLED i2c display  (i2c on qwii?)\
+* add HDMI 1x2 display duplicator with touchscreen on box + external connection\
+* usb port to external USB powered hub for mouse, keyboard, etc\
+\
+* add more GPIO ports for external io (power strips, etc)\
+* use current power controller to control 12vdc power supply on/off\
+\
+System setup:\
+* ZeroConfig for MODAC services\
+* wifi + ethernet? or just ethernet or just wifi?\
+	* wifi only for system updates, off normally\
+\
+\
+Separate GUI System\
+* MODAC GUI on PC  (and mac?)\
+* connect by wired ethernet (at least at first)\
+* large, simple GUI for use with touch screen - better tab setup?\
+	* gui dev could be long and involved, beyond proof of concept level\
+\
+\'85 \
+All Off Button done\
+updated github\
+merged DevP2b into master\
+created branch DevP3a\
+\
+setup Zeroconfig\
+	{\field{\*\fldinst{HYPERLINK "https://www.kalitut.com/2017/11/raspberry-pi-set-up-zeroconf-bonjour.html"}}{\fldrslt 
+\f1\fs24 \cf2 \expnd0\expndtw0\kerning0
+\ul \ulc2 https://www.kalitut.com/2017/11/raspberry-pi-set-up-zeroconf-bonjour.html}}\
+The required avahi-dameon is already up to date, but utils not installed\
+	sudo apt-get install avahi-utils\
+so next is to use rasps-config to set the host name (under network options, not advanced per older article)\
+using \'93modacServer\'94\
+\
+> sudo pip3 install \'97upgrade zeroconf\
+\
+Hmm, is zeroconf really worth it?\
+we have a very small install and plan to use wired net tween the PC/modac.\
+I think we skip this and force ip address on the modacServer\
+* so - how to setup static ip on our switch?\
+	* configure static ip/net port on rPi\
+	* client on Win10 PC just needs to know rPi IP, but could get static ip too?\
+\
+easy enough to run via VNC\
+\
+\'97\'97\
+done AD16 and Env sensor should not stop server from running\
+Time of latest update in MoData should be from event loop, not EnvSensor\
+	Done, and fix for missing devices\
+\
+* Schematic - whats where, connector definitions\
+	* relay lines : all 12 v? or some 5v?e\
+* Configuration:\
+	* ip address\
+	* K-type A/D channels (24 + 16bit?) + names\
+	* relay names\
+	* msg for names of channels (so client can use em)?\
+	* log + csv file name?\
+	* displays on oled\
+* Scripting/PID Control\
+	* develop decent Python names, outline loop, etc\
+	* review other script system from github\
+\'97\
+Scripting\'85\
+apparently using the PiLN pid ripped from oven.py, but very stripped down\
+\
+need a way to simulate runs for testing.\
+have an alternative tool that feeds moData and downstream using sim rather than data reads\
+  * fairly simple? replace ReadData in the main loop of modacServer with simulateStep\
+\
+Use python code or a TinyLanguage?\
+prototype tiny language using python modules\
+\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls2\ilvl0\cf0 {\listtext	\uc0\u8226 	}Idle\
+{\listtext	\uc0\u8226 	}RampTo(temp, overTime)\
+\pard\tx940\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li1440\fi-1440\pardirnatural\partightenfactor0
+\ls2\ilvl1\cf0 {\listtext	\uc0\u8259 	}positive/negative direction?\
+{\listtext	\uc0\u8259 	}RampUp/RampDown\
+\pard\tx220\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\li720\fi-720\pardirnatural\partightenfactor0
+\ls2\ilvl0\cf0 {\listtext	\uc0\u8226 	}HoldTemp(untilTime, untilDistance)\
+{\listtext	\uc0\u8226 	}SupportFan(on/off)\
+{\listtext	\uc0\u8226 	}ExhaustFan(on/off)\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+Do Ramp/Hold modules know to turn on/off Exhaust Fan?\
+Maybe Hold or RampDown does?\
+\
+Example\
+steps = [\
+	\{Idle\}\
+	\{RampTo temp=500C\}\
+	HoldTemp(500C, Deflect=100mm)\
+	SupportFan(On)\
+	ExhaustFan(On)\
+	RampDown(roomTemp, SupportOn, ExhaustOn)\
+	Alarm()\
+	Idle()\
+	]\
+how to switch tween steps?\
+	loop knows Steps = array or ordered list of functions + parameters\
+	each loop \
+		done = currentStep.update()\
+		if done == True\
+			next step\
+syntax of steps?\
+	json?  what would that turn into?\
+	python dict, array, array of dict or ?\
+\
+\
+Hardware Mods to do:\
+* add 2 external relay control lines ala power strip\
+* re-integrate OLED display (shows ip address, summary temp, state)\
+	\
+\'97\'97\
+Oct 6\
+Merged code back to Master from DevP3a branch in github\
+Simulated kiln runs thru cycle well.  \
+Now needs testing against real kiln\
+\
+ * Fan control lines need testing (binary out # ??, 3 links +Gnd from pi stack)\
+ * Kiln Control panel might get btns for known kiln controls (3 heaters, 2 fans, 1 12v control to relays)\
+ * cable from AD to T.Couple Amp box\
+ Duplicate SD card - or at least 2ndary boot chip\
+Documentation!\
+\
+Nov 2\
+various revisions and delays\
+thermoCouple fails to give decent values after k-type data shift\
+so rough calibrate using testAD24 and several temps\
+ice water, roomTemp, hot water (38.3C), roomWater 33.8\
+run for 5 min (tc on AD24 chan 2, 3, 6)\
+creates 4 CSV files\
+next avg/mean the tables\
+in ODS, in Python\
+by tossing the upper far range, basically get to about 0.002-0.005 s.Dev\
+across 5min of samples and 3 thermocouples \
+although one TC was off by 0.08 V (0-5)\
+\
+Nov 7, \
+updated k-type with magic number converting from value read to degC\
+using Ice water value of 0.134 (from calibration run)\
+and the 122.4 gain\
+mv = (readValue - iceWaterValue)/gain\
+and run that mV thru the thermocouple-reference kType.inverse(mV, enviro.tempC())\
+gives reasonable values\
+\
+Dec 22\
+Finally got a single T-Couple controller running 3 heaters on kiln.\
+still need:\
+*) Review Calibration Data\
+*) dual HDMI out (monitor + touch screen)\
+*) OLED on QWIIC (vs new oled test)\
+	why does it not work?\
+*) Physical E-Stop Button (needs Binary Input class)\
+*) PC Client Port: see {\field{\*\fldinst{HYPERLINK "https://cyrille.rossant.net/create-a-standalone-windows-installer-for-your-python-application/"}}{\fldrslt 
+\f1\fs24 \cf2 \expnd0\expndtw0\kerning0
+\ul \ulc2 https://cyrille.rossant.net/create-a-standalone-windows-installer-for-your-python-application/}}\
+	*) WinPython + InnoSetup\
+*) explore alt GUI using KIVY?\
+*) documentation:\
+	* configuration done using python modules see Config doc\
+	* user setup and basic operation guide\
+	* sw design and architecture\
+*) Case with displays\
+	* Plexi mount for both displays - separate or as 1 piece? (1 for demo/POC)\
+	* need dimensional diagram for Corel Draw\
+\
+Simplify to get it working asap:\
+	* single hdmi out\
+	* no oled\
+	* 3 k-type input\
+	* 3 heater out\
+	* 12v, 2 fans on controlled power strips\
+	* Enviro sensor\
+	* 16bit AD not connected to io?\
+	simple case w/power supplies\
+\
+\'97\'97\'97\'97\'97\
+January 18 2020\
+Testing with the kiln showed problems with the thermocouple reading but may have those under control\
+\
+* Need to test the I2C thermocouple board w/24bit chain & code\
+\
+Working on the Case.\
+Joe found a nice APC rack mounted power unit that seems to be be a perfect prototype box.\
+It has a hole almost big enough for LCD touch panel on left front, and an opening for other on right\
+Back side has AC plugs plus a couple smaller holes, one that fits a column of the 2pin jacks perfectly.\
+and one that fits the 4pin jack quite well\
+Laser cut panels have been made for these, as well as the LCD panel mounting and a large wooden one inside for main boards\
+\
+LCD touch panel mounting has been a bit problematic, as the panel has no mounting holes, and the existing hole is just a lil bit too small in the horizontal direction.\
+A stack of panels is used to hold the LCD and its associated boards.  These are aligned by several holes.\
+The primary alignment are the rack mount handles on left side (10-32 screws)\
+Front Panel has a cutout for the LCD, the size of its viewing area (note: current 1-18 panel has this slightly off.\
+It is adjusted in the Left Panel.cdr (not full name, its on the laser laptop)\
+An interior Bezzel panel of cardboard keeps the panel from crunching against the metal case\
+Next layer of cardboard is cut out to support the panel in position (note the usb cable cutout was not accounted for yet)\
+Then comes the backing layer of cardboard that protects back side of panel\
+Then comes the Associated Board Mounting Panel - to hold the driver, usb, and button panel.\
+Button panel might want to be front facing but that requires modifications to the metal panel we are not ready to do.\
+\
+Right front panel has the little OLED display,  ethernet, USB and HDMI jacks.  It also has lots of space available.\
+Some sort of I2C connection might be good here - perhaps one using RJ45? (avoid confusion with ethernet!!)\
+\
+Next up will be:\
+* DONE screwing the LCD Stack together (temp solution, probably gonna recut some)\
+* recut front panel\
+* laying out the main components - pi stack, relay board, DC power distribution strips, and i2c components\
+* working out the power supply setup on left interior behind LCD\
+	* ac-5vdc\
+	* ac-9vdc (LCD)\
+	* ac in, strip for ^^^ and connect to ac out\
+	* does pi need own? can it now work with other cable?\
+* wire all components to panels\
+* local test to be sure it still runs\
+* take it to IfA for testing\
+\
+Still working documentation, etc\
+\
+\'97\'97\
+Feb 03 2020\
+Make new image and test Pi for home\
+\
+* download pi image (2019-09-26-raspbian-buster-full.zip)\
+* use Balena Etcher to flash to SD card\
+* setup Pi w/ card\
+ \
+}
