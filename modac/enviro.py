@@ -40,7 +40,7 @@ def init():
 
     #assert not this.__eSensor is None
     this.update()
-    this.__status = moStatus.Ok
+    this.__status = moStatus.OK
 
 
 def update():

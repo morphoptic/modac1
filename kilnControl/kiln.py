@@ -539,10 +539,10 @@ class Kiln:
     def command12VRelay(self,cmdState):
         tmpState = cmdState
         if self.simulation == True: # 12v On
-            tmpState = False
+            tmpState = False #simulation is always off
         log.debug("Command 12v Relay " + str(cmdState) + " sim: "+str(this.simulation) + " actual:"+str(tmpState))
         self.v12RelayCommanded = tmpState
-        moHardware.binaryCmd(relayPower,tmpState)
+        moHardware.binaryCmd(relayPower, tmpState)
 
     def commandExhaustFan(self, cmdState):
         # turn on/off exhaust
@@ -616,10 +616,11 @@ class Kiln:
         self.scriptIndex = 0
         self.loadScriptStep()
         self.simulation = self.myScript.simulate
+        log.debug("runKilnScript: simulation:"+str(self.simulation))
         moHardware.simulateKiln(self.simulation)
         # moHardware should call this.setSimulation(self.simulation) # because it is in both places
 
-        if this.simulation:
+        if self.simulation:
             dist = 1000.0  # 1meter start dist in simulation
             print("Kiln Simulation start dist", dist)
         else:
