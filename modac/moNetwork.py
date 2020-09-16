@@ -25,7 +25,7 @@ from .ping import ping
 # TODO: convert us from raw ip to a zeroConf address
 __serverName = "modacServer.local"
 __noNetAddress = '127.0.0.1'
-__eth0Address = '192.168.0.10'  # set in servers /etc/dhcpcd.conf
+__eth0Address = '192.168.2.10'  # set in servers /etc/dhcpcd.conf
 __serverIPAddress = None
 #__myIPAddress = 'tcp://127.0.0.1'
 __pubAddress = None
