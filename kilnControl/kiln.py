@@ -16,6 +16,7 @@
 #  emergencyShutoff() shuts down kiln (12vrelay power)
 #  runKilnScript(params): Cmd handler to run a kiln cycle. params is Dict with array of KilnStep
 #
+# TODO:  why do ktemps lag the kType reports in full update message
 
 import sys
 this = sys.modules[__name__]
@@ -383,7 +384,8 @@ class Kiln:
                 self.lastCheckHeatingTime = currentTime
                 self.lastCheckHeatingTemp = self.kilnTemps[0]
             else :
-                if (currentTime - self.lastCheckHeatingTime).total_seconds() > self.overHeatTime:
+                deltaTimeSec = (currentTime - self.lastCheckHeatingTime).total_seconds()
+                if deltaTimeSec > self.overHeatTime:
                     # its been a while since we checked; has temp changed?
                     if self.lastCheckHeatingTemp < self.kilnTemps[0]:
                         # its heating, so we good
@@ -391,9 +393,12 @@ class Kiln:
                         self.lastCheckHeatingTemp = self.kilnTemps[0]
                     else:
                         # no change in temp? something wrong
-                        log.error("Temperatures didnt change but supposed to be Heating - ERROR!!!")
+                        log.error("Temperatures didnt change but supposed to be Heating - ERROR!!! "+str(deltaTimeSec))
+                        log.error("   lastCheckTemp: "+ str(self.lastCheckHeatingTemp)+" curr ktemps: "+str(self.kilnTemps))
                         self.terminateScript()
-                        moHardware.EmergencyOff()
+                        self.state = KilnState.Error
+                        self.publishStatus()
+                        #moHardware.EmergencyOff()
                         return
 
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust

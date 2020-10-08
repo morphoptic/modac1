@@ -133,7 +133,8 @@ def asArray():
             this.status = moStatus.Error
             return ktypeData
         else:
-            adArray = moData.getValue(keyForAD16())
+            ad16Record = moData.getValue(keyForAD16())
+            adArray = ad16Record[keyForAD16()]
         #print("adArray from 16bit ", adArray)
     else:
         adArray = ad24.all0to5Array()

@@ -18,6 +18,8 @@ import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+from .moStatus import *
+
 # Other modules include this but this doesnt include them
 # number of sensors of each type
 # we need this early in Client startup
@@ -67,6 +69,12 @@ def getNursery():
 def shutdown():
     __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
 
+def defaultAD16record():
+    record = {
+        keyForStatus(): moStatus.Default.name,
+        keyForTimeStamp(): generateTimestampStr(),
+        keyForAD16(): [0.0]*this.numAD16()
+    }
 def init(client=False):
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
@@ -90,7 +98,7 @@ def init(client=False):
         update(keyForEnviro(), def_env)
         update(keyForBinaryOut(), [0]*this.numBinaryOut())
         update(keyForAD24(), [0.0]*this.numAD24())
-        update(keyForAD16(), [0.0]*this.numAD16())
+        update(keyForAD16(), defaultAD16record())
         update(keyForKType(), [0.0]*this.numKType())
         def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
         update(keyForLeicaDisto(), def_leica)
@@ -132,6 +140,11 @@ def update(key,value):
             value = value.strftime(getTimeFormat())
     this.__moDataDictionary[key] = value
     pass
+
+def generateTimestampStr():
+    now = datetime.datetime.now()
+    value = now.strftime(getTimeFormat())
+    return value
 
 def getTimestamp():
     return getValue(keyForTimeStamp())
@@ -204,7 +217,9 @@ def asRowArray():
     if isValidKey(keyForAD16Raw()):
         a += this.getValue(keyForAD16Raw())
     if isValidKey(keyForAD16()):
-        a += this.getValue(keyForAD16())
+        # ad16 is now a structure including status and timestamp
+        record = this.getValue(keyForAD16())
+        a += record[keyForAD16()]
     if isValidKey(keyForKType()):
         a += this.getValue(keyForKType())
     if isValidKey(keyForBinaryOut()):

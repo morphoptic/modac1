@@ -90,7 +90,10 @@ class ad16Panel():
         # network got something - hopefully dispatched  already so moData is updated
         # ToDo: check timestamp ? if it is same as last, then nothing changed (so what was received?)
         self.timestamp = moData.getValue(keyForTimeStamp())
-        data = moData.getValue(self.key)
+        record = moData.getValue(self.key)
+        self.timestamp = record[keyForTimeStamp()]
+        self.statusName = record[keyForStatus()]
+        data = record[self.key]
         #print(self.key+" Update = ", data)
  
         self.count = self.count+1

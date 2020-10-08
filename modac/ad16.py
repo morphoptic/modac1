@@ -54,7 +54,8 @@ def init():
     if ad16_i2c is None:
         log.error("error getting i2c bus for AD16")
         this.__status = moStatus.Error
-        moData.update(keyForAD16(), this.__values)
+        moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
+        #moData.update(keyForAD16(), this.__values)
         return
     print("Create ADS1115")
     try:
@@ -72,7 +73,7 @@ def init():
             this.__values = [0] * this.__numChannels
             this.__volts  = [0.0] * this.__numChannels
         #
-        moData.update(keyForAD16(), this.__volts)
+        moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
         moData.update(keyForAD16Raw(), this.__values)
         moData.update(keyForAD16Status(), this.__status.name)
         print("Bad Values "+str(this.__values))
@@ -95,6 +96,15 @@ def init():
     # now get initial values
     this.update()
     this.__status = moStatus.OK
+
+def createUpdateRecord():
+    updateRecord = createUpdateRecord()
+    {
+        keyForStatus(): this.__status.name,
+        keyForTimeStamp(): moData.generateTimestampStr(),
+        keyForAD16(): this.__volts
+    }
+    return updateRecord
 
 def update():
     if this.__isAlive == False:
@@ -119,8 +129,9 @@ def update():
         this.__volts[3] = this.__chan3.voltage
     except:
         log.error(" Error reading AD16 values, disable device", exc_info=True)
+        this.__status = moStatus.Error
         # need to put at least one record in moData
-        moData.update(keyForAD16(), this.__values)
+        moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
         this.__ad16_i2c = None
         this.__isAlive = False
         this.__status = moStatus.Error
@@ -130,7 +141,7 @@ def update():
         this.__values = [0]* len(this.__values)
         this.__volts = [0.0] * this.__numChannels
     #
-    moData.update(keyForAD16(), this.__volts)
+    moData.update(keyForAD16(), createUpdateRecord())
     moData.update(keyForAD16Raw(), this.__values)
     moData.update(keyForAD16Status(), this.__status.name)
 
