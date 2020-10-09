@@ -508,6 +508,7 @@ class Kiln:
             log.debug("single PID - all On")
             self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
         else:  # shouldnt have to do this but
+            log.debug("single PID - all Off")
             self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
 
 
@@ -591,21 +592,22 @@ class Kiln:
         #error is all values = 0, chk ktypeStatus?
 
         # print("Kiln ktypes read as: ", kTemps)
-        sum = 0.0
         self.kilnTemps[1] = kTemps[kType_lower]
         self.kilnTemps[2] = kTemps[kType_middle]
         self.kilnTemps[3] = kTemps[kType_upper]
-        sum = self.kilnTemps[1] + self.kilnTemps[2] + self.kilnTemps[3]
-        avg = sum / 3
 
         # how we get kiln temp depends on bool from kilnControl/kilnControl.py
+        avg = 0
         if kType_avgAll:
             # use the average of 3 ktype thermocouples
+            avg = (self.kilnTemps[1] + self.kilnTemps[2] + self.kilnTemps[3]) / 3
             self.kilnTemps[0] = avg
+        elif kType_avgTopBottom:
+            avg = (self.kilnTemps[1] + self.kilnTemps[3]) / 2
         else:
             # use only the lower (first) ktype = bottom
-            self.kilnTemps[0] = self.kilnTemps[1]
-
+            avg = self.kilnTemps[1]
+        self.kilnTemps[0] = avg
         pass
 
     def updateDistance(self):
