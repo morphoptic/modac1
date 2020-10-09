@@ -376,6 +376,8 @@ class Kiln:
                 self.lastCheckHeatingTemp = 0
 
         # Update Data (heaters, fans, temperture, distance)
+        moHardware.updateKilnSensors()
+        # these update from moData
         self.updateBinaryDevices()
         self.updateTemperatures()
         self.updateDistance()

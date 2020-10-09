@@ -68,6 +68,24 @@ def update():
         moData.setStatusError()
         return False
 
+def updateKilnSensors():
+    if not __initialized == True: return
+
+    try:
+        # get our own timestamp
+        moData.updateTimestamp()
+        binaryOutputs.update()
+        ad16.update()
+        kType.update()
+        enviro.update()
+        return True
+    except:
+        log.error("Exception in MoHardware Update", exc_info=True)
+        #exc = traceback.format_exc()
+        #log.error("Traceback is: " + exc)
+        moData.setStatusError()
+        return False
+
 
 #    if not leicaDisto.isRunning():
 #        #leicaDisto.update() # leica updates happen in other thread
