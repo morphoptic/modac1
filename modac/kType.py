@@ -120,7 +120,7 @@ def update():
         this.status = moStatus.Simulated
         this.simulator.update()
     moData.update(keyForKTypeStatus(), this.status.name)
-    pass
+    moData.update(keyForKType() + keyForTimeStamp(), moData.generateTimestampStr())
 
 def asArray():
     assert not this.simulation

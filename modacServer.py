@@ -57,7 +57,7 @@ def modacExit():
     if jsonActive:
         moJSON.closeJsonLog()
     moData.shutdown()
-    moServer.shutdownServer()
+    moServer.shutdownPublisher()
     log.info("modacExit: closed everything i think, although those are async trio")
     #exit(0)
 
@@ -76,9 +76,8 @@ async def modac_ReadPubishLoop():
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
         if moServer.receivedShutdown():
-            log.warn("Received Shutdown, exit loop")
+            log.warning("Received Shutdown, exit loop")
             moServer.sendShutdown()
-            modacExit()
             break;
         if not moHardware.update():
             log.error("Error in moHardware Update, suicide")
@@ -110,9 +109,20 @@ async def modac_ReadPubishLoop():
             break
         if moData.getStatus() == moData.moDataStatus.Error:
             log.error("Modata is in error- die")
-            modacExit()
+            this.okToRunMainLoop = False
+    log.info("somehow we exited the ReadPublish Forever Loop, end Kiln, set status post a few tiems")
+    kilnControl.kiln.endKilnControlProcess()
+    moData.shutdown() # sets status to Shutdown
+    for step in range(3):
+        # publish Shutdown so client might recognize it
+        print("WAit to shutdowm", step)
+        log.info("Waiting to finish shutdown "+ str(step))
+        await moServer.publish()
+        await trio.sleep(5)
     # after Forever
-    log.info("somehow we exited the ReadPublish Forever Loop")
+    log.info("after waited a bit, we now modacExit()")
+    modacExit()
+
 
 async def modac_asyncServer():
     #await trio.sleep(2)

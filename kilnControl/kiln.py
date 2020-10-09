@@ -335,6 +335,11 @@ class Kiln:
             if ad16.isError():
                 emergencyShutOff()
                 break
+            if self.state == KilnState.Error:
+                log.error("Kiln has gone into Error state. Terminate Process")
+                self.processRunnable = False
+                self.publishStatus()
+                break
 
             self.kilnStep()
             #self.sleepThisStep = self.time_step   # TODO set this in KilnStep

@@ -98,8 +98,7 @@ def init():
     this.__status = moStatus.OK
 
 def createUpdateRecord():
-    updateRecord = createUpdateRecord()
-    {
+    updateRecord = {
         keyForStatus(): this.__status.name,
         keyForTimeStamp(): moData.generateTimestampStr(),
         keyForAD16(): this.__volts

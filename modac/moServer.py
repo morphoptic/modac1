@@ -33,10 +33,15 @@ __receivedHello = False
 __Shutdown = False
 
 def shutdownServer():
-    log.debug("try to kill moServer CmdListener+Publisher")
+    log.debug("shutdownServer - modata shutsdown, stop listening")
+    moData.shutdown()
     sendShutdown()
-
+    this.__Shutdown = True
     this.__killCmdListener = True # this should stop the serverReceive() from pair1
+    # dont really shutdown - as the outer loop needs to do this
+
+def shutdownPublisher():
+    log.debug("shutdownPublisher")
     if not this.__Publisher is None:
         this.publish() # one last time
         time.sleep(1)
@@ -59,12 +64,15 @@ def sendShutdown():
     publishData(keyForShutdown(), None)
 
 async def publish():
+    if this.__Publisher is None:
+        log.debug("publish() offline - no send AllData")
+        return
     log.debug("publish - only AllData for now %s"%moData.asJson())
     await publishData(keyForAllData(), moData.asDict())
 
 async def publishData(key, value):
     if this.__Publisher is None:
-        log.debug("publisher offline "+key)
+        log.debug("publish Datum offline "+key)
         return
     #print("publish: key/value: ", key, value)
     msg = moNetwork.mergeTopicBody(key, value)
@@ -226,7 +234,8 @@ def receivedGoodbye():
     return
 
 def receivedShutdown():
-    #log.info("Received Shutdown?")
+    if this.__Shutdown:
+        log.info("Received Shutdown?"+str(this.__Shutdown))
     return this.__Shutdown
 
 if __name__ == "__main__":

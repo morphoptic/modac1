@@ -67,7 +67,9 @@ def getNursery():
     return this.__nursery
 
 def shutdown():
-    __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
+    log.debug("moData shutdown - sets status shutdown")
+    update(keyForTimeStamp(), datetime.datetime.now())
+    update(keyForStatus(), moDataStatus.Shutdown.name)
 
 def defaultAD16record():
     record = {
@@ -75,6 +77,8 @@ def defaultAD16record():
         keyForTimeStamp(): generateTimestampStr(),
         keyForAD16(): [0.0]*this.numAD16()
     }
+    return record
+
 def init(client=False):
     # here we dont init hardware, only data collection
     # initial data values required, empty arrays and filled in dict
@@ -194,7 +198,13 @@ __namesOfColumns = None
 # do this manually or using names?
 # bit too complex for dictwriter, given many entries are complex
 def __appendArray(key,targetArray):
-    a = this.getValue(key)
+    # TODO: converting ad16 values to dict+values just got a lot more complex
+    a = []
+    if key == keyForAD16():
+        ad16= this.getValue(key)
+        a = ad16[key]
+    else:
+        a = this.getValue(key)
     targetArray + a
     
 def asRowArray():
@@ -241,7 +251,11 @@ def asRowArray():
 def __appendAName(key):
     #print("__appendAName key:", key)
     cPrefix = key
-    a = this.getValue(key)
+    if key == keyForAD16():
+        ad16= this.getValue(key)
+        a = ad16[key]
+    else:
+        a = this.getValue(key)
     #print("__appendAName a:", a)
     assert isinstance(a, list)
     for i in range(len(a)):
