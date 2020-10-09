@@ -484,16 +484,29 @@ class Kiln:
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway
         if self.scriptState == KilnScriptState.Heating or self.scriptState == KilnScriptState.Holding:
-            #log.debug("Update PIDs ")
-            if self.useSinglePID:
-                self.doSinglePID()
-            else:
-                self.doMultiplePID()
-            # common code to command heaters to change, but only if needed
+            # only one PID, and always command relays
+            self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
+            if self.pidOut[0] > 0:
+                # turn heaters on
+                log.debug("single PID - all On")
+                self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
+            else:  # shouldnt have to do this but
+                log.debug("single PID - all Off")
+                self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+
             for i in range(1,4): # should use len heaters?
-                if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
-                    log.info("pid kiln cmd heater change %d"%i)
-                    moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
+                moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
+
+            #log.debug("Update PIDs ")
+            # if self.useSinglePID:
+            #     self.doSinglePID()
+            # else:
+            #     self.doMultiplePID()
+            # # common code to command heaters to change, but only if needed
+            # for i in range(1,4): # should use len heaters?
+            #     if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
+            #         log.info("pid kiln cmd heater change %d"%i)
+            #         moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         # bottom of step
         #log, publish and put in data blackboard
         #self.publishStatus()
@@ -501,6 +514,7 @@ class Kiln:
 
     def doSinglePID(self):
         # using only the 0 index wich may be avg or paritular ktype to control PID
+        # not using this at present
         self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
         # log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
         if self.pidOut[0] > 0:
@@ -673,6 +687,7 @@ class Kiln:
         self.maxTimeMin = default_maxTime # curSeg.maxTime
         self.maxTimeSec =  default_maxTime* 60 # curSeg.maxTime* 60
         self.step_time = curSeg.stepTime
+        self.sleepThisStep = curSeg.stepTime
         self.targetHoldTimeMin = curSeg.holdTimeMinutes
         self.targetHoldTimeSec = self.targetHoldTimeMin * 60
         # set exhaust/support fans? command_X
