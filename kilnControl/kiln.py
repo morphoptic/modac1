@@ -20,13 +20,9 @@
 
 import sys
 this = sys.modules[__name__]
-import logging, logging.handlers, traceback
+import logging, logging.handlers
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-import time
-import datetime
-from enum import Enum
 
 import trio
 
@@ -634,8 +630,8 @@ class Kiln:
                 if self.kilnTemps[0] > this.criticalTemp and self.supportFanCommanded == False:
                     self.currentDistance += slumpRate
         else:
-            lData = moData.getValue(keyForLeicaDisto())
-            self.currentDistance = lData[keyForDistance()]
+            #lData = moData.getValue(keyForLeicaDisto())
+            self.currentDistance = moData.getValue(keyForDistance())
         pass
 
     def runKilnScript(self, scriptAsJson):
@@ -652,14 +648,13 @@ class Kiln:
             dist = 1000.0  # 1meter start dist in simulation
             print("Kiln Simulation start dist", dist)
         else:
-            lData = moData.getValue(keyForLeicaDisto())
+            # lData = moData.getValue(keyForLeicaDisto())
             #print("startKiln Run leicaPanel.getData = ", lData)
-            dist = lData[keyForDistance()]
+            dist = moData.getValue(keyForDistance())
 
         # test for no distance data
         if dist <= 0:
-            log.warn("No distance data for Leica, Kiln run may not work")
-            #self.state = KilnState.Idle
+            log.warning("No distance data for Distance Sensor, Script run may not work")
         self.startDistance = dist
         self.currentDistance = dist
         self.targetDist = self.startDistance + self.targetDisplacement

@@ -12,7 +12,7 @@ log.setLevel(logging.DEBUG)
 
 from .moKeys import *
 from . import moData, enviro, ad24, ad16, kType, binaryOutputs
-from modac import leicaDistoAsync as leicaDisto
+#from modac import leicaDistoAsync as leicaDisto
 
 # locally required for this module
 import trio
@@ -31,8 +31,8 @@ async def init(nursery, nosensors = False):
         kType.init()
         # leica distance sensor needs to run its own thread/process
         #support noLeica cli option?
-        leicaDisto.init()
-        nursery.start_soon(leicaDisto.runLoop)
+        #leicaDisto.init()
+        #nursery.start_soon(leicaDisto.runLoop)
     except (ValueError, OSError) as e:
         log.error("Error starting sensors ", exc_info=True)
         if not nosensors:
@@ -58,7 +58,7 @@ def update():
         ad24.update()
         ad16.update()
         kType.update()
-        leicaDisto.update()
+        #leicaDisto.update()
         enviro.update()
         return True
     except:
@@ -98,7 +98,7 @@ def shutdown():
     ad24.shutdown()
     ad16.shutdown()
     binaryOutputs.shutdown()
-    leicaDisto.shutdown()
+    #leicaDisto.shutdown()
     __initialized = False
     log.debug("shutdown hardware")
 
@@ -116,10 +116,11 @@ def resetLeicaCmd():
     if this.__nursery is None:
         return
     # dont block like in init(), do it async
-    if leicaDisto.isRunning():
-        leicaDisto.close()
-    leicaDisto.reset()
-    this.__nursery.start_soon(leicaDisto.runLoop)
+    # if leicaDisto.isRunning():
+    #     leicaDisto.close()
+    # leicaDisto.reset()
+    # this.__nursery.start_soon(leicaDisto.runLoop)
+    pass
 
 def simulateKiln(onOff=True):
     kType.setSimulate(onOff)

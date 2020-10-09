@@ -104,8 +104,9 @@ def init(client=False):
         update(keyForAD24(), [0.0]*this.numAD24())
         update(keyForAD16(), defaultAD16record())
         update(keyForKType(), [0.0]*this.numKType())
-        def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
-        update(keyForLeicaDisto(), def_leica)
+        update(keyForDistance(), 0)
+        # def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
+        # update(keyForLeicaDisto(), def_leica)
 
     def_kilnStatus = kilnState.defaultKilnRuntimeStatus()
     update(keyForKilnState(),def_kilnStatus[keyForState()])
@@ -216,10 +217,13 @@ def asRowArray():
         a.append(env[keyForHumidity()])
         a.append(env[keyForPressure()])
     
-    if isValidKey(keyForLeicaDisto()):
-        leica = this.getValue(keyForLeicaDisto())
-        a.append(leica[keyForDistance()])
-    
+    if isValidKey(keyForDistance()):
+        distRecord = this.getValue(keyForDistance())
+        a.append(distRecord)
+    # if isValidKey(keyForLeicaDisto()):
+    #     leica = this.getValue(keyForLeicaDisto())
+    #     a.append(leica[keyForDistance()])
+
     # if isValidKey(keyForAD24Raw()):
     #     a += this.getValue(keyForAD24Raw())
     # if isValidKey(keyForAD24()):
@@ -281,9 +285,10 @@ def arrayColNames():
         this.__namesOfColumns.append(keyForHumidity())
     if isValidKey(keyForPressure()):
         this.__namesOfColumns.append(keyForPressure())
-#    if isValidKey(keyForDistance()):
-    if isValidKey(keyForLeicaDisto()):
-         this.__namesOfColumns.append(keyForDistance())
+    if isValidKey(keyForDistance()):
+        this.__namesOfColumns.append(keyForDistance())
+    # if isValidKey(keyForLeicaDisto()):
+    #      this.__namesOfColumns.append(keyForDistance())
     # if isValidKey(keyForAD24Raw()):
     #     this.__appendAName(keyForAD24Raw())
     # if isValidKey(keyForAD24()):
