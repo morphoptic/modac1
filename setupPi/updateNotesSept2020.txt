@@ -203,6 +203,9 @@ interface eth0
   static routers=192.168.0.1
   static domain_name_servers=192.168.0.1 8.8.8.8 fd51:42f8:caae:d92e::1
   metric 300
+  
+also change in /etc/hosts
+
 ----
 sept 6 - reconciling gits
 sept 7 it works.
@@ -213,5 +216,13 @@ or the installed app wont find the proper data files.
 Currently running the installer built server and client (pi and windows)
 prepare to move to morphoptic's win10 laptop.
 then clone SD card
+
+----
+oct 6 2020
+due to configuration issues with IfA PC, apparently we need to use a different IP
+so using 192.168.2.10 for the pi
+change in /etc/hosts and /etc/dhcpcd.conf
+changes up dated in gitrepo ./setupPi
+
 
 
