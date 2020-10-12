@@ -89,7 +89,8 @@ def init(client=False):
     # devices could use moData.deviceInitValue() to initialize internal values
     update(keyForStatus(),moDataStatus.Startup.name)
     update(keyForTimeStamp(),"No Data Yet")
-    
+    update(keyForDistance(),0.0)
+
     # in server individual devices will post their own init values
     # client needs to fake em - which may be maintance issue to keep consistent
     if client == True:
