@@ -1,0 +1,15 @@
+pyinstaller
+
+To create an EXE for Win10 we use pyinstaller...
+    http://www.pyinstaller.org/
+	https://datatofish.com/executable-pyinstaller/
+
+from the dataToFish site:
+1) add python to Win10path
+2) add pyinstaller  (pip install pyinstaller)
+3) create folder holding the py code
+4) in sh, cd to folder ^^ and run
+   pyinstaller --onefile moTkShell.py
+
+this creates a dist folder, which will contain the executable moTkShell.executable
+assuming your python install has all the right parts
