@@ -158,7 +158,7 @@ class Kiln:
         self.processRunnable = False
         self.state = KilnState.Closed
         self.simulation = False
-        self.overHeatTime = 5*60 # temp doenst change in 5min
+        self.overHeatTime = 2*60 # temp doenst change in 5min
         self.reset()
         log.debug("Kiln initialized")
         self.state = KilnState.Starting
@@ -386,7 +386,7 @@ class Kiln:
             if self.lastCheckHeatingTime is None:
                 self.lastCheckHeatingTime = currentTime
                 self.lastCheckHeatingTemp = self.kilnTemps[0]
-            else :
+            else:
                 deltaTimeSec = (currentTime - self.lastCheckHeatingTime).total_seconds()
                 if deltaTimeSec > self.overHeatTime:
                     # its been a while since we checked; has temp changed?
@@ -398,10 +398,13 @@ class Kiln:
                         # no change in temp? something wrong
                         log.error("Temperatures didnt change but supposed to be Heating - ERROR!!! "+str(deltaTimeSec))
                         log.error("   lastCheckTemp: "+ str(self.lastCheckHeatingTemp)+" curr ktemps: "+str(self.kilnTemps))
-                        self.terminateScript()
-                        self.state = KilnState.Error
-                        self.publishStatus()
+                        #self.terminateScript()
+                        #self.state = KilnState.Error
+                        #self.publishStatus()
                         #moHardware.EmergencyOff()
+                        self.twiddleBinaries()
+                        self.lastCheckHeatingTime = currentTime
+                        self.lastCheckHeatingTemp = self.kilnTemps[0]
                         return
 
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
@@ -457,7 +460,7 @@ class Kiln:
             log.info("target displacement %f reached. next segment"%(self.currentDisplacement))
             self.nextScriptSegment()
 
-        if self.scriptState == KilnScriptState.Holding :
+        if self.scriptState == KilnScriptState.Holding:
             # holding at target temp, how long we been here?
             # self.targetHoldTimeSec = 0 # seconds to hold at target temp, default 0 = ignore
             log.debug("Kiln HOLDING started at "+str(self.startHoldTime) +" cur:"+str(currentTime))
@@ -696,3 +699,23 @@ class Kiln:
         self.startHoldTimeStr = "notHolding"
         self.timeInHoldSeconds = 0
         self.timeInHoldMinutes = 0
+
+    async def twiddleBinaries(self):
+        # nasty lil hack to trip kiln heaters when system stops seeing changes
+        log.warning("Twiddling heaters")
+        log.warning("Initial States "+str(self.commandedHeaterStates))
+        # loop several times on/off
+        for i in range(5):
+            self.allHeatersTo(HeaterOff)
+#            await trio.sleep(0.5)
+            self.allHeatersTo(HeaterOn)
+            await trio.sleep(0.5)
+        self.allHeatersTo(self.commandedHeaterStates[1])
+        log.warning("After Twiddle States "+str(self.commandedHeaterStates))
+
+
+    def allHeatersTo(self,state):
+        for i in range(1, 4):  # should use len heaters?
+            moHardware.binaryCmd(heaters[i], state)
+
+
