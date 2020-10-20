@@ -12,10 +12,7 @@ import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-import json
-#from simplecrypt import encrypt, decrypt
-from binascii import hexlify, unhexlify
-import trio #adding async functions use the Trio package
+import trio
 
 #import rest of modac
 from .moKeys import *

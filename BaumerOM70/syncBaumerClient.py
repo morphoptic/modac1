@@ -5,14 +5,15 @@
 import sys
 this = sys.modules[__name__]
 import socket
-import datetime
 import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-import struct
+if __name__ == "__main__":
+    import OM70Datum
+else:
+    from . import OM70Datum
 
-from BaumerOM70 import OM70Datum
 
 # address is set in web interface "Process Interface
 port = 12345

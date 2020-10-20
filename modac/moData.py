@@ -144,6 +144,7 @@ def update(key,value):
     if key == keyForTimeStamp():
         if isinstance(value, datetime.datetime):
             value = value.strftime(getTimeFormat())
+    # todo TRIO lock aquire/release, and update inside await?
     this.__moDataDictionary[key] = value
     pass
 

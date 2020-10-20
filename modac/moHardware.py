@@ -12,6 +12,7 @@ log.setLevel(logging.DEBUG)
 
 from .moKeys import *
 from . import moData, enviro, ad24, ad16, kType, binaryOutputs
+from BaumerOM70 import modacBaumerClient
 #from modac import leicaDistoAsync as leicaDisto
 
 # locally required for this module
@@ -29,6 +30,7 @@ async def init(nursery, nosensors = False):
         ad24.init()
         ad16.init()
         kType.init()
+        modacBaumerClient.start(nursery)
         # leica distance sensor needs to run its own thread/process
         #support noLeica cli option?
         #leicaDisto.init()
@@ -53,11 +55,13 @@ def update():
 
     try:
         # get our own timestamp
+        # TODO: trio locks
         moData.updateTimestamp()
         binaryOutputs.update()
         ad24.update()
         ad16.update()
         kType.update()
+        modacBaumerClient.update()
         #leicaDisto.update()
         enviro.update()
         return True
@@ -98,6 +102,7 @@ def shutdown():
     ad24.shutdown()
     ad16.shutdown()
     binaryOutputs.shutdown()
+    modacBaumerClient.shutdown()
     #leicaDisto.shutdown()
     __initialized = False
     log.debug("shutdown hardware")

@@ -89,14 +89,16 @@ class OM70Datum(_OM70DatumT):
         return self[DISTANCEMM_IDX]
 
     def asJson(self):
-        s = json.dumps(self._asdict())
+        s = json.dumps(self.asDict())
         return s
     
     def asJsonIndent(self):
-        s = json.dumps(self._asdict(), indent=4)
+        s = json.dumps(self.asDict(), indent=4)
         return s
 
     def asDict(self):
+        #d = datum.asDict()
+        #TODO: integrate modoc timestamp into dict
         return self._asdict()
 
     def equals(self,other):

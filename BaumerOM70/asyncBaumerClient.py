@@ -5,13 +5,15 @@
 #TODO also changed underlying OM70Datum into namedTuple, so more rework
 import sys
 this = sys.modules[__name__]
-import signal
 import trio
 import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-from BaumerOM70 import OM70Datum
+if __name__ == "__main__":
+    import OM70Datum
+else:
+    from . import OM70Datum
 
 # address is set in web interface "Process Interface
 port = 12345
@@ -60,7 +62,7 @@ async def anotherTask():
             log.warning("***Trio Cancelled anotherTask")
             return
 
-async def testBaumerReceive():
+async def BaumerReceive():
     print ("testSendRcv begin")
     moveonTime = 30
     async with trio.open_nursery() as nursery:
@@ -71,4 +73,4 @@ async def testBaumerReceive():
 
 if __name__ == "__main__":
     print("Test Baumer OM70 distance Sensor Trio Async")
-    trio.run(testBaumerReceive)
+    trio.run(BaumerReceive)
