@@ -120,7 +120,7 @@ def update():
         this.status = moStatus.Simulated
         this.simulator.update()
     moData.update(keyForKTypeStatus(), this.status.name)
-    pass
+    moData.update(keyForKType() + keyForTimeStamp(), moData.generateTimestampStr())
 
 def asArray():
     assert not this.simulation
@@ -133,7 +133,8 @@ def asArray():
             this.status = moStatus.Error
             return ktypeData
         else:
-            adArray = moData.getValue(keyForAD16())
+            ad16Record = moData.getValue(keyForAD16())
+            adArray = ad16Record[keyForAD16()]
         #print("adArray from 16bit ", adArray)
     else:
         adArray = ad24.all0to5Array()

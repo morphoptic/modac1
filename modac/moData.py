@@ -18,6 +18,8 @@ import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+from .moStatus import *
+
 # Other modules include this but this doesnt include them
 # number of sensors of each type
 # we need this early in Client startup
@@ -65,7 +67,17 @@ def getNursery():
     return this.__nursery
 
 def shutdown():
-    __moDataDictionary = {keyForStatus():moDataStatus.Shutdown.name}
+    log.debug("moData shutdown - sets status shutdown")
+    update(keyForTimeStamp(), datetime.datetime.now())
+    update(keyForStatus(), moDataStatus.Shutdown.name)
+
+def defaultAD16record():
+    record = {
+        keyForStatus(): moStatus.Default.name,
+        keyForTimeStamp(): generateTimestampStr(),
+        keyForAD16(): [0.0]*this.numAD16()
+    }
+    return record
 
 def init(client=False):
     # here we dont init hardware, only data collection
@@ -77,7 +89,8 @@ def init(client=False):
     # devices could use moData.deviceInitValue() to initialize internal values
     update(keyForStatus(),moDataStatus.Startup.name)
     update(keyForTimeStamp(),"No Data Yet")
-    
+    update(keyForDistance(),0.0)
+
     # in server individual devices will post their own init values
     # client needs to fake em - which may be maintance issue to keep consistent
     if client == True:
@@ -90,10 +103,11 @@ def init(client=False):
         update(keyForEnviro(), def_env)
         update(keyForBinaryOut(), [0]*this.numBinaryOut())
         update(keyForAD24(), [0.0]*this.numAD24())
-        update(keyForAD16(), [0.0]*this.numAD16())
+        update(keyForAD16(), defaultAD16record())
         update(keyForKType(), [0.0]*this.numKType())
-        def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
-        update(keyForLeicaDisto(), def_leica)
+        update(keyForDistance(), 0)
+        # def_leica = {keyForTimeStamp():"No Data Yet", keyForDistance():-1}
+        # update(keyForLeicaDisto(), def_leica)
 
     def_kilnStatus = kilnState.defaultKilnRuntimeStatus()
     update(keyForKilnState(),def_kilnStatus[keyForState()])
@@ -132,6 +146,11 @@ def update(key,value):
             value = value.strftime(getTimeFormat())
     this.__moDataDictionary[key] = value
     pass
+
+def generateTimestampStr():
+    now = datetime.datetime.now()
+    value = now.strftime(getTimeFormat())
+    return value
 
 def getTimestamp():
     return getValue(keyForTimeStamp())
@@ -181,7 +200,13 @@ __namesOfColumns = None
 # do this manually or using names?
 # bit too complex for dictwriter, given many entries are complex
 def __appendArray(key,targetArray):
-    a = this.getValue(key)
+    # TODO: converting ad16 values to dict+values just got a lot more complex
+    a = []
+    if key == keyForAD16():
+        ad16= this.getValue(key)
+        a = ad16[key]
+    else:
+        a = this.getValue(key)
     targetArray + a
     
 def asRowArray():
@@ -193,10 +218,13 @@ def asRowArray():
         a.append(env[keyForHumidity()])
         a.append(env[keyForPressure()])
     
-    if isValidKey(keyForLeicaDisto()):
-        leica = this.getValue(keyForLeicaDisto())
-        a.append(leica[keyForDistance()])
-    
+    if isValidKey(keyForDistance()):
+        distRecord = this.getValue(keyForDistance())
+        a.append(distRecord)
+    # if isValidKey(keyForLeicaDisto()):
+    #     leica = this.getValue(keyForLeicaDisto())
+    #     a.append(leica[keyForDistance()])
+
     # if isValidKey(keyForAD24Raw()):
     #     a += this.getValue(keyForAD24Raw())
     # if isValidKey(keyForAD24()):
@@ -204,7 +232,9 @@ def asRowArray():
     if isValidKey(keyForAD16Raw()):
         a += this.getValue(keyForAD16Raw())
     if isValidKey(keyForAD16()):
-        a += this.getValue(keyForAD16())
+        # ad16 is now a structure including status and timestamp
+        record = this.getValue(keyForAD16())
+        a += record[keyForAD16()]
     if isValidKey(keyForKType()):
         a += this.getValue(keyForKType())
     if isValidKey(keyForBinaryOut()):
@@ -226,7 +256,11 @@ def asRowArray():
 def __appendAName(key):
     #print("__appendAName key:", key)
     cPrefix = key
-    a = this.getValue(key)
+    if key == keyForAD16():
+        ad16= this.getValue(key)
+        a = ad16[key]
+    else:
+        a = this.getValue(key)
     #print("__appendAName a:", a)
     assert isinstance(a, list)
     for i in range(len(a)):
@@ -252,9 +286,10 @@ def arrayColNames():
         this.__namesOfColumns.append(keyForHumidity())
     if isValidKey(keyForPressure()):
         this.__namesOfColumns.append(keyForPressure())
-#    if isValidKey(keyForDistance()):
-    if isValidKey(keyForLeicaDisto()):
-         this.__namesOfColumns.append(keyForDistance())
+    if isValidKey(keyForDistance()):
+        this.__namesOfColumns.append(keyForDistance())
+    # if isValidKey(keyForLeicaDisto()):
+    #      this.__namesOfColumns.append(keyForDistance())
     # if isValidKey(keyForAD24Raw()):
     #     this.__appendAName(keyForAD24Raw())
     # if isValidKey(keyForAD24()):

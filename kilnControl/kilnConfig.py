@@ -41,7 +41,7 @@ kType_upper = 2
 # for some circumstance (testing) only one kType is used for control
 # this boolean controls whether only kTypeLower is used or average is used
 kType_avgAll = False
-
+kType_avgTopBottom = True
 #####################
 emergency_shutoff_temp = 800  # if kiln ever gets this hot, shutdown and vent
 

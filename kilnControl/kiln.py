@@ -16,16 +16,13 @@
 #  emergencyShutoff() shuts down kiln (12vrelay power)
 #  runKilnScript(params): Cmd handler to run a kiln cycle. params is Dict with array of KilnStep
 #
+# TODO:  why do ktemps lag the kType reports in full update message
 
 import sys
 this = sys.modules[__name__]
-import logging, logging.handlers, traceback
+import logging, logging.handlers
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-import time
-import datetime
-from enum import Enum
 
 import trio
 
@@ -334,6 +331,11 @@ class Kiln:
             if ad16.isError():
                 emergencyShutOff()
                 break
+            if self.state == KilnState.Error:
+                log.error("Kiln has gone into Error state. Terminate Process")
+                self.processRunnable = False
+                self.publishStatus()
+                break
 
             self.kilnStep()
             #self.sleepThisStep = self.time_step   # TODO set this in KilnStep
@@ -370,6 +372,8 @@ class Kiln:
                 self.lastCheckHeatingTemp = 0
 
         # Update Data (heaters, fans, temperture, distance)
+        moHardware.updateKilnSensors()
+        # these update from moData
         self.updateBinaryDevices()
         self.updateTemperatures()
         self.updateDistance()
@@ -383,7 +387,8 @@ class Kiln:
                 self.lastCheckHeatingTime = currentTime
                 self.lastCheckHeatingTemp = self.kilnTemps[0]
             else :
-                if (currentTime - self.lastCheckHeatingTime).total_seconds() > self.overHeatTime:
+                deltaTimeSec = (currentTime - self.lastCheckHeatingTime).total_seconds()
+                if deltaTimeSec > self.overHeatTime:
                     # its been a while since we checked; has temp changed?
                     if self.lastCheckHeatingTemp < self.kilnTemps[0]:
                         # its heating, so we good
@@ -391,9 +396,12 @@ class Kiln:
                         self.lastCheckHeatingTemp = self.kilnTemps[0]
                     else:
                         # no change in temp? something wrong
-                        log.error("Temperatures didnt change but supposed to be Heating - ERROR!!!")
+                        log.error("Temperatures didnt change but supposed to be Heating - ERROR!!! "+str(deltaTimeSec))
+                        log.error("   lastCheckTemp: "+ str(self.lastCheckHeatingTemp)+" curr ktemps: "+str(self.kilnTemps))
                         self.terminateScript()
-                        moHardware.EmergencyOff()
+                        self.state = KilnState.Error
+                        self.publishStatus()
+                        #moHardware.EmergencyOff()
                         return
 
         # if we are WAY TOO HOT, shut down kil run and turn on exhaust
@@ -474,16 +482,29 @@ class Kiln:
         # pdate PID/Heater control
         # shouldnt get here if state isnt Heating or Holding, but test anyway
         if self.scriptState == KilnScriptState.Heating or self.scriptState == KilnScriptState.Holding:
-            #log.debug("Update PIDs ")
-            if self.useSinglePID:
-                self.doSinglePID()
-            else:
-                self.doMultiplePID()
-            # common code to command heaters to change, but only if needed
+            # only one PID, and always command relays
+            self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
+            if self.pidOut[0] > 0:
+                # turn heaters on
+                log.debug("single PID - all On")
+                self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
+            else:  # shouldnt have to do this but
+                log.debug("single PID - all Off")
+                self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
+
             for i in range(1,4): # should use len heaters?
-                if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
-                    log.info("pid kiln cmd heater change %d"%i)
-                    moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
+                moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
+
+            #log.debug("Update PIDs ")
+            # if self.useSinglePID:
+            #     self.doSinglePID()
+            # else:
+            #     self.doMultiplePID()
+            # # common code to command heaters to change, but only if needed
+            # for i in range(1,4): # should use len heaters?
+            #     if not self.reportedHeaterStates[i] == self.commandedHeaterStates[i]:
+            #         log.info("pid kiln cmd heater change %d"%i)
+            #         moHardware.binaryCmd(heaters[i], self.commandedHeaterStates[i])
         # bottom of step
         #log, publish and put in data blackboard
         #self.publishStatus()
@@ -491,6 +512,7 @@ class Kiln:
 
     def doSinglePID(self):
         # using only the 0 index wich may be avg or paritular ktype to control PID
+        # not using this at present
         self.pidOut[0] = self.pids[0].compute(self.targetTemperature, self.kilnTemps[0])
         # log.debug("====== PID0 " + str(self.pidOut[0])+ " target: "+ str( self.targetTemperature)+ " reported:" +str(self.kilnTemps[0]))
         if self.pidOut[0] > 0:
@@ -498,6 +520,7 @@ class Kiln:
             log.debug("single PID - all On")
             self.commandedHeaterStates = [HeaterOn, HeaterOn, HeaterOn, HeaterOn]
         else:  # shouldnt have to do this but
+            log.debug("single PID - all Off")
             self.commandedHeaterStates = [HeaterOff, HeaterOff, HeaterOff, HeaterOff]
 
 
@@ -581,21 +604,22 @@ class Kiln:
         #error is all values = 0, chk ktypeStatus?
 
         # print("Kiln ktypes read as: ", kTemps)
-        sum = 0.0
         self.kilnTemps[1] = kTemps[kType_lower]
         self.kilnTemps[2] = kTemps[kType_middle]
         self.kilnTemps[3] = kTemps[kType_upper]
-        sum = self.kilnTemps[1] + self.kilnTemps[2] + self.kilnTemps[3]
-        avg = sum / 3
 
         # how we get kiln temp depends on bool from kilnControl/kilnControl.py
+        avg = 0
         if kType_avgAll:
             # use the average of 3 ktype thermocouples
+            avg = (self.kilnTemps[1] + self.kilnTemps[2] + self.kilnTemps[3]) / 3
             self.kilnTemps[0] = avg
+        elif kType_avgTopBottom:
+            avg = (self.kilnTemps[1] + self.kilnTemps[3]) / 2
         else:
             # use only the lower (first) ktype = bottom
-            self.kilnTemps[0] = self.kilnTemps[1]
-
+            avg = self.kilnTemps[1]
+        self.kilnTemps[0] = avg
         pass
 
     def updateDistance(self):
@@ -606,8 +630,8 @@ class Kiln:
                 if self.kilnTemps[0] > this.criticalTemp and self.supportFanCommanded == False:
                     self.currentDistance += slumpRate
         else:
-            lData = moData.getValue(keyForLeicaDisto())
-            self.currentDistance = lData[keyForDistance()]
+            #lData = moData.getValue(keyForLeicaDisto())
+            self.currentDistance = moData.getValue(keyForDistance())
         pass
 
     def runKilnScript(self, scriptAsJson):
@@ -624,14 +648,13 @@ class Kiln:
             dist = 1000.0  # 1meter start dist in simulation
             print("Kiln Simulation start dist", dist)
         else:
-            lData = moData.getValue(keyForLeicaDisto())
+            # lData = moData.getValue(keyForLeicaDisto())
             #print("startKiln Run leicaPanel.getData = ", lData)
-            dist = lData[keyForDistance()]
+            dist = moData.getValue(keyForDistance())
 
         # test for no distance data
         if dist <= 0:
-            log.warn("No distance data for Leica, Kiln run may not work")
-            #self.state = KilnState.Idle
+            log.warning("No distance data for Distance Sensor, Script run may not work")
         self.startDistance = dist
         self.currentDistance = dist
         self.targetDist = self.startDistance + self.targetDisplacement
@@ -661,6 +684,7 @@ class Kiln:
         self.maxTimeMin = default_maxTime # curSeg.maxTime
         self.maxTimeSec =  default_maxTime* 60 # curSeg.maxTime* 60
         self.step_time = curSeg.stepTime
+        self.sleepThisStep = curSeg.stepTime
         self.targetHoldTimeMin = curSeg.holdTimeMinutes
         self.targetHoldTimeSec = self.targetHoldTimeMin * 60
         # set exhaust/support fans? command_X
