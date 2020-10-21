@@ -102,6 +102,7 @@ class OM70Datum(_OM70DatumT):
         return self._asdict()
 
     def equals(self,other):
+        """a verbose test for equality/close-enough that Prints not equal paerts"""
         if not self[BLOCKID_IDX] == other[BLOCKID_IDX]:
             print("blockId not equal ",self[BLOCKID_IDX],other[BLOCKID_IDX])
             return False
