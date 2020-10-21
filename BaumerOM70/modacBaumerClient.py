@@ -68,8 +68,9 @@ async def baumerAsyncReceiveTask():
             this.__currentDatum = OM70Datum.fromBuffer(data)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
-            return
+            break
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
             break
     log.info("BaumerOM70 end of async loop")
+    udp_sock.close()

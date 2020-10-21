@@ -105,7 +105,7 @@ async def cmdListenLoop():
             break
         if not retval:
             this.__killCmdListener = True
-        log.info("bottom cmdListenLoop kill = "+str(this.__killCmdListener ))
+        #log.info("bottom cmdListenLoop kill = "+str(this.__killCmdListener ))
     log.error("***cmdListenLoop stopping")
     if not this.__CmdListener is None:
         this.__CmdListener.close()
