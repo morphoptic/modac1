@@ -26,11 +26,11 @@ async def init(nursery, nosensors = False):
     this.__nursery = nursery
     binaryOutputs.init()
     try:
+        await modacBaumerClient.start(nursery)
         enviro.init()
         ad24.init()
         ad16.init()
         kType.init()
-        modacBaumerClient.start(nursery)
         # leica distance sensor needs to run its own thread/process
         #support noLeica cli option?
         #leicaDisto.init()
@@ -97,7 +97,7 @@ def updateKilnSensors():
 #        resetLeicaCmd()
 
 def shutdown():
-    this.allOff()
+    this.allBinaryOffCmd()
     enviro.shutdown()
     ad24.shutdown()
     ad16.shutdown()
@@ -107,10 +107,7 @@ def shutdown():
     __initialized = False
     log.debug("shutdown hardware")
 
-# TODO should not have two of these!
-def allOff():
-    binaryOutputs.allOff()
-def allOffCmd():
+def allBinaryOffCmd():
     binaryOutputs.allOff()
 
 def binaryCmd(channel,onoff):

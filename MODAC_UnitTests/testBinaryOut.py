@@ -41,7 +41,7 @@ def testAll():
     logging.info("All on then off w delay")
     binaryOutputs.allOn()
     sleep(sleepDelay)
-    binaryOutputs.allOff()
+    binaryOutputs.allBinaryOffCmd()
     print("moDataDict:",moData.rawDict())
 
     logging.info("***test catch out of bounds request")
@@ -56,7 +56,7 @@ def testAll():
     logging.info("All on then off w delay")
     binaryOutputs.allOn()
     sleep(sleepDelay)
-    binaryOutputs.allOff()
+    binaryOutputs.allBinaryOffCmd()
     print("moDataDict:",moData.rawDict())
     
     logging.info("binaryOut binaryOut_testAll complete")
@@ -77,5 +77,5 @@ if __name__ == "__main__":
     except Exception as e:
         print("MAIN Exception somewhere in binaryOut_testAll. see log files")
         logging.error("Exception happened in binaryOut_testAll", exc_info=True)
-    binaryOutputs.allOff()
+    binaryOutputs.allBinaryOffCmd()
 

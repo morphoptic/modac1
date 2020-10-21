@@ -20,21 +20,19 @@ __port = 12345
 __baumer_udpAddr = ('', __port) # accept any sending address
 
 __okToRun = True
-__lastPostTime = None
-__secBetweenPosts = datetime.timedelta(seconds=1.0)
-
-__currentDatum = None
+__currentDatum = OM70Datum.OM70Datum()
 
 async def start(nursery= None):
-    __okToRun = True
-    __currentDatum = OM70Datum()
+    log.info("modacBaumerClient start")
+    this.__okToRun = True
+    update()
     if nursery is None:
         nursery = moData.getNursery()
     nursery.start_soon(baumerAsyncReceiveTask)
-    update()
 
 def shutdown():
-    __okToRun = False
+    log.info("BaumerOM70 shutdown()")
+    this.__okToRun = False
 
 def update():
     # TODO: data lock for concurrent access?
@@ -42,14 +40,14 @@ def update():
     d = this.__currentDatum.asDict()
     # then work with dictionary
     distance = d[OM70Datum.DISTANCEMM_NAME]
-    now = datetime.now()
+    now = datetime.datetime.now()
     d[keyForTimeStamp()] = now.strftime(moData.getTimeFormat())
-    moData.update(keyForBaumerOM70(), json.dumps(d))
+    moData.update(keyForBaumerOM70(), d)
     moData.update(keyForDistance(), distance)
+    log.info(keyForBaumerOM70()+": "+ json.dumps(d))
 
 async def baumerAsyncReceiveTask():
     log.info("Begin receiveOm70Data "+ str( this.__baumer_udpAddr))
-    this.__lastPostTime = datetime.now()
     try:
         # udp_sock = socket.socket(
         #     socket.AF_INET,  # IPv4
@@ -63,7 +61,6 @@ async def baumerAsyncReceiveTask():
 
     buffSize = OM70Datum.byteSize()
     while __okToRun:
-        now = datetime.now()
         try:
             data, address = await udp_sock.recvfrom(buffSize)
             #print("Received data from:", address)
@@ -75,3 +72,4 @@ async def baumerAsyncReceiveTask():
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
             break
+    log.info("BaumerOM70 end of async loop")

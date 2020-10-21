@@ -162,7 +162,7 @@ class OM70Datum(_OM70DatumT):
 def fromBuffer(buffer):
     """Treat Buffer as a raw UDP packet from OM70, unpack and create OM70Datum namedTuple"""
     nt = OM70Datum._make(_om70struct.unpack(buffer))
-    print("fromBuffer tuple: ", nt)
+    #print("fromBuffer tuple: ", nt)
     return nt
 
 def makeRandomOm70():
