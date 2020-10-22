@@ -43,7 +43,7 @@ kType_upper = 2
 kType_avgAll = False
 kType_avgTopBottom = True
 #####################
-emergency_shutoff_temp = 800  # if kiln ever gets this hot, shutdown and vent
+emergency_shutoff_temp = 900  # if kiln ever gets this hot, shutdown and vent
 
 #####################
 default_holdTemp = 500
