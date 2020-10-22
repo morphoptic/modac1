@@ -76,6 +76,7 @@ async def modac_ReadPubishLoop():
         #update inputs & run filters on data
         log.debug("top forever read-publish loop")
         if moServer.receivedShutdown():
+            # TODO: should update MoData with shutdown, send a few AllData w that then die
             log.warning("Received Shutdown, exit loop")
             moServer.sendShutdown()
             break;

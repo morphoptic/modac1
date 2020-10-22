@@ -16,7 +16,10 @@
 #  emergencyShutoff() shuts down kiln (12vrelay power)
 #  runKilnScript(params): Cmd handler to run a kiln cycle. params is Dict with array of KilnStep
 #
-# TODO:  why do ktemps lag the kType reports in full update message
+
+# TODO: why does the kilnTemp here lag the ktypes by several seconds?
+# TODO cont: because the read/publish loop is different time than kiln/PID
+# TODO: split the read/publish into two trio tasks; add moData locking
 
 import sys
 this = sys.modules[__name__]
@@ -158,7 +161,8 @@ class Kiln:
         self.processRunnable = False
         self.state = KilnState.Closed
         self.simulation = False
-        self.overHeatTime = 2*60 # temp doenst change in 5min
+
+        self.overHeatTime = 10*60 # temp doenst change in N min
         self.reset()
         log.debug("Kiln initialized")
         self.state = KilnState.Starting

@@ -60,6 +60,7 @@ def startPublisher():
     this.__Publisher = Pub0(listen=moNetwork.pubSubAddress())
 
 def sendShutdown():
+    # TODO: should update MoData with shutdown, send a few AllData w that then die
     log.info("Send Shutdown")
     publishData(keyForShutdown(), None)
 
