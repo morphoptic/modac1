@@ -8,6 +8,7 @@ import socket
 import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+import struct
 
 if __name__ == "__main__":
     import OM70Datum
