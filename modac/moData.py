@@ -29,7 +29,7 @@ from .moStatus import *
 # num of entries should be matched in their init and raise error/assert if not same
 # really should come from some config file, with names too
 # perhaps these need to be in the config.py files? moConfig kilnConfig
-__numKType = 3
+__numKType = 4
 def setNumKType(num):
     __numKType = num
 def numKType():
