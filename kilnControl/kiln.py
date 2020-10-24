@@ -16,7 +16,6 @@
 #  emergencyShutoff() shuts down kiln (12vrelay power)
 #  runKilnScript(params): Cmd handler to run a kiln cycle. params is Dict with array of KilnStep
 #
-
 # TODO: why does the kilnTemp here lag the ktypes by several seconds?
 # TODO cont: because the read/publish loop is different time than kiln/PID
 # TODO: split the read/publish into two trio tasks; add moData locking
@@ -44,7 +43,7 @@ kilnInstance = None
 # are we allowing control?  some tools may not want kiln process to run at all
 enableKilnControl = True
 # are we using EStop (software only at present)
-enableEStop = True# False
+enableEStop = True # False
 
 # heater on/off via relays  relays are ActiveLow, which is handled in BinaryOutputs.py
 HeaterOn = True
@@ -67,13 +66,12 @@ def emergencyShutOff():
     endKilnControlProcess() #terminate thread
     # error state tells it we not running
 
-criticalTemp = 700
+criticalTemp = 890
 
 def init():
     log.info("Init KilnControl.Kiln Package")
     this.kilnInstance = Kiln()
     this.kilnInstance.publishStatus()
-
 
 #####################
 # use command to start kiln process

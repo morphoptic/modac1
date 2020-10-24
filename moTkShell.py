@@ -30,6 +30,7 @@ from moTkGui.moTKWindow import moTkWindow
 from moTkGui.moTabAllData import moTabAllData
 from moTkGui.moTabKiln import moTabKiln
 from moTkGui.moPanelTempPlot import moPanelTempPlot
+from moTkGui.moTabDistances import moTabDistances
 from moTkGui.moTkShared import *
 
 ###############
@@ -62,11 +63,15 @@ def createTKWindow():
 
     kilnFrame = tk.Frame(this.moWindow.notebook(), bg="blue")
     this.kilnTab = moTabKiln(kilnFrame)
-    this.moWindow.addTab(kilnFrame,moObject=this.kilnTab)
+    this.moWindow.addTab(kilnFrame, moObject=this.kilnTab)
 
     allDataFrame = tk.Frame(this.moWindow.notebook(), bg="cyan")
     this.allDataTab = moTabAllData(allDataFrame)
-    this.moWindow.addTab(allDataFrame,moObject=this.allDataTab,frameTitle="AllData")
+    this.moWindow.addTab(allDataFrame, moObject=this.allDataTab, frameTitle="AllData")
+
+    distanceFrame = tk.Frame(this.moWindow.notebook(), bg="cyan")
+    this.distanceTab = moTabDistances(distanceFrame)
+    this.moWindow.addTab(distanceFrame, moObject=this.distanceTab, frameTitle="Distances")
 
     log.debug("createTKWindow() end")
 

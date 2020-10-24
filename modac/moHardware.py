@@ -12,6 +12,7 @@ log.setLevel(logging.DEBUG)
 
 from .moKeys import *
 from . import moData, enviro, ad24, ad16, kType, binaryOutputs
+from BaumerOM70 import modacBaumerClient
 #from modac import leicaDistoAsync as leicaDisto
 
 # locally required for this module
@@ -25,6 +26,7 @@ async def init(nursery, nosensors = False):
     this.__nursery = nursery
     binaryOutputs.init()
     try:
+        await modacBaumerClient.start(nursery)
         enviro.init()
         ad24.init()
         ad16.init()
@@ -53,11 +55,13 @@ def update():
 
     try:
         # get our own timestamp
+        # TODO: trio locks
         moData.updateTimestamp()
         binaryOutputs.update()
         ad24.update()
         ad16.update()
         kType.update()
+        modacBaumerClient.update()
         #leicaDisto.update()
         enviro.update()
         return True
@@ -93,19 +97,17 @@ def updateKilnSensors():
 #        resetLeicaCmd()
 
 def shutdown():
-    this.allOff()
+    this.allBinaryOffCmd()
     enviro.shutdown()
     ad24.shutdown()
     ad16.shutdown()
     binaryOutputs.shutdown()
+    modacBaumerClient.shutdown()
     #leicaDisto.shutdown()
     __initialized = False
     log.debug("shutdown hardware")
 
-# TODO should not have two of these!
-def allOff():
-    binaryOutputs.allOff()
-def allOffCmd():
+def allBinaryOffCmd():
     binaryOutputs.allOff()
 
 def binaryCmd(channel,onoff):

@@ -12,10 +12,7 @@ import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-import json
-#from simplecrypt import encrypt, decrypt
-from binascii import hexlify, unhexlify
-import trio #adding async functions use the Trio package
+import trio
 
 #import rest of modac
 from .moKeys import *
@@ -33,20 +30,17 @@ __receivedHello = False
 __Shutdown = False
 
 def shutdownServer():
-    log.debug("shutdownServer - modata shutsdown, stop listening")
+    log.debug("shutdownServer - modata shutsdown, stop listening, publisher still lives")
     moData.shutdown()
     sendShutdown()
     this.__Shutdown = True
     this.__killCmdListener = True # this should stop the serverReceive() from pair1
     # dont really shutdown - as the outer loop needs to do this
 
-def shutdownPublisher():
+async def shutdownPublisher():
     log.debug("shutdownPublisher")
-    if not this.__Publisher is None:
-        this.publish() # one last time
-        time.sleep(1)
-        this.__Publisher.close()
-        this.__Publisher = None
+    this.__Publisher.close()
+    this.__Publisher = None
     this.__Shutdown = True
 
 async def startServer(nursery):
@@ -91,18 +85,15 @@ def publishKilnScriptEnded():
     this.__Publisher.send(eMsg)
     pass
 
-
 async def startCmdListener(nursery):
     this.__CmdListener =  Pair1(listen=moNetwork.cmdAddress(),
                                 # poly means we listen to many
                                 polyamorous=True,
                                 recv_timeout = moNetwork.rcvTimeout())
-    print("Cmd Listener: ",this.__CmdListener,moNetwork.rcvTimeout())
+    log.info("Cmd Listener:  timeout "+str(moNetwork.rcvTimeout()))
     nursery.start_soon(cmdListenLoop)
     pass
 
-
-__killCmdListener = False
 async def cmdListenLoop():
     # async forever loop
     # sorta semiphore to signal we are shutting down
@@ -115,10 +106,12 @@ async def cmdListenLoop():
             break
         if not retval:
             this.__killCmdListener = True
+        #log.info("bottom cmdListenLoop kill = "+str(this.__killCmdListener ))
     log.error("***cmdListenLoop stopping")
     if not this.__CmdListener is None:
         this.__CmdListener.close()
         this.__CmdListener = None
+    log.error("***cmdListenLoop exit")
     pass
 
 async def serverReceive():
@@ -187,7 +180,7 @@ def serverDispatch(topic,body):
         #print(payload)
         moHardware.binaryCmd(payload[0],payload[1]) # channel, onOff
     elif topic == keyForAllOffCmd():
-        moHardware.allOffCmd()
+        moHardware.allBinaryOffCmd()
     elif topic == keyForResetLeica():
         moHardware.resetLeicaCmd()
         
