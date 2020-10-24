@@ -14,11 +14,9 @@
 # both are very complex
 # python/pexpect+gatttool work but are a bit opague
 #
-# TODO: Needs better Trio integration for async issues w pexpect process
-#
-# aug 11 reworking for better async citizen
-#
 # NOTE: Leica reads in METERS so we scale by 1000 to mm
+#
+# Oct 2020 with integration of Baumer OM70, Leica is no longer used
 #
 '''
 LeicaDisto Module holds singleton State and methods to talk with BLE Device
@@ -80,7 +78,6 @@ from . import moData
 
 # locally required for this module
 import sys
-#from time import sleep
 import datetime
 #
 import math
@@ -346,9 +343,9 @@ def reset():
 def init():
     log.debug("leica init")
     d = {
-    keyForTimeStamp(): "no data yet",
-    keyForDistance(): -1,
-    keyForStatus(): this._state.name
+        keyForTimeStamp(): "no data yet",
+        keyForDistance(): -1,
+        keyForStatus(): this._state.name
     }
     moData.update(keyForLeicaDisto(), d)
 

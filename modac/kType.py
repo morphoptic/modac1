@@ -37,7 +37,7 @@ kTypeIdx= [4,5,6]
 # mods to support data from 16bit AD instead
 _use16BitDA = True
 if _use16BitDA:
-    kTypeIdx = [0,1,2]
+    kTypeIdx = [0,1,2,3]
 
 ampGain = 122.4 # from ad8495 spec sheet
 adOffset = 0.0  #magic offset subtracted from adValue, based on roomtemp reading by ktype

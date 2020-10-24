@@ -46,17 +46,22 @@ startKilnOnStartup = True
 okToRunMainLoop = False
 nosensors = False
 
-def modacExit():
-    log.info("modacExit shutting down")
-    this.okToRunMainLoop = False
+def modacExit1():
+    log.info("modacExit1 shutting down")
+    this.okToRunMainLoop = False # stops the main ReadPublish loop, let it send shutdown msgs
     kilnControl.kiln.endKilnControlProcess()
     moHardware.shutdown()  # turns off any hardware
+    moServer.shutdownServer()
     #gpioZero takes care of this: GPIO.cleanup()
     if csvActive:
         moCSV.close()
     if jsonActive:
         moJSON.closeJsonLog()
     moData.shutdown()
+
+def modacExit2():
+    log.info("modacExit2 shutting down")
+    modacExit1()
     moServer.shutdownPublisher()
     log.info("modacExit: closed everything i think, although those are async trio")
     #exit(0)
@@ -78,7 +83,8 @@ async def modac_ReadPubishLoop():
         if moServer.receivedShutdown():
             log.warning("Received Shutdown, exit loop")
             moServer.sendShutdown()
-            break;
+            this.okToRunMainLoop = False
+            #break;
         if not moHardware.update():
             log.error("Error in moHardware Update, suicide")
             moData.setStatusError()
@@ -113,15 +119,16 @@ async def modac_ReadPubishLoop():
     log.info("somehow we exited the ReadPublish Forever Loop, end Kiln, set status post a few tiems")
     kilnControl.kiln.endKilnControlProcess()
     moData.shutdown() # sets status to Shutdown
-    for step in range(3):
+    moHardware.shutdown()
+    for step in range(5):
         # publish Shutdown so client might recognize it
-        print("WAit to shutdowm", step)
+        print("Wait to shutdowm", step)
         log.info("Waiting to finish shutdown "+ str(step))
         await moServer.publish()
-        await trio.sleep(5)
+        await trio.sleep(1)
     # after Forever
     log.info("after waited a bit, we now modacExit()")
-    modacExit()
+    modacExit2()
 
 
 async def modac_asyncServer():
@@ -173,17 +180,12 @@ async def modac_asyncServer():
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
             log.error("Exception caught in the nursery loop: ", exc_info=True)#+str( sys.exc_info()[0]))
-            # exc = traceback.format_exc()
-            # log.error("Traceback is: "+exc)
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
-            print("Exception somewhere in modac_io_server event loop.")
-            print(exc)
-            #traceback.print_exc()#sys.exc_info()[2].print_tb()
     moData.setNursery(None)
     log.debug("modac nursery try died");
     log.error("Exception happened?", exc_info=True)
-    modacExit()
+    modacExit1()
 
 # if we decide to use cmd line args, its 2 step process parsing and dispatch
 # parsing happens early to grab cmd line into argparse data model
@@ -206,7 +208,7 @@ def modac_loadConfig():
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
     log.error("signal exit! someone hit ctrl-C?")
-    modacExit()
+    modacExit1()
     
 if __name__ == "__main__":
     # command line args
@@ -230,7 +232,7 @@ if __name__ == "__main__":
         log.error("Exception happened", exc_info=True)
     finally:
         print("end main")
-    modacExit()
+    modacExit2()
     log.warning("End of modacServer Main ")
     print("ThThThats All Folks")
     

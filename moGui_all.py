@@ -32,7 +32,8 @@ log.setLevel(logging.DEBUG)
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
 from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
-from modacGUI import leicaPanel, binaryOutPanel, tempDistPanel
+#from modacGUI import leicaPanel
+from modacGUI import binaryOutPanel, tempDistPanel
 from modacGUI import kilnPanel2
 #from modacGUI import CsvStartDialog, CsvTimeStepDialog
 
@@ -105,9 +106,6 @@ class ModacAppWindow(object):
 
         self.tempDistPanel= tempDistPanel.tempDistPanel()
         self.notebook.append_page(self.tempDistPanel.box, self.tempDistPanel.label)
-        
-        self.leicaPanel = leicaPanel.leicaPanel()
-        self.notebook.append_page(self.leicaPanel.box, self.leicaPanel.label)
         
         self.binaryOutPanel = binaryOutPanel.binaryOutPanel()
         self.notebook.append_page(self.binaryOutPanel.box, self.binaryOutPanel.label)

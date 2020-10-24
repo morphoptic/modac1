@@ -51,6 +51,7 @@ def keyForKType(): return "kType"
 def keyForLeicaDisto(): return "leicaD1"
 def keyForDistance(): return "distance"
 
+def keyForBaumerOM70(): return "BaumerOM70"
 # some combined keys
 def keyForAD16Status() : return keyForAD16()+ "_" + keyForStatus()
 def keyForKTypeStatus() : return keyForKType()+ "_" + keyForStatus()
