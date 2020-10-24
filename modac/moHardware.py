@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 from .moKeys import *
-from . import moData, enviro, ad24, ad16, kType, binaryOutputs
+from . import moData, enviro, ad16, kType, binaryOutputs
 from BaumerOM70 import modacBaumerClient
 #from modac import leicaDistoAsync as leicaDisto
 
@@ -28,7 +28,7 @@ async def init(nursery, nosensors = False):
     try:
         await modacBaumerClient.start(nursery)
         enviro.init()
-        ad24.init()
+        # ad24.init()
         ad16.init()
         kType.init()
         # leica distance sensor needs to run its own thread/process
@@ -58,7 +58,7 @@ def update():
         # TODO: trio locks
         moData.updateTimestamp()
         binaryOutputs.update()
-        ad24.update()
+        # ad24.update()
         ad16.update()
         kType.update()
         modacBaumerClient.update()
@@ -99,7 +99,7 @@ def updateKilnSensors():
 def shutdown():
     this.allBinaryOffCmd()
     enviro.shutdown()
-    ad24.shutdown()
+    # ad24.shutdown()
     ad16.shutdown()
     binaryOutputs.shutdown()
     modacBaumerClient.shutdown()

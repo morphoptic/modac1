@@ -31,7 +31,8 @@ log.setLevel(logging.DEBUG)
 
 from modac.moKeys import *
 from modac import moData, moNetwork, moClient, moCommand, moCSV
-from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
+# from modacGUI import enviroPanel, ktypePanel, ad24Panel, ad16Panel, leicaPanel, binaryOutPanel
+from modacGUI import enviroPanel, ktypePanel, ad16Panel, leicaPanel, binaryOutPanel
 #from modacGUI import leicaPanel
 from modacGUI import binaryOutPanel, tempDistPanel
 from modacGUI import kilnPanel2
@@ -113,8 +114,8 @@ class ModacAppWindow(object):
         self.ktypePanel = ktypePanel.ktypePanel()
         self.notebook.append_page(self.ktypePanel.box, self.ktypePanel.label)
         
-        self.ad24Panel = ad24Panel.ad24Panel()
-        self.notebook.append_page(self.ad24Panel.box, self.ad24Panel.label)
+        # self.ad24Panel = ad24Panel.ad24Panel()
+        # self.notebook.append_page(self.ad24Panel.box, self.ad24Panel.label)
         
         self.ad16Panel = ad16Panel.ad16Panel()
         self.notebook.append_page(self.ad16Panel.box, self.ad16Panel.label)
@@ -301,7 +302,7 @@ class ModacAppWindow(object):
         self.kilnPanel.update()
         self.enviroPanel.update()
         self.ktypePanel.update()
-        self.ad24Panel.update()
+        # self.ad24Panel.update()
         self.ad16Panel.update()
         self.leicaPanel.update()
         self.binaryOutPanel.update()
