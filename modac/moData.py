@@ -102,7 +102,7 @@ def init(client=False):
          }
         update(keyForEnviro(), def_env)
         update(keyForBinaryOut(), [0]*this.numBinaryOut())
-        update(keyForAD24(), [0.0]*this.numAD24())
+        # update(keyForAD24(), [0.0]*this.numAD24())
         update(keyForAD16(), defaultAD16record())
         update(keyForKType(), [0.0]*this.numKType())
         update(keyForDistance(), 0)
