@@ -59,10 +59,10 @@ def modacExit1():
         moJSON.closeJsonLog()
     moData.shutdown()
 
-def modacExit2():
+async def modacExit2():
     log.info("modacExit2 shutting down")
     modacExit1()
-    moServer.shutdownPublisher()
+    await moServer.shutdownPublisher()
     log.info("modacExit: closed everything i think, although those are async trio")
     #exit(0)
 
@@ -129,7 +129,8 @@ async def modac_ReadPubishLoop():
         await trio.sleep(1)
     # after Forever
     log.info("after waited a bit, we now modacExit()")
-    modacExit2()
+    await modacExit2()
+    log.info("after modacExit2 in ReadPublish loop")
 
 
 async def modac_asyncServer():
@@ -179,14 +180,22 @@ async def modac_asyncServer():
             await modac_ReadPubishLoop()
         except trio.Cancelled:
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
+           modacExit1()
+           await modacExit2()
+
         except:
             log.error("Exception caught in the nursery loop: ", exc_info=True)#+str( sys.exc_info()[0]))
             # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
+            modacExit1()
+            await modacExit2()
+        log.info("bottom of with nursery")
     moData.setNursery(None)
     log.debug("modac nursery try died");
     log.error("Exception happened?", exc_info=True)
-    modacExit1()
+    #modacExit1()
+    #await modacExit2()
+    log.info("modacServer ending")
 
 # if we decide to use cmd line args, its 2 step process parsing and dispatch
 # parsing happens early to grab cmd line into argparse data model
@@ -233,7 +242,6 @@ if __name__ == "__main__":
         log.error("Exception happened", exc_info=True)
     finally:
         print("end main")
-    modacExit2()
     log.warning("End of modacServer Main ")
     print("ThThThats All Folks")
     
