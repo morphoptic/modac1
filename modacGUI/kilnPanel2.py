@@ -79,7 +79,7 @@ class kilnPanel():
         # GtkSpinButton config(value, lower, upper, step_incr, page_incr, page_size)
         self.targetTSpinner = self.builder.get_object(keyForTargetTemp())
         adj = self.targetTSpinner.get_adjustment()
-        adj.configure(defaultTargetTemp, 20.0,800.0, 5, 10, 10)
+        adj.configure(defaultTargetTemp, 20.0, 890.0, 5, 10, 10)
         
         self.holdTimeSpinner = self.builder.get_object(keyForKilnHoldTimeMin())
         adj = self.holdTimeSpinner.get_adjustment()
