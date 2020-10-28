@@ -37,8 +37,9 @@ async def baumerAsyncReceive():
     buffSize = OM70Datum.byteSize()
     while okToRun:
         try:
-            data, address = await udp_sock.recvfrom(buffSize)
-            print("Received data from:", address)
+            with trio.move_on_after(30):
+                data, address = await udp_sock.recvfrom(buffSize)
+                print("Received data from:", address)
             datum = OM70Datum.fromBuffer(data)
             print("  OM70 dist:", datum.distancemm())
             print("  OM70: ", datum)

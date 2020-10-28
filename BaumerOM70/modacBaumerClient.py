@@ -54,7 +54,6 @@ async def baumerAsyncReceiveTask():
         #     socket.SOCK_DGRAM,  # UDP
         # )
         udp_sock = trio.socket.socket(trio.socket.AF_INET, trio.socket.SOCK_DGRAM)
-        udp_sock.settimeout(5) # timeout after 5 sec
         await udp_sock.bind(this.__baumer_udpAddr)
     except:
         log.error("Exception caught creating socket: ", exc_info=True)
@@ -63,15 +62,14 @@ async def baumerAsyncReceiveTask():
     buffSize = OM70Datum.byteSize()
     while __okToRun:
         try:
-            data, address = await udp_sock.recvfrom(buffSize)
-            #print("Received data from:", address)
+            with trio.move_on_after(15):
+                data, address = await udp_sock.recvfrom(buffSize)
+                #print("Received data from:", address)
             # TODO async lock?
+            # TODO better handle moveon timeout? this reuses last received
             this.__currentDatum = OM70Datum.fromBuffer(data)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
-            break
-        except trio.socket.timeout:
-            log.error("Timeout Exception caught in Baumer Forever Loop: ", exc_info=True)
             break
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
