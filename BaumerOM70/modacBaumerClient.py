@@ -56,7 +56,7 @@ async def baumerAsyncReceiveTask():
         return
 
     buffSize = OM70Datum.byteSize()
-    while __okToRun:
+    while this.__okToRun:
         try:
             with trio.move_on_after(10):
                 data, address = await udp_sock.recvfrom(buffSize)
@@ -64,7 +64,7 @@ async def baumerAsyncReceiveTask():
             this.__currentDatum = OM70Datum.fromBuffer(data)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
-            __okToRun = False
+            this.__okToRun = False
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
             break
