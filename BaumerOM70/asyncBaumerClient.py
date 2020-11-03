@@ -2,7 +2,9 @@
 # default ip address is 198.162.0.250
 # our rPi is on a dedicated switch on the 198.162.2.x network
 # so that needs to be changed
-#TODO also changed underlying OM70Datum into namedTuple, so more rework
+# TODO: client needs to restart on timeout
+# TODO: push the address out to  parameter
+
 import sys
 this = sys.modules[__name__]
 import trio

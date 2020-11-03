@@ -1,11 +1,16 @@
-# modac_io_server testbed for MODAC hardware server
+# modacServer: main entry for MODAC hardware server
 # connects hardware to data and network
 # inits services and devices, runs update forever loop
 # provides pyNNG pubSub publishing of data (see moNetwork)
 # provides pyNNG Pair1 command pairing with clients
 # note hw interfacing is dealt with in the modac modules moData, moNetwork/moCommand, moHardware
-# Trio provides async data handling
-# Some hardware, notably blutooth Leica Distance Sensor, require separate threads or processes
+# Trio provides async functions for 'threads'
+# multiple TrioNursery 'threads' required:
+#   Read/Publish: reads sensors, publishes results TODO: split in two w/diff update time
+#   Command Listener
+#   passes Nursery to moHardware to spin off any required handlers
+# TODO: need to extract config parameters to file, cmd line load
+
 import sys
 this = sys.modules[__name__]
 import os
@@ -36,6 +41,7 @@ from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moJSON
 import kilnControl
 
 runTests = False #True
+readRate = 1.0
 publishRateFast = 1.0
 publishRateSlow = 15.0 # seconds for sleep at end of main loop
 publishRate = publishRateFast # seconds for sleep at end of main loop
@@ -44,8 +50,12 @@ csvActive = True
 jsonActive = False
 startKilnOnStartup = True
 okToRunMainLoop = False
-nosensors = False
+nosensors = False # cmd line to test when pi has no sensor hardware
 
+#TODO: Exiting is a bit too complex with Trio
+# exit1 should shut down all the read/processing loops
+# publish loop will stop looping and do the final cleanups (publish shutdown a few times)
+# then exit2 will kill the publishing and hopefully exit python
 def modacExit1():
     log.info("modacExit1 shutting down")
     this.okToRunMainLoop = False # stops the main ReadPublish loop, let it send shutdown msgs
@@ -66,16 +76,10 @@ async def modacExit2():
     log.info("modacExit: closed everything i think, although those are async trio")
     #exit(0)
 
-async def modac_ReadPubishLoop():
+async def modac_ReadLoop():
     print("modac_ReadPubishLoop")
-    log.info("\n\nEnter Modac ReadPublish Loop")
+    log.info("\n\nEnter Modac Read Loop")
     #for i in range(300):
-    moData.setStatusRunning()
-    this.okToRunMainLoop = True
-    moData.logData() # log info as json to stdOut/console + logfile
-    lastTime = datetime.datetime.now()
-    # make it 1min ago to trigger first print below
-    lastTime = lastTime - datetime.timedelta(minutes=1)
 
     while this.okToRunMainLoop: # hopefully CtrlC will kill it
         #update inputs & run filters on data
@@ -85,17 +89,39 @@ async def modac_ReadPubishLoop():
             log.warning("Received Shutdown, exit loop")
             moServer.sendShutdown()
             this.okToRunMainLoop = False
-            #break;
+
         if not moHardware.update():
             log.error("Error in moHardware Update, suicide")
             moData.setStatusError()
             this.okToRunMainLoop = False
 
+        try:
+            await trio.sleep(this.readRate)
+        except trio.Cancelled:
+            log.warning("***Trio Cancelled caught in ReadPublish Loop")
+            break
+        if moData.getStatus() == moData.moDataStatus.Error:
+            log.error("Modata is in error- die")
+            this.okToRunMainLoop = False
+    log.info("somehow we exited the Read Forever Loop, end Kiln, set status post a few tiems")
+    kilnControl.kiln.endKilnControlProcess()
+    moData.shutdown() # sets status to Shutdown
+    moHardware.shutdown()
+
+async def modac_PubishLoop():
+    print("modac_PubishLoop")
+    log.info("\n\nEnter Modac Publish Loop")
+    moData.logData() # log info as json to stdOut/console + logfile
+    lastTime = datetime.datetime.now()
+    # make it 1min ago to trigger first print below
+    lastTime = lastTime - datetime.timedelta(minutes=1)
+
+    while this.okToRunMainLoop: # hopefully CtrlC will kill it
+
         # publish data (includes final Error status)
         await moServer.publish()
+        # save csv/json if it is time
         currentTime = datetime.datetime.now()
-        #sinceLastLog = (currentTime-lastTime).total_seconds()
-        #if sinceLastLog >=60:
         if not currentTime.time().minute == lastTime.time().minute:
             moData.logData() # outputs JSON to log file
             if csvActive == True:
@@ -117,10 +143,8 @@ async def modac_ReadPubishLoop():
         if moData.getStatus() == moData.moDataStatus.Error:
             log.error("Modata is in error- die")
             this.okToRunMainLoop = False
-    log.info("somehow we exited the ReadPublish Forever Loop, end Kiln, set status post a few tiems")
-    kilnControl.kiln.endKilnControlProcess()
-    moData.shutdown() # sets status to Shutdown
-    moHardware.shutdown()
+    log.info("somehow we exited the Publish Forever Loop, post a few tiems")
+    # assume Read loop also caught it and is shutting down others
     for step in range(5):
         # publish Shutdown so client might recognize it
         print("Wait to shutdowm", step)
@@ -130,8 +154,7 @@ async def modac_ReadPubishLoop():
     # after Forever
     log.info("after waited a bit, we now modacExit()")
     await modacExit2()
-    log.info("after modacExit2 in ReadPublish loop")
-
+    log.info("after modacExit2 in Publish loop")
 
 async def modac_asyncServer():
     #await trio.sleep(2)
@@ -148,10 +171,16 @@ async def modac_asyncServer():
 
         # save the nursey in moData for other modules
         moData.setNursery(nursery)
-        
+
         # pass it nursery so it can start complex sensor monitors like Leica
         await moHardware.init(nursery, this.nosensors)
         
+        moData.setStatusRunning()
+        this.okToRunMainLoop = True
+        moData.logData()  # log info as json to stdOut/console + logfile
+
+        nursery.start_soon(modac_ReadLoop())
+
         # start the CSV server logging
         if csvActive:
             now = datetime.datetime.now()
@@ -175,9 +204,9 @@ async def modac_asyncServer():
 
         # now spawn the main ReadPublish Loop
         try:
-            #   run event loop
-            log.warning("await ReadPublish Loop")
-            await modac_ReadPubishLoop()
+            #   run publish loop
+            log.warning("await Publish Loop")
+            await modac_PubishLoop()
         except trio.Cancelled:
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
            modacExit1()

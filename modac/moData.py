@@ -25,7 +25,8 @@ from .moStatus import *
 # we need this early in Client startup
 # but wont have actual data until receive from Server
 
-# TODO: set this with config shared with server (original concept of Channels)
+# TODO: lots of initialization values here - cant import code impl but need params
+
 # num of entries should be matched in their init and raise error/assert if not same
 # really should come from some config file, with names too
 # perhaps these need to be in the config.py files? moConfig kilnConfig
@@ -60,6 +61,7 @@ class moDataStatus(Enum):
 __moDataDictionary = {}
 
 __nursery = None
+
 def setNursery(nursery=None):
     log.debug("setNursery %r"%(nursery))
     this.__nursery = nursery
@@ -87,6 +89,7 @@ def init(client=False):
     # so need alternative... perhaps a local function deviceInitValue()
     # that would return the initial value,
     # devices could use moData.deviceInitValue() to initialize internal values
+
     update(keyForStatus(),moDataStatus.Startup.name)
     update(keyForTimeStamp(),"No Data Yet")
     update(keyForDistance(),0.0)
@@ -160,7 +163,8 @@ def asDict():
     return __moDataDictionary
 
 def asJson():
-    return json.dumps(asDict(), indent=4)
+    s = json.dumps(asDict(), indent=4)
+    return s
 
 def isValidKey(key):
     if key in __moDataDictionary:
