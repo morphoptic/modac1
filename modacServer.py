@@ -15,10 +15,6 @@ import sys
 this = sys.modules[__name__]
 import os
 import logging, logging.handlers, traceback
-import argparse
-import gpiozero # basic rPi GPIO using gpiozero technique first
-from gpiozero.pins.native import NativeFactory # so py installer finds em
-import json
 import signal
 import datetime
 import time
@@ -179,7 +175,7 @@ async def modac_asyncServer():
         this.okToRunMainLoop = True
         moData.logData()  # log info as json to stdOut/console + logfile
 
-        nursery.start_soon(modac_ReadLoop())
+        nursery.start_soon(modac_ReadLoop)
 
         # start the CSV server logging
         if csvActive:

@@ -21,7 +21,7 @@ from modac.moKeys import *
 from .kilnConfig import *
 
 class KilnState(Enum):
-    '''States of the KilnProcess internal to LeicaDisto Module'''
+    """States of the KilnProcess"""
     Closed = 0  # before start and when done w no error
     Error = -1  # done and error occured
     Starting = 1  # between closed and open
@@ -35,15 +35,17 @@ class KilnScriptState(Enum):
     NoScriptStep = 0
     Heating = 1  # in transition, heaters on ramping up or down; exit on temperature reached or Other
     Holding = 2  # in a temperature hold, heaters may be on or off to hold; exit on hold time|dist
-    Cooling = 3  # heaters off, fans on 1 # TODO remove this cooling is just negative heating
+    Cooling = 3  # current targetTemp is lower than prev segment target
     EndRun = 10  # run is over, temp back to start. Hold this for Nsec after script ??
     # TODO Cooling script state - supporting and cooling fan control
     # do we have a cooling phase at the end of a script, or really should just reset and Idle
+
     # may want two process timeSteps;
     # IdleTimeStep for fairly quick response - does nothing but allow async Command to change State (startScript)
     # ScriptTimeStep - 10 sec minimum to keep PID from going crazy
 
 def defaultKilnRuntimeStatus():
+    """default is needed for moData init"""
     asArray = [  # build w array instead of dict to keep order
         # shared keys - for debug purposes
         # default values set in moData so not dependent on this file
@@ -84,10 +86,8 @@ def defaultKilnRuntimeStatus():
         (keyForKilnHeaters(), [False, False, False, False]),
         (keyForKilnHeaterCommanded(), [False, False, False, False]),
         (keyForKilnTemperatures(), [0.0, 0.0, 0.0, 0.0]),
-
-        # (keyForScript(), str(self.myScript)),
     ]
-    def_kilnStatus = OrderedDict(asArray)
+    def_kilnStatus = OrderedDict(asArray)  #ordered dict may keep it more readable
 
     return def_kilnStatus
 
