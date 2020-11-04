@@ -1,4 +1,5 @@
-#moPanelTempPlot a tab for moTkShell to display temperature table and matplot
+# moPanelTempPlot a tab for moTkShell to display temperature table and matplot
+# skips the middle, unconnected thermocouple, and the external (near Baumer)
 from datetime import datetime
 import sys
 this = sys.modules[__name__]
@@ -98,7 +99,7 @@ class moPanelTempPlot():
 
         # put something in the graph. it will replave on frist updateFromMoData()/plotAll()
         self.subplot = self.fig.add_subplot(1, 1, 1)
-        self.subplot.set_title("All kType Thermocouples")
+        self.subplot.set_title("avg, bottom & top kType Thermocouples")
         self.subplot.legend(loc=2)
 
         line, = self.subplot.plot(self.times, self.avgT)  # plot the first column
@@ -132,7 +133,7 @@ class moPanelTempPlot():
         t = ktypes[3]
         self.minMax(a)
         self.minMax(b)
-        self.minMax(m)
+        #self.minMax(m)
         self.minMax(t)
         self.avgT.append(a)
         self.avgT.pop(0)
@@ -179,7 +180,7 @@ class moPanelTempPlot():
         #self.subplot.set_xticks(self.times)
         self.subplot.plot(self.times, self.avgT, label="averageT")
         self.subplot.plot(self.times, self.lowerT, label="lowerT")
-        self.subplot.plot(self.times, self.middleT, label="middleT")
+        #self.subplot.plot(self.times, self.middleT, label="middleT")
         self.subplot.plot(self.times, self.upperT, label="upperT")
 
         self.fig.autofmt_xdate()
@@ -195,7 +196,7 @@ class moPanelTempPlot():
         for i in range(self.maxRows):
             self.minMax(self.avgT[i])
             self.minMax(self.lowerT[i])
-            self.minMax(self.middleT[i])
+            #self.minMax(self.middleT[i])
             self.minMax(self.upperT[i])
         log.debug("recalcDataMaxMin new min/max "+str(self.minData) + ":" + str(self.maxData))
 
