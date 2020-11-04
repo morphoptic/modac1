@@ -22,6 +22,25 @@ __baumer_udpAddr = ('', __port) # accept any sending address
 __okToRun = True
 __currentDatum = OM70Datum.OM70Datum()
 
+class MovingAverage:
+    """simple fast class to calculate moving average on the fly"""
+    # retaining self.sum avoids re-traversing values list every time
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.values = []
+        self.sum = 0.0
+        self.latest = 0.0
+
+    def update(self, value):
+        self.values.append(value)
+        self.sum += value
+        if len(self.values) > self.window_size:
+            self.sum -= self.values.pop(0)
+        self.latest = float(self.sum) / len(self.values)
+        return self.latest
+
+__mvAvg = MovingAverage(100)
+
 async def start(nursery= None):
     log.info("modacBaumerClient start")
     this.__okToRun = True
@@ -39,7 +58,7 @@ def update():
     # grab namedTuple as dict for quick access
     d = this.__currentDatum.asDict()
     # then work with dictionary
-    distance = d[OM70Datum.DISTANCEMM_NAME]
+    distance = this.__mvAvg.latest  # d[OM70Datum.DISTANCEMM_NAME]
     now = datetime.datetime.now()
     d[keyForTimeStamp()] = now.strftime(moData.getTimeFormat())
     moData.update(keyForBaumerOM70(), d)
@@ -62,6 +81,8 @@ async def baumerAsyncReceiveTask():
                 data, address = await udp_sock.recvfrom(buffSize)
                 #print("Received data from:", address)
             this.__currentDatum = OM70Datum.fromBuffer(data)
+            distance = this.__currentDatum[OM70Datum.DISTANCEMM_NAME]
+            __mvAvg.update(distance)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
             this.__okToRun = False

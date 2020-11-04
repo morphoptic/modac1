@@ -16,6 +16,21 @@ if __name__ == "__main__":
 else:
     from . import OM70Datum
 
+class MovingAverage:
+    """simple fast class to calculate moving average on the fly"""
+    # retaining self.sum avoids re-traversing values list every time
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.values = []
+        self.sum = 0.0
+
+    def update(self, value):
+        self.values.append(value)
+        self.sum += value
+        if len(self.values) > self.window_size:
+            self.sum -= self.values.pop(0)
+        return float(self.sum) / len(self.values)
+
 # address is set in web interface "Process Interface
 port = 12345
 baumer_udpAddr = ('', port) # accept any sending address
@@ -27,11 +42,13 @@ def signalExit(*args):
 
 def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
+    movingAvg = MovingAverage(100)
     t = datetime.datetime.now()
     name = t.strftime("om70_%H_%M_%S.csv")
     f = open(name, 'w')
     try:
         udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp_sock.settimeout(10.0)
         udp_sock.bind(baumer_udpAddr)
     except:
         log.error("Exception caught creating socket: ", exc_info=True)
@@ -47,8 +64,11 @@ def receiveOm70Data():
             dist = datum[OM70Datum.DISTANCEMM_IDX]
             t = datetime.datetime.now()
             time = t.strftime("%H:%M:%S.%f")
-            print(time,",",dist, file= f)
+            ma = movingAvg.update(dist)
+            print(time,",",dist, ",", ma, file= f)
             f.flush()
+        except socket.timeout:
+            print("Timeout on socket")
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
             break
