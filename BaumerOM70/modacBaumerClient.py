@@ -81,7 +81,7 @@ async def baumerAsyncReceiveTask():
                 data, address = await udp_sock.recvfrom(buffSize)
                 #print("Received data from:", address)
             this.__currentDatum = OM70Datum.fromBuffer(data)
-            distance = this.__currentDatum[OM70Datum.DISTANCEMM_NAME]
+            distance = this.__currentDatum[OM70Datum.DISTANCEMM_IDX]
             __mvAvg.update(distance)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
