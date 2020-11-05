@@ -82,6 +82,9 @@ _OM70DatumT = namedtuple('OM70Datum', [*_memberNames], defaults=[*_memberDefault
 def byteSize():
     return struct.calcsize(_structFormat)
 
+def names():
+    return _memberNames
+
 class OM70Datum(_OM70DatumT):
     """ Baumer OM70 UDP Packet Datum - packing unpacking, test and JSON important bits  """
 
