@@ -38,7 +38,7 @@ baumer_udpAddr = ('', port) # accept any sending address
 
 __runable = True
 movAvgWindow = 100
-onCount = True
+onCount = True  # print only when count == movAvgWindow; false= print every read
 
 def signalExit(*args):
     this.__runable = False
@@ -47,11 +47,11 @@ def signalExit(*args):
 def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
     movingAvg = MovingAverage(movAvgWindow)
-    t = datetime.datetime.now()
-    name = t.strftime("om70_%H_%M_%S.csv")
+    startTime = datetime.datetime.now()
+    name = startTime.strftime("om70_%H_%M_%S.csv")
     f = open(name, 'w', newline='')
     csvfile = csv.writer(f)
-    headerRow = ("dateTime", "M_Avg") + OM70Datum.names()
+    headerRow = ("dateTime", "M_Avg_"+str(movAvgWindow)) + OM70Datum.names()
     csvfile.writerow(headerRow)
     # datum = OM70Datum.makeRandomOm70()
     # row = [name, 100.0, *datum]
@@ -73,18 +73,20 @@ def receiveOm70Data():
         try:
             data, address = udp_sock.recvfrom(buffSize)
             datum = OM70Datum.fromBuffer(data)
-            #print("  OM70 dist:", datum.distancemm())
-            dist = datum[OM70Datum.DISTANCEMM_IDX]
-            ma = movingAvg.update(dist)
+            ma = movingAvg.update(datum[OM70Datum.DISTANCEMM_IDX])
             count += 1
             if (onCount and count == movAvgWindow) or not onCount:
-                t = datetime.datetime.now()
-                time = t.strftime("%H:%M:%S.%f")
+                now = datetime.datetime.now()
+                time = now.strftime("%H:%M:%S.%f")
                 row = [time, ma, *datum]
                 print(row)
                 csvfile.writerow(row)
                 f.flush()
                 count = 0
+                elapsedTime = now - startTime
+                if elapsedTime.total_seconds()/3600 > 1:
+                    # stop after an hour of data collection
+                    break
         except socket.timeout:
             print("Timeout on socket")
         except:

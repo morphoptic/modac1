@@ -37,7 +37,7 @@ baumer_udpAddr = ('', port) # accept any sending address
 
 __runable = True
 def signalExit(*args):
-    __runable = False
+    this.__runable = False
     print("caught ctrlC end loop")
 
 def receiveOm70Data():
@@ -55,7 +55,7 @@ def receiveOm70Data():
         return
     data = bytearray(OM70Datum.byteSize())
     buffSize = OM70Datum.byteSize()
-    while __runable:
+    while this.__runable:
         # recvfrom
         try:
             data, address = udp_sock.recvfrom(buffSize)
