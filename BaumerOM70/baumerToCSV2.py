@@ -41,7 +41,7 @@ movAvgWindow = 100
 onCount = True
 
 def signalExit(*args):
-    __runable = False
+    this.__runable = False
     print("caught ctrlC end loop")
 
 def receiveOm70Data():
@@ -68,12 +68,12 @@ def receiveOm70Data():
     data = bytearray(OM70Datum.byteSize())
     buffSize = OM70Datum.byteSize()
     count = 0
-    while __runable:
+    while this.__runable:
         # recvfrom
         try:
             data, address = udp_sock.recvfrom(buffSize)
             datum = OM70Datum.fromBuffer(data)
-            print("  OM70 dist:", datum.distancemm())
+            #print("  OM70 dist:", datum.distancemm())
             dist = datum[OM70Datum.DISTANCEMM_IDX]
             ma = movingAvg.update(dist)
             count += 1
@@ -81,6 +81,7 @@ def receiveOm70Data():
                 t = datetime.datetime.now()
                 time = t.strftime("%H:%M:%S.%f")
                 row = [time, ma, *datum]
+                print(row)
                 csvfile.writerow(row)
                 f.flush()
                 count = 0
