@@ -39,6 +39,7 @@ baumer_udpAddr = ('', port) # accept any sending address
 __runable = True
 movAvgWindow = 100
 onCount = True  # print only when count == movAvgWindow; false= print every read
+hours  = 2
 
 def signalExit(*args):
     this.__runable = False
@@ -84,7 +85,7 @@ def receiveOm70Data():
                 f.flush()
                 count = 0
                 elapsedTime = now - startTime
-                if elapsedTime.total_seconds()/3600 > 1:
+                if elapsedTime.total_seconds()/3600 > hours:
                     # stop after an hour of data collection
                     break
         except socket.timeout:
