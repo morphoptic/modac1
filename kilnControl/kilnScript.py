@@ -134,7 +134,7 @@ class KilnScript:
         seg.stepIdx = beforeIdx
         self.segments.insert(beforeIdx, seg)
         self.curSegmentIdx = beforeIdx
-        return self.segments[curSegmentIdx]
+        return self.segments[self.curSegmentIdx]
 
     def saveScript(self, filename):
         # saves this script as JSON file
@@ -154,7 +154,7 @@ class KilnScript:
         return json.dumps(self.asDict(), indent=4)
 
     def asDict(self):
-        a =    [
+        a = [
                 #(keyForState(), KilnState.Unknown.name), #should these be here or in kiln?
                 #(keyForKilnScriptState(), KilnScriptState.Unknown.name),
                 (keyForScriptName(), self.name),

@@ -27,7 +27,7 @@ class KilnScriptState(Enum):
     NoScriptStep = 0
     Heating = 1  # in transition, heaters on ramping up or down; exit on temperature reached or Other
     Holding = 2  # in a temperature hold, heaters may be on or off to hold; exit on hold time|dist
-    Cooling = 3  # heaters off, fans on 1 # TODO remove this cooling is just negative heating
+    Cooling = 3  # heaters off, fans on 1 # TODO recognize this for targetTemp < startTemp (last target)
     EndRun = 10  # run is over, temp back to start. Hold this for Nsec after script ??
     # TODO Cooling script state - supporting and cooling fan control
     # do we have a cooling phase at the end of a script, or really should just reset and Idle

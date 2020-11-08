@@ -2,7 +2,7 @@
 # default ip address is 198.162.0.250
 # our rPi is on a dedicated switch on the 198.162.2.x network
 # so that needs to be changed
-#TODO also changed underlying OM70Datum into namedTuple, so more rework
+
 import sys
 this = sys.modules[__name__]
 import trio
@@ -22,6 +22,25 @@ __baumer_udpAddr = ('', __port) # accept any sending address
 __okToRun = True
 __currentDatum = OM70Datum.OM70Datum()
 
+class MovingAverage:
+    """simple fast class to calculate moving average on the fly"""
+    # retaining self.sum avoids re-traversing values list every time
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.values = []
+        self.sum = 0.0
+        self.latest = 0.0
+
+    def update(self, value):
+        self.values.append(value)
+        self.sum += value
+        if len(self.values) > self.window_size:
+            self.sum -= self.values.pop(0)
+        self.latest = float(self.sum) / len(self.values)
+        return self.latest
+
+__mvAvg = MovingAverage(100)
+
 async def start(nursery= None):
     log.info("modacBaumerClient start")
     this.__okToRun = True
@@ -39,20 +58,16 @@ def update():
     # grab namedTuple as dict for quick access
     d = this.__currentDatum.asDict()
     # then work with dictionary
-    distance = d[OM70Datum.DISTANCEMM_NAME]
+    distance = this.__mvAvg.latest  # d[OM70Datum.DISTANCEMM_NAME]
     now = datetime.datetime.now()
     d[keyForTimeStamp()] = now.strftime(moData.getTimeFormat())
     moData.update(keyForBaumerOM70(), d)
     moData.update(keyForDistance(), distance)
-    log.info(keyForBaumerOM70()+": "+ json.dumps(d))
+    #log.info(keyForBaumerOM70()+": "+ json.dumps(d))
 
 async def baumerAsyncReceiveTask():
     log.info("Begin receiveOm70Data "+ str( this.__baumer_udpAddr))
     try:
-        # udp_sock = socket.socket(
-        #     socket.AF_INET,  # IPv4
-        #     socket.SOCK_DGRAM,  # UDP
-        # )
         udp_sock = trio.socket.socket(trio.socket.AF_INET, trio.socket.SOCK_DGRAM)
         await udp_sock.bind(this.__baumer_udpAddr)
     except:
@@ -60,17 +75,17 @@ async def baumerAsyncReceiveTask():
         return
 
     buffSize = OM70Datum.byteSize()
-    while __okToRun:
+    while this.__okToRun:
         try:
-            with trio.move_on_after(15):
+            with trio.move_on_after(10):
                 data, address = await udp_sock.recvfrom(buffSize)
                 #print("Received data from:", address)
-            # TODO async lock?
-            # TODO better handle moveon timeout? this reuses last received
             this.__currentDatum = OM70Datum.fromBuffer(data)
+            distance = this.__currentDatum[OM70Datum.DISTANCEMM_IDX]
+            __mvAvg.update(distance)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
-            break
+            this.__okToRun = False
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
             break

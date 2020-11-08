@@ -15,7 +15,7 @@ from .moKeys import *
 from . import moData
 # locally required for this module
 from gpiozero import OutputDevice
-from time import sleep
+from gpiozero.pins.native import NativeFactory # so py installer finds em
 
 # gpiozero OutputDevices with Binary Values
 # note GPIOZero is smart enough to turn all Off when app properly exits
