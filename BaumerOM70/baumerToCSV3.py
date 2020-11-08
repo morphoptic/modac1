@@ -23,9 +23,9 @@ port = 12345
 baumer_udpAddr = ('', port) # accept any sending address
 
 __runable = True
-movAvgWindow = 1000 # number of read/samples to average
+movAvgWindow = 7500 # number of read/samples to average
 onCount = True      # print only when count == movAvgWindow; false= print every read
-hoursToRun = 0.1    # how long to run test
+hoursToRun = 6.0    # how long to run test
 
 class MovingAverage:
     """simple fast class to calculate moving average on the fly"""
