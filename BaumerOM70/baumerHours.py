@@ -51,7 +51,7 @@ def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
     movingAvg = MovingAverage(movAvgWindow)
     startTime = datetime.datetime.now()
-    name = startTime.strftime("om70_%H_%M_%S.csv")
+    name = startTime.strftime("om70_hours_%H_%M_%S.csv")
     f = open(name, 'w', newline='')
     csvfile = csv.writer(f)
     headerRow = ("dateTime", "M_Avg_"+str(movAvgWindow)) + OM70Datum.names()
