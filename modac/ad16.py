@@ -41,6 +41,9 @@ __chan1 = None
 __chan2 = None
 __chan3 = None
 
+adsGain = 2/3
+#adsGain = 1
+
 def readChans():
     print("0: {:>5}\t{:>5.3f}".format(this.__chan0.value, this.__chan0.voltage))
     print("1: {:>5}\t{:>5.3f}".format(this.__chan1.value, this.__chan1.voltage))
@@ -60,6 +63,8 @@ def init():
     print("Create ADS1115")
     try:
         this.__moAD16Device = ADS.ADS1115(ad16_i2c)
+        this.__moAD16Device.gain = adsGain
+        print("ADS1115 Gain: ", this.__moAD16Device.gain)
     except (ValueError, OSError) as e:
         log.error(" Cant create ad16", exc_info=True)
         this.__status = moStatus.Error
