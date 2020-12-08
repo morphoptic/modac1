@@ -82,9 +82,8 @@ async def baumerAsyncReceiveTask():
                 #print("Received data from:", address)
             this.__currentDatum = OM70Datum.fromBuffer(data)
             d = this.__currentDatum[OM70Datum.DISTANCEMM_IDX]
-            if not math.isNan(d):
-                distance = distance
-                __mvAvg.update(distance)
+            if not math.isnan(d):
+                __mvAvg.update(d)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
             this.__okToRun = False
