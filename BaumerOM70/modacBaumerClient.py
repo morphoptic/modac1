@@ -10,7 +10,7 @@ import datetime
 import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-import json
+import math
 from . import OM70Datum
 from modac.moKeys import *
 from modac import moData
@@ -81,8 +81,10 @@ async def baumerAsyncReceiveTask():
                 data, address = await udp_sock.recvfrom(buffSize)
                 #print("Received data from:", address)
             this.__currentDatum = OM70Datum.fromBuffer(data)
-            distance = this.__currentDatum[OM70Datum.DISTANCEMM_IDX]
-            __mvAvg.update(distance)
+            d = this.__currentDatum[OM70Datum.DISTANCEMM_IDX]
+            if not math.isNan(d):
+                distance = distance
+                __mvAvg.update(distance)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")
             this.__okToRun = False
