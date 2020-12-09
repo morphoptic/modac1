@@ -45,7 +45,7 @@ class moTabDistances():
         self.times = [now]*self.maxRows
 
         # we know what we got, and can skip the 2d array
-        self.rawMM = [0]*self.maxRows
+        #self.rawMM = [0]*self.maxRows
         self.slumpMM = [0]*self.maxRows
         self.minData = 1000 # instead of using numpy min/max just keep em on the fly
         self.maxData = 0 # although this may be an issue when overall min/max scroll off
@@ -119,7 +119,7 @@ class moTabDistances():
         self.subplot.set_title("Distances")
         self.subplot.legend(loc=2)
 
-        line, = self.subplot.plot(self.times, self.rawMM)  # plot the first column
+        line, = self.subplot.plot(self.times, self.slumpMM)  # plot the slump only
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=1)
         self.lowerPanel.pack(side=tk.BOTTOM, fill=tk.X, expand=1)
 
@@ -155,19 +155,20 @@ class moTabDistances():
         self.currentDisplacementLabel.config(text="current Slump:: " + str(currentDisplacement))
 
         # add currents to arrays
-        self.rawMM.append(rawDistance)
-        self.rawMM.pop(0)
+        #self.rawMM.append(rawDistance)
+        #self.rawMM.pop(0)
 
         self.slumpMM.append(currentDisplacement)
         self.slumpMM.pop(0)
+        self.minMax(currentDisplacement)
 
-        if self.count % (self.maxRows/2) == 0:
+        if self.count % (self.maxRows/10) == 0:
             log.debug("hit count mod maxRows, so recalc max/min")
             self.recalcDataMaxMin()
 
         #insure min max for chart
-        self.minMax(rawDistance)
-        self.minMax(currentDisplacement)
+        #self.minMax(rawDistance)
+        #self.minMax(currentDisplacement)
 
         #update the table
         row = [self.timestamp, str(rawDistance), str(currentDisplacement)]
@@ -183,8 +184,8 @@ class moTabDistances():
     def plot(self):
         mi = self.minData - (self.minData * 0.1)
         ma = self.maxData + (self.maxData*0.1)
-        if ma < 100:
-            ma = 100 # min size is 0-100
+        if ma < 10:
+            ma = 10 # min size is 0-100
         print("plotAll mi ",mi, "ma", ma)
         if mi < 0:
             mi = self.minData
@@ -203,7 +204,7 @@ class moTabDistances():
         self.subplot.xaxis.set_minor_locator(matplotlib.dates.MinuteLocator())
 
         #self.subplot.set_xticks(self.times)
-        self.subplot.plot(self.times, self.rawMM, label="rawMM")
+        #self.subplot.plot(self.times, self.rawMM, label="rawMM")
         self.subplot.plot(self.times, self.slumpMM, label="slumpMM")
 
         self.fig.autofmt_xdate()
@@ -214,17 +215,17 @@ class moTabDistances():
 
     def recalcDataMaxMin(self):
         log.debug("recalcDataMaxMin count:", str(self.count), "was min", str(self.minData) , " max ",str(self.maxData))
-        self.minData = 1000 # instead of using numpy min/max just keep em on the fly
+        self.minData = 2000 # instead of using numpy min/max just keep em on the fly
         self.maxData = 0 # although this may be an issue when overall min/max scroll off
         for i in range(self.maxRows):
-            self.minMax(self.rawMM[i])
+            #self.minMax(self.rawMM[i])
             self.minMax(self.slumpMM[i])
         log.debug("recalcDataMaxMin new min/max "+str(self.minData) + ":" + str(self.maxData))
 
     def minMax(self,datum):
         if datum < self.minData:
             self.minData = datum
-        if datum > self.maxRows:
+        if datum > self.maxData:
             self.maxData = datum
 
 
