@@ -187,8 +187,10 @@ def updateAllData(d):
     for key, value in d.items():
         if key == keyForKilnStatus():
             # step thru kilnStatus values to keep order in OrderedDict
+            # TODO: rationalize this vs kiln.updateStatus()
+            # copies data from d into kstatus, which is/was OrderedDict
             kstatus = this.getValue(keyForKilnStatus())
-            #log.debug("updating KilnStatus")
+            #log.debug("updating KilnStatus from: ")
             for kkey in kstatus.keys():
                 kstatus[kkey]=value[kkey]
         else:

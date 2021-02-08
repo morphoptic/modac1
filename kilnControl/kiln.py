@@ -208,8 +208,9 @@ class Kiln:
             self.pids[1] = pidController.PIDController()
             self.pids[2] = pidController.PIDController()
             self.pids[3] = pidController.PIDController()
-        log.debug("Kiln reset")
+        self.updateStatus()
         self.publishStatus()
+        log.debug("Kiln reset status" + json.dumps(self.updateStatus(), indent=4))
 
     def terminateScript(self):
         log.info("kiln.terminateScript()")
@@ -237,6 +238,13 @@ class Kiln:
         log.info("terminateScript end")
        
     def updateStatus(self):
+        # TODO: rationalize this func, publishStatus(), and bit  inside MoData.updateAllData()
+        # latter goes thru keyForKilnStatus() and updates by keys from MoData
+        # which completely bypasses what is done here
+        # also MoData has default value setup
+        # as it is an OrderedDict()  need to copy values into it
+        #            for kkey in kstatus.keys():
+        #       kstatus[kkey]=value[kkey]
         # better for this to start w default and update instead of new each call
         # these are top level moData so they get t CSV easy
         moData.update(keyForKilnState(),self.state.name)
@@ -247,6 +255,7 @@ class Kiln:
         #if isinstance(self.processStartTime, datetime.datetime):
         startTimeStr = self.processStartTime.strftime(keyForTimeFormat())
 
+        # TODO: rationalizing - value returned is an OrderedDict
         status = moData.getValue(keyForKilnStatus())
         if status is None:
             log.debug("first status, get default")
@@ -304,7 +313,7 @@ class Kiln:
         #log.info("Publish Kiln Status %r" % status)
         #log.info("Publish Kiln Status %s" % json.dumps(status,indent=4))
         # update Status should change the one in kiln
-        #moData.update(keyForKilnStatus(), status)
+        moData.update(keyForKilnStatus(), status)
         #moServer.publishData(keyForKilnStatus(), status) # separate publish? or as part of moData?
         pass
 
