@@ -23,12 +23,12 @@ __CmdSender = None
 #
 __subscribers = [] # array of all subscribers on PubSub in this process
 
-__kilnCallback = None
+__kilnScriptEndCallback = None
 __running = False
 
-def setKilnCallback(function):
+def setKilnScriptEndCallback(function):
     log.info("Set KilnCallback: " + repr(function))
-    this.__kilnCallback = function
+    this.__kilnScriptEndCallback = function
 
 def shutdownClient():
     if not this.__CmdSender is None:
@@ -126,12 +126,12 @@ def clientDispatch(topic,body):
     elif topic == keyForKilnStatus():
         moData.update(keyForKilnStatus(), body)
     elif topic == keyForKilnScriptEnded():
-        log.debug("Topic = ScriptEnded try calling kilnCallback")
-        if not this.__kilnCallback is None:
+        log.debug("Topic = ScriptEnded try calling __kilnScriptEndCallback")
+        if not this.__kilnScriptEndCallback is None:
             log.info("yep one set, call it")
-            this.__kilnCallback(topic, body)
+            this.__kilnScriptEndCallback(topic, body)
         else:
-            log.error("Ooops - no callback for kilnCallback")
+            log.error("Ooops - no callback for __kilnScriptEndCallback")
         pass
     elif topic == keyForShutdown():
         log.warning("Shutdown Command received from Server")

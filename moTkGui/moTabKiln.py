@@ -113,6 +113,10 @@ class moTabKiln():
         self.supportCk = None
         self.twelveVCk = None
 
+        # Set callback for EndScript command - resets buttons
+        # note this doesnt set any of the Error displays
+        moClient.setKilnScriptEndCallback(self.endScript)
+
         log.debug(" initialize moTabKiln build UI panels")
 
         # now build the UI Panel
@@ -395,6 +399,7 @@ class moTabKiln():
         self.updating = False
 
     def updateScriptStatusElements(self):
+        log.debug("updateScriptStatusElements")
         # kilnStatus Elements
         self.kilnStateLabel.config(text="KilnState: " + self.kilnStateName)
         self.kilnScriptStateLabel.config(text="KilnState: " + self.scriptStateName)
@@ -405,6 +410,18 @@ class moTabKiln():
         self.scrolledBox.delete(1.0, tk.END)
         self.scrolledBox.insert(tk.END, textScriptStatus)
         self.scrolledBox.see("end")  # str(scrollPoint))
+
+        # TODO: if kilnState is Error, lable should be RED otherwise normal
+        # closed, Error, Starting, Idle, RunningScript
+        if self.kilnStateName == self.KilnState.Error.name:
+            self.kilnStateLabel.configure(bg="red")
+        elif self.kilnStateName == self.KilnState.Closed.name:
+            self.kilnStateLabel.configure(bg="yellow")
+        elif self.kilnStateName == self.KilnState.RunningScript.name:
+            self.kilnStateLabel.configure(bg="green")
+        else:
+            self.kilnStateLabel.configure(bg="gray")
+
 
     # called when MoData is updated by server msg
     def updateFromMoData(self):
