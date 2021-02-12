@@ -35,6 +35,7 @@ def getServerIPaddr():
     # try to find the server IP address
     if ping(__eth0Address) == 0:
         this.__serverIPAddress = __noNetAddress
+        log.debug("modac server not responding to ping at address "+__eth0Address)
     else:
         this.__serverIPAddress = __eth0Address
     log.debug("Server IP Address will be:"+this.__serverIPAddress)

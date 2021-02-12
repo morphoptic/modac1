@@ -112,6 +112,7 @@ async def modacAsyncLoop(sendChannel):
             # wait for one receive or timeout
             log.debug("modacAsyncLoop receive count %d"%(count))
             rcvd = await moClient.asyncClientReceive()
+            # TODO rcvd is now an array of [(i,T/F, topic, extra)]
             #client received something. log it?
             if rcvd == True:
                 log_data()

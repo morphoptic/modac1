@@ -224,7 +224,7 @@ def receivedHello():
     return this.__receivedHello
 
 def receivedGoodbye():
-    log.info("Check Goodbye ")
+    log.info("Client said Goodbye ")
     return
 
 def receivedShutdown():

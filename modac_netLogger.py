@@ -82,6 +82,7 @@ async def modac_asyncClientEventLoop():
         log.debug("modac_SubscriberEventLoop - loop %d"%(i))
         try:
             rcvd = await moClient.asyncClientReceive()
+            # TODO rcvd is now an array of [(i,T/F, topic, extra)]
             #client received something. log it?
             if rcvd == True:
                 log_data()

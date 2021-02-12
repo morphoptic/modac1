@@ -21,7 +21,7 @@ import trio # adding Trio package to handle Cancelled
 
 __CmdSender = None
 #
-__subscribers = [] # array of all subscribers on PubSub in this process
+__subscribers = [] # array of all subscribers on PubSub in this process, really should be only 1
 
 __kilnScriptEndCallback = None
 __running = False
@@ -70,6 +70,7 @@ def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnSt
 # client Receive called from main or gtk loop  CAUTION: be sure to sync changes with asyncClientReceive
 # servers may also be doing a Pair1 sendCmd in their loop
 # This will do one receive: ending either with receipt and dispatch or Timeout
+# TODO asyncReceive will be adding support for more complex return value, this should get it too
 def clientReceive():
     msgReceived = False
     for i in range(len(this.__subscribers)):
@@ -94,33 +95,47 @@ def clientHandleRecievedMsg(msgRaw):
     msg = msgRaw.decode('utf8')
     topic, body = moNetwork.splitTopicStr(msg)
     clientDispatch(topic, body)
+    return topic, body
 
 # async version of client Recieve; should be called in a Trio Nursery event loop
 # This will do one receive: ending either with receipt and dispatch or Timeout
 # either one will return to the parent loop
+# TODO: return list/commaSepList of what happened
+# for each subscription, include rcv/timeout/pyNNG-Trio exception
+__consecutiveTimeouts = 0
 async def asyncClientReceive():
     msgReceived = False
+    status = []
+    # return status should be list of lists, one entry for each subscription channel
+    # we really should have only one thing we subscribe to
+    # but if we later add a pyNNG sensor sender or other publishers, status should handle multiples
     for i in range(len(this.__subscribers)):
         try:
             msgRaw = await this.__subscribers[i].arecv()
-            clientHandleRecievedMsg(msgRaw)
+            topic, body = clientHandleRecievedMsg(msgRaw)
+            # TODO keep the topic around for return
             msgReceived = True
+            status.append( [i, True, topic] )
+            this.__consecutiveTimeouts = 0
         # trio closed exceptions not caught here
         except Timeout:
             log.debug("receive timeout on subscriber %d" % (i))
             # TODO: recognize multiple consecutive timeouts exceeding threshold
+            # by at least noticing and returning here
             # create and send message there is an error and client needs restart
+            this.__consecutiveTimeouts += 1
+            status.append( [i, False, keyForTimeout(), this.__consecutiveTimeouts] )
         except pynng.exceptions.Closed:
             log.debug("Closed: subscriber %d - so terminate" % (i))
             # TODO: perhaps it is gonna restart? maybe we wait and restart
             # TODO: need to pass this up to parent somehow
-            return False
+            status.append( [i, False, keyForPyNNG()] )
         except trio.Cancelled:
-            return False
+            status.append( [i, False, keyForTrioCancel()] )
         except:
             log.exception("Some other exception! on subscriber %d " % (i))
-            return False
-    return msgReceived
+            status.append( [i, False, keyForException()] )
+    return status
 
 def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))
