@@ -36,6 +36,7 @@ from moTkGui.moTkShared import *
 ###############
 # ugh globals
 __killLoops = False
+__consectutiveTimeoutThreshold = 10 # threshold when Tk is informed, multiply by moNetwork rcvTimeout() for msec
 
 def on_closing():
     #if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -90,9 +91,12 @@ async def tkAsyncLoop(receive_channel):
             # nowait means it will throw a trio.WouldBlock if no data on channel
             msg = receive_channel.receive_nowait()
             # TODO: handle message contents; if got here, then something happened in moClient
-            log.info("tkAsyncLoop received from modac " +msg)
+            log.info("tkAsyncLoop received from modac " + msg)
             # usually (originally) it means data came in, so update windows from moData
-            this.moWindow.updateFromMoData()
+            if msg.startswith(moKeys.keyForTimeout()):
+                log.debug ("Excess timeout received in TkAsync "+ msg)
+            else:
+                this.moWindow.updateFromMoData()
         except trio.WouldBlock:
             # nothing to see here; no updates from modac yet
             # so fall thru to the next part
@@ -154,30 +158,40 @@ async def modacAsyncLoop(sendChannel):
             # TODO rcvd is now an array of [(i,T/F, topic, extra)]
             log.debug ("asyncClientReceive returned:"+str(rcvd))
 
-            for subcriptionResp in rcvd:
+            for subscriptionResp in rcvd:
                 #client received something. log it?
-                log.debug ("response "+str(subcriptionResp))
-                # two or more fields in subcriptionResp
+                log.debug ("response "+str(subscriptionResp))
+                # two or more fields in subscriptionResp
                 # first is subscription number
                 # second is boolean if got pyNNG msg
                 # third is topic of msg, or key for why returned w/o data
-                if subcriptionResp[1] == True:
+                if subscriptionResp[1] == True:
                     log_data()
                     # memoryChannel to tell UI thread to update from moData
                     msg = "modata updated %d"%(count)
                     await sendChannel.send(msg)
                 # TODO else deal with timeout, repeated timeouts cause error/restart
                 else:
-                    log.debug("no msg received, reason is: " +str(subcriptionResp[2]))
+                    log.debug("no msg received, reason is: " +str(subscriptionResp[2]))
                     # todo if topic is Timeout, next value is # consecutive timeouts
                     # if number timeouts is > threshold; Server may be dead
-                    if subcriptionResp[2] == moKeys.keyForTimeout():
-                        log.debug("Timeout count:"+str(subcriptionResp[3]))
+                    if subscriptionResp[2] == moKeys.keyForTimeout():
+                        # ok this finds it, now decide if it exceeds Threshold, and msg Tkloop
+                        timeoutCount = subscriptionResp[3]
+                        log.debug("Timeout count:"+ str(timeoutCount))
+                        # this.__consectutiveTimeoutThreshold : multiply by moNetwork rcvTimeout() for msec
+                        if timeoutCount > this.__consectutiveTimeoutThreshold:
+                            msg = moKeys.keyForTimeout() + " " + str(timeoutCount)
+                            await sendChannel.send(msg)
+                    else:
+                        # other response, pass it along
+                        msg = subscriptionResp[2]
+                        await sendChannel.send(msg)
             await trio.sleep(1)
         except trio.Cancelled:
             log.error("***modacLoop caught trioCancelled, exiting")
             this.__killLoops = True
-            break # a bit redundant but ok
+            break # a bit redundant, given kill flag but ok
     log.info("End modacAsyncLoop")
 
 async def csvLogger():
