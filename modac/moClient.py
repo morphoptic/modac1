@@ -108,8 +108,12 @@ async def asyncClientReceive():
         # trio closed exceptions not caught here
         except Timeout:
             log.debug("receive timeout on subscriber %d" % (i))
+            # TODO: recognize multiple consecutive timeouts exceeding threshold
+            # create and send message there is an error and client needs restart
         except pynng.exceptions.Closed:
             log.debug("Closed: subscriber %d - so terminate" % (i))
+            # TODO: perhaps it is gonna restart? maybe we wait and restart
+            # TODO: need to pass this up to parent somehow
             return False
         except trio.Cancelled:
             return False

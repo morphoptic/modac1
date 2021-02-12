@@ -79,6 +79,8 @@ def createTKWindow():
 # Trio stuff to wrap TK into async; vs using tkroot.mainloop()
 
 async def tkAsyncLoop(receive_channel):
+    ### coRoutine to update from data
+    # takes place of normal TK update loop but for use within Trio
     count = 0
     log.debug("Start tkAsyncLoop")
     #updateFromMoData()
@@ -135,6 +137,7 @@ def log_data():
     log.info("moData.asJson:"+moData.asJson())
 
 async def modacAsyncLoop(sendChannel):
+    ### coRoutine to read from Modac Server and pass data to UI routine
     log.info("Begin modacAsyncLoop")
     count = 0
     while not this.__killLoops:
@@ -150,6 +153,7 @@ async def modacAsyncLoop(sendChannel):
                 # memoryChannel to tell UI thread to update from moData
                 msg = "modata updated %d"%(count)
                 await sendChannel.send(msg)
+            # TODO else deal with timeout, repeated timeouts cause error/restart
             await trio.sleep(1)
         except trio.Cancelled:
             log.error("***modacLoop caught trioCancelled, exiting")
