@@ -1,4 +1,7 @@
 # moTkWindow- Class to provide TK GUI shell with menu+ notebook
+# this module/class is the top level to which the client app will add notebook pages, etc
+# it defines a number of the top/bottom status areas (ad16, moServer, timestamp)
+# and provides a Notebook for adding different moPanels
 ########################################################
 ### First all the imports
 import sys

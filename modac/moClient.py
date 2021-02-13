@@ -13,7 +13,7 @@ import json
 
 #import rest of modac
 from .moKeys import *
-from . import moData, moNetwork, moCommand
+from . import moData, moNetwork, moCommand, moStatus
 # locally required for this module
 from pynng import Pub0, Sub0, Pair1, Timeout
 import pynng
@@ -22,9 +22,11 @@ import trio # adding Trio package to handle Cancelled
 __CmdSender = None
 #
 __subscribers = [] # array of all subscribers on PubSub in this process, really should be only 1
-
+__consecutiveTimeouts = 0
 __kilnScriptEndCallback = None
 __running = False
+
+status = moStatus.moClientStatus.Default
 
 def setKilnScriptEndCallback(function):
     log.info("Set KilnCallback: " + repr(function))
@@ -33,26 +35,41 @@ def setKilnScriptEndCallback(function):
 def shutdownClient():
     if not this.__CmdSender is None:
         this.__CmdSender.close()
+        this.__CmdSender = None
     for s in this.__subscribers:
         s.close()
-    log.debug("end shutdownClient")
+    this.__subscribers = []
     this.__running = False
-    pass
+    this.status = moStatus.moClientStatus.Shutdown
+    log.debug("end shutdownClient")
 
 def isRunning():
     return this.__running
 
 def startClient():
+    this.__consecutiveTimeouts = 0
     startSubscriber()
     startCmdSender()
     moCommand.cmdHello() # say hello to our little friend
     this.__running = True
+    this.status = moStatus.moClientStatus.Running
 
-    
+def reconnectServer():
+    log.debug("reconnnect to server, stop subscribers and cmdSender, then start em again")
+    # end subscribers; end cmd sender
+    this.status = moStatus.moClientStatus.Paused
+    endSubscriber()
+    endCmdSender()
+    # then start em again
+    startClient() # will set status running
+
 # start PyNNG sender for commands to MODAC Server
 def startCmdSender():
     this.__CmdSender =  Pair1(dial=moNetwork.cmdAddress(), polyamorous=True, send_timeout=moNetwork.sendTimeout())
-    pass
+
+def endCmdSender():
+    this.__CmdSender.close()
+    this.__CmdSender = None
 
 # start PyNNG subscriber for Modac Server
 #need to register for whatever published keys you want to receive
@@ -66,6 +83,14 @@ def startSubscriber(keys=[keyForAllData(), keyForKilnScriptEnded(), keyForKilnSt
     this.__subscribers.append(subscriber)
     # this doesnt format log.debug("startSubscriber: ", subscriber.toString())
     return subscriber
+
+def endSubscriber():
+    log.debug("Ending Subscriber")
+    for s in this.__subscribers:
+        log.debug("close subscriber "+ str(s))
+        s.close()
+    # now forget what was on that list
+    this.__subscribers = []
 
 # client Receive called from main or gtk loop  CAUTION: be sure to sync changes with asyncClientReceive
 # servers may also be doing a Pair1 sendCmd in their loop
@@ -100,22 +125,22 @@ def clientHandleRecievedMsg(msgRaw):
 # async version of client Recieve; should be called in a Trio Nursery event loop
 # This will do one receive: ending either with receipt and dispatch or Timeout
 # either one will return to the parent loop
-# TODO: return list/commaSepList of what happened
 # for each subscription, include rcv/timeout/pyNNG-Trio exception
-__consecutiveTimeouts = 0
 async def asyncClientReceive():
     msgReceived = False
-    status = []
+    rcvstatus = []
     # return status should be list of lists, one entry for each subscription channel
     # we really should have only one thing we subscribe to
     # but if we later add a pyNNG sensor sender or other publishers, status should handle multiples
     for i in range(len(this.__subscribers)):
+        if this.status == moStatus.moClientStatus.Paused:
+            return rcvstatus
         try:
             msgRaw = await this.__subscribers[i].arecv()
             topic, body = clientHandleRecievedMsg(msgRaw)
             # TODO keep the topic around for return
             msgReceived = True
-            status.append( [i, True, topic] )
+            rcvstatus.append( [i, True, topic] )
             this.__consecutiveTimeouts = 0
         # trio closed exceptions not caught here
         except Timeout:
@@ -124,18 +149,18 @@ async def asyncClientReceive():
             # by at least noticing and returning here
             # create and send message there is an error and client needs restart
             this.__consecutiveTimeouts += 1
-            status.append( [i, False, keyForTimeout(), this.__consecutiveTimeouts] )
+            rcvstatus.append( [i, False, keyForTimeout(), this.__consecutiveTimeouts] )
         except pynng.exceptions.Closed:
             log.debug("Closed: subscriber %d - so terminate" % (i))
             # TODO: perhaps it is gonna restart? maybe we wait and restart
             # TODO: need to pass this up to parent somehow
-            status.append( [i, False, keyForPyNNG()] )
+            rcvstatus.append( [i, False, keyForPyNNG()] )
         except trio.Cancelled:
-            status.append( [i, False, keyForTrioCancel()] )
+            rcvstatus.append( [i, False, keyForTrioCancel()] )
         except:
             log.exception("Some other exception! on subscriber %d " % (i))
-            status.append( [i, False, keyForException()] )
-    return status
+            rcvstatus.append( [i, False, keyForException()] )
+    return rcvstatus
 
 def clientDispatch(topic,body):
     log.debug("Dispatch: Topic:%s Obj:%s"%(topic,body))

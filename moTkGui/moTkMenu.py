@@ -13,10 +13,10 @@ from tkinter import messagebox as mb
 from tkinter import simpledialog as sd
 
 from .moTkShared import *
-from modac import moCSV, moCommand
+from modac import moCSV, moCommand, moClient
 
 def setCSVTiming():
-    print("setCSVTiming")
+    log.debug("setCSVTiming")
     # dialog to get integer Seconds
     numSec = sd.askinteger(title="CSV Step:",
                            initialvalue=moTkShared().csvStep ,
@@ -28,12 +28,12 @@ def setCSVTiming():
 
 def terminateServer():
     # send command TerminateServer
-    log.debug("Shutdown Server Activated")
+    log.debug("Shutdown Server action")
     moCommand.cmdShutdown()
     pass
 
 def stopCSVRecording():
-    print("stopCSVRecording")
+    log.debug("stopCSVRecording")
     moTKShared().csvActive = False
     moCSV.close()
     pass
@@ -59,21 +59,27 @@ def setCSVFile():
                                 initialfile =moTkShared().csvFilename,
                                 filetypes = [('CSV files', '.csv')],
                                 defaultextension='.csv')
-    print(name)
+    log.debug("setCSVFile dailog returned: " +name)
     # if ok, then
     if name is None or name == "":
         return
     moTkShared().csvFilename = name
     moTkShared().last_open_dir = os.path.dirname(name)
 
+def reconnectServer():
+    log.debug("reconnect Server")
+    # pause client listener, reconnect then unpause client.
+    moClient.reconnectServer()
+    pass
+
 def doExit():
-    print("doExit - sends signal.SIGINT")
+    log.debug("doExit - sends signal.SIGINT")
     pid = os.getpid()
     os.kill(pid,signal.SIGINT)
     pass
 
 def About():
-    print("This is a simple example of a menu")
+    log.debug("MorphOptic Data Acquistion and Control (MODAC) TK Client")
 
 class moTkMenu():
     def __init__(self, root ):
@@ -87,6 +93,8 @@ class moTkMenu():
         self.filemenu.add_command(label="Set CSV File", command=setCSVFile)
         self.filemenu.add_command(label="Start CSV Recording", command=startCSVRecording)
         self.filemenu.add_command(label="Stop CSV Recording", command=stopCSVRecording)
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Reconnect Server", command=reconnectServer) # too simple?
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Terminate Server", command=terminateServer) # too simple?
         self.filemenu.add_command(label="Exit", command=doExit) # too simple?

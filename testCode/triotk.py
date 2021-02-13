@@ -35,6 +35,7 @@ def spawning_callback(nursery, async_callback=None):
     """
     if async_callback is None:
         return functools.partial(spawning_callback, nursery)
+    # ERROR there is no nursery.spawn function
     return functools.partial(nursery.spawn, async_callback)
 
 
