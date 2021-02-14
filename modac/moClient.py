@@ -59,9 +59,12 @@ def reconnectServer():
     # end subscribers; end cmd sender
     this.status = moStatus.moClientStatus.Paused
     endSubscriber()
+    log.debug("Reconnect subscriber list after End " + str(this.__subscribers))
     endCmdSender()
     # then start em again
     startClient() # will set status running
+    #log.debug("Reconnect subscriber list after start " + str(this.__subscribers))
+    #log.debug("Reconnect client status after " + this.status.name)
 
 # start PyNNG sender for commands to MODAC Server
 def startCmdSender():
@@ -90,7 +93,7 @@ def endSubscriber():
         log.debug("close subscriber "+ str(s))
         s.close()
     # now forget what was on that list
-    this.__subscribers = []
+    this.__subscribers.clear()
 
 # client Receive called from main or gtk loop  CAUTION: be sure to sync changes with asyncClientReceive
 # servers may also be doing a Pair1 sendCmd in their loop

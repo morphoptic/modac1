@@ -29,7 +29,7 @@ class moTkWindow():
     def __init__(self, title="MODAC Tk Gui", closeMethod= None):
         self.window = tk.Tk()  # could be root instead of window
         self.setCloseMethod(closeMethod)
-        #self.window.geometry('800x800') dont specify, let it fill out
+        self.window.geometry('800x700') # if dont specify, it fill out too big
         self.window.title(title)
         self.moObjects = [] # an array into which we will store panels that hold modac data
         self.shared = moTkShared()
@@ -57,14 +57,21 @@ class moTkWindow():
         #self.topFrame.grid(row=0, sticky='NW')
 
         ##################################################################
-        # Tabbed Notebook in center; addTab() will add more tabs
-        self.nb = ttk.Notebook(self.window)
+        # MidFrame: Tabbed Notebook in center; addTab() will add more tabs
+        self.midFrame = tk.Frame(self.window, bg="blue")
+
+        #self.midScrolledBox = tk.scrolledtext.ScrolledText(self.midFrame, width=90)
+
+        #self.nb = ttk.Notebook(self.midScrolledBox)
+        self.nb = ttk.Notebook(self.midFrame, height =650)
         #self.nb.grid(row=1, sticky='NSEW')
-        self.nb.pack(fill=tk.BOTH, expand=1, side=tk.TOP)
+        self.nb.pack(fill=tk.X, side=tk.TOP)#, expand=1)
+
+        self.midFrame.pack(fill= tk.X)
 
         ##################################################################
         # bottom status (last message received)
-        # status bar below Menu?
+        # why does this not display at bottom of window
         self.moUpdateStr = tk.StringVar()
         self.moUpdateStr.set("No Data Yet")
         self.bottomFrame = tk.Frame(self.window,bg="green")

@@ -113,7 +113,7 @@ async def modacAsyncLoop(sendChannel):
                         if subscriptionResp[2] == moKeys.keyForTimeout():
                             # ok this finds it, now decide if it exceeds Threshold, and msg Tkloop
                             timeoutCount = subscriptionResp[3]
-                            log.debug("Timeout count:"+ str(timeoutCount))
+                            #log.debug("Timeout count:"+ str(timeoutCount))
                             # this.__consectutiveTimeoutThreshold : multiply by moNetwork rcvTimeout() for msec
                             if timeoutCount > this.__consectutiveTimeoutThreshold:
                                 msg = moKeys.keyForTimeout() + " " + str(timeoutCount)
@@ -121,6 +121,7 @@ async def modacAsyncLoop(sendChannel):
                         else:
                             # other response, pass it along
                             msg = subscriptionResp[2]
+                            log.debug("not timeout, so pass along over channel " + msg)
                             await sendChannel.send(msg)
             except trio.Cancelled:
                 log.error("***modacLoop caught trioCancelled, exiting")
@@ -150,8 +151,13 @@ async def tkAsyncLoop(receive_channel):
                     log.debug ("Excess timeout received in TkAsync "+ msg)
                     # invoke or update TimeoutDialog
                     moTkTimeoutDialog.showOrUpdate(this.moWindow.root(), msg)
-                else:
-                    # could be AllData, EndScript, pyNNG/Trio/General Exception
+                elif msg.startswith(moKeys.keyForPyNNG()) :
+                    log.info("Ignore pynng exception")
+                elif msg.startswith(moKeys.keyForException()):
+                    log.info("Ignore generic exception")
+                elif msg.startswith(moKeys.keyForTrioCancel()):
+                    log.info("Ignore trio exception")
+                else: # should be one of the data messages
                     this.moWindow.updateFromMoData()
             except trio.WouldBlock:
                 # nothing came in; no updates from modac yet
@@ -226,6 +232,7 @@ def modacExit():
     if moCSV.isOpen():
         moCSV.close()
     moClient.shutdownClient()
+    this.__killLoops = True
 
 def signalExit(*args):
     print("signal exit! someone hit ctrl-C?")
@@ -245,7 +252,8 @@ async def modacTKClient():
         nursery.start_soon(modacAsyncLoop, send_channel)
         nursery.start_soon(tkAsyncLoop, receive_channel)
         nursery.start_soon(csvLogger)
-        log.info("end with nursery")
+        log.info("end async with nursery, processes will start soon")
+    log.info("modacTKClient, after nursery")
 
 ##############################
 # now the main app stuff
