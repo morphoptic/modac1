@@ -107,7 +107,7 @@ async def modacAsyncLoop(sendChannel):
                         msg = "modata updated %d"%(count)
                         await sendChannel.send(msg)
                     else:
-                        log.debug("no msg received, reason is: " +str(subscriptionResp[2]))
+                        log.debug("no msg received, reason is: " +str(subscriptionResp))
                         # if topic is Timeout, next value is # consecutive timeouts
                         # if number timeouts is > threshold; Server may be dead
                         if subscriptionResp[2] == moKeys.keyForTimeout():

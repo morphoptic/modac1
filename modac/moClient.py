@@ -176,7 +176,7 @@ def clientDispatch(topic,body):
         log.debug("Topic = ScriptEnded try calling __kilnScriptEndCallback")
         if not this.__kilnScriptEndCallback is None:
             log.info("yep one set, call it")
-            this.__kilnScriptEndCallback(topic, body)
+            this.__kilnScriptEndCallback()
         else:
             log.error("Ooops - no callback for __kilnScriptEndCallback")
         pass

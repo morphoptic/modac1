@@ -1,4 +1,4 @@
-# moTabAllData a tab for moTkShell
+# moTabKiln a tab for moTkShell to show kiln data
 import sys
 import logging, logging.handlers, traceback
 
@@ -16,7 +16,6 @@ from modac import moCommand, moClient
 from kilnControl.kilnScript import *
 from .moTkShared import *
 from .moPanelTempPlot import moPanelTempPlot
-
 
 ### couple validators for TextEntry widgets
 def validPositiveInt(s):  # validates string holds positive int
@@ -48,6 +47,14 @@ def validPositiveFloat(s):
     except ValueError:
         return False
 
+__tabInstance = None  # not really a singleton, just remembers last one made
+
+def endScript():
+    if this.__tabInstance == None:
+        log.error("No moTabKiln instance found")
+        return
+    this.__tabInstance.endScript()
+
 
 class moTabKiln():
     def getTitle(self):
@@ -57,6 +64,8 @@ class moTabKiln():
         log.debug(" initialize moTabKiln top")
         self.frame = frame
         self.tabTitle = "Kiln Control"
+
+        this.__tabInstance = self
 
         self.updating = True  # used when updating current script gui to avoid stack overflow
 
@@ -115,7 +124,7 @@ class moTabKiln():
 
         # Set callback for EndScript command - resets buttons
         # note this doesnt set any of the Error displays
-        moClient.setKilnScriptEndCallback(self.endScript)
+        moClient.setKilnScriptEndCallback(this.endScript)
 
         log.debug(" initialize moTabKiln build UI panels")
 
@@ -413,11 +422,11 @@ class moTabKiln():
 
         # TODO: if kilnState is Error, lable should be RED otherwise normal
         # closed, Error, Starting, Idle, RunningScript
-        if self.kilnStateName == self.KilnState.Error.name:
+        if self.kilnStateName == self.kilnState.Error.name:
             self.kilnStateLabel.configure(bg="red")
-        elif self.kilnStateName == self.KilnState.Closed.name:
+        elif self.kilnStateName == self.kilnState.Closed.name:
             self.kilnStateLabel.configure(bg="yellow")
-        elif self.kilnStateName == self.KilnState.RunningScript.name:
+        elif self.kilnStateName == self.kilnState.RunningScript.name:
             self.kilnStateLabel.configure(bg="green")
         else:
             self.kilnStateLabel.configure(bg="gray")
@@ -426,6 +435,7 @@ class moTabKiln():
     # called when MoData is updated by server msg
     def updateFromMoData(self):
         self.getKilnStatusFromMoData()
+
         if self.prevkilnState == KilnState.RunningScript and self.kilnState == KilnState.Idle:
             # really should have gotten EndScript command but...
             log.debug("noticed kilnState went back to Idle, so endScript")
@@ -440,7 +450,8 @@ class moTabKiln():
             # only update the script elements when running; to show current segment
             self.curSegIdx = self.kilnStatus[keyForSegmentIndex()]
             self.updateScriptElements()
-            print("Script is in segment " + str(self.curSegIdx))
+            self.setEditingAllowed(False)
+            log.info("Script is in segment " + str(self.curSegIdx))
 
         self.updateScriptStatusElements()  # json scrolling text box
         self.moTempPanel.updateFromMoData()
@@ -448,7 +459,7 @@ class moTabKiln():
         pass
 
     def endScript(self):
-        log.debug("Kiln endScript")
+        log.debug("Kiln endScript of moTabKil n")
         self.curSegIdx = 0
         self.kilnScript.getSegment(0)
         self.setEditingAllowed(True)
