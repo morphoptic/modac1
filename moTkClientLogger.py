@@ -86,7 +86,7 @@ async def tkAsyncLoop(receive_channel):
             break;
         except:
             this.__killLoops = True
-            log.error("Exception caught in the nursery loop: " + str(sys.exc_info()[0]))
+            log.error("Exception caught in the nursery loop: ", exc_info = True)
             exc = traceback.format_exc()
             log.error("Traceback is: " + exc)
             # TODO need to handle Ctl-C on server better

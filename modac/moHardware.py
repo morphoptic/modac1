@@ -67,8 +67,6 @@ def update():
         return True
     except:
         log.error("Exception in MoHardware Update", exc_info=True)
-        #exc = traceback.format_exc()
-        #log.error("Traceback is: " + exc)
         moData.setStatusError()
         return False
 
@@ -85,8 +83,6 @@ def updateKilnSensors():
         return True
     except:
         log.error("Exception in MoHardware Update", exc_info=True)
-        #exc = traceback.format_exc()
-        #log.error("Traceback is: " + exc)
         moData.setStatusError()
         return False
 

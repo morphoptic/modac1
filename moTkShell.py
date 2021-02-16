@@ -37,7 +37,7 @@ from moTkGui import moTkTimeoutDialog
 ###############
 # ugh globals
 __killLoops = False
-__consectutiveTimeoutThreshold = 10 # threshold when Tk is informed, multiply by moNetwork rcvTimeout() for msec
+__consectutiveTimeoutThreshold = 60 # threshold when Tk is informed, multiply by moNetwork rcvTimeout() for msec
 
 def on_closing():
     #if messagebox.askokcancel("Quit", "Do you want to quit?"):

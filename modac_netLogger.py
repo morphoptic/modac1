@@ -106,14 +106,12 @@ async def modacAsyncLogger():
         except trio.Cancelled:
            log.warning("***Trio propagated Cancelled to modac_asyncServer, time to die")
         except:
-            log.error("Exception caught in the nursery loop: "+str( sys.exc_info()[0]))
+            log.error("Exception caught in the nursery loop: ", exc_info = True)
             exc = traceback.format_exc()
             log.error("Traceback is: "+exc)
-            # TODO need to handle Ctl-C on server better
             # trio has ways to catch it, then we need to properly shutdown spawns
             print("Exception somewhere in modac_io_server event loop.")
             print(exc)
-            #traceback.print_exc()#sys.exc_info()[2].print_tb()
     moData.setNursery(None)
     log.debug("modac nursery try died");
     log.error("Exception happened?", exc_info=True)
