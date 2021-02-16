@@ -22,12 +22,12 @@ import sys
 this = sys.modules[__name__]
 
 import logging, logging.handlers
-
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 import smbus2
 
+__i2cAddr = 0x62
 __watcher = None
 
 def init():
@@ -39,15 +39,15 @@ def init():
         pass
 
 def beatHeart():
-    if __watcher == None:
+    if this.__watcher == None:
         # if no piwatcher,
         return
-    __watcher.beatHeart()
+    this.__watcher.beatHeart()
 
 class PyWatcher:
     def __init__(self):
         self.bus = smbus2.SMBus(1)
-        self.i2cAddress = 0x62
+        self.i2cAddress = this.__i2cAddr
 #        self.reset()
 
     def reset(self):
