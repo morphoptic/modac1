@@ -1,7 +1,7 @@
 #!/bin/sh -v
 piwatcher reset
-# piwatcher wake 20
-# piwatcher watch 60
+piwatcher wake 20
+piwatcher watch 60
 cd /home/pi/MODAC_Dev/
 # need this to make pynng work
 PYTHONUNBUFFERED=1;LD_PRELOAD=/usr/lib/arm-linux-gnueabihf/libatomic.so.1

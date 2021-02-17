@@ -34,6 +34,7 @@ log.setLevel(logging.DEBUG)
 
 # my stuff
 from modac import moKeys, moData, moHardware, moNetwork, moServer, moCSV, moJSON
+from modac import pyWatcher
 import kilnControl
 
 runTests = False #True
@@ -64,6 +65,7 @@ def modacExit1():
     if jsonActive:
         moJSON.closeJsonLog()
     moData.shutdown()
+    #pyWatcher.reset()
 
 async def modacExit2():
     log.info("modacExit2 shutting down")
@@ -112,10 +114,13 @@ async def modac_PubishLoop():
     # make it 1min ago to trigger first print below
     lastTime = lastTime - datetime.timedelta(minutes=1)
 
+    pyWatcher.init()
+
     while this.okToRunMainLoop: # hopefully CtrlC will kill it
 
         # publish data (includes final Error status)
         await moServer.publish()
+        pyWatcher.beatHeart()
         # save csv/json if it is time
         currentTime = datetime.datetime.now()
         if not currentTime.time().minute == lastTime.time().minute:
