@@ -27,13 +27,14 @@ log.setLevel(logging.DEBUG)
 
 import smbus2
 
-__i2cAddr = 0x62
 __watcher = None
 
 def init():
     try:
        if this.__watcher == None:
             this.__watcher = PyWatcher()
+           log.info("PyWatcher created")
+       this.__watcher.beatHeart()
     except:
         log.error("Exception happened, maybe no pi watcher board at i2c 62?", exc_info=True)
         pass
@@ -53,7 +54,7 @@ def beatHeart():
 class PyWatcher:
     def __init__(self):
         self.bus = smbus2.SMBus(1)
-        self.i2cAddress = this.__i2cAddr
+        self.i2cAddress = 0x62
 #        self.reset()
 
     def reset(self):
