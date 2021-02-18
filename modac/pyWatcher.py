@@ -32,8 +32,8 @@ __watcher = None
 
 def init():
     try:
-       if __watcher == None:
-            __watcher = PyWatcher()
+       if this.__watcher == None:
+            this.__watcher = PyWatcher()
     except:
         log.error("Exception happened, maybe no pi watcher board at i2c 62?", exc_info=True)
         pass
@@ -69,8 +69,11 @@ class PyWatcher:
         # send a heartbeat to piWatcher;
         # read register 0 of i2c device
         # dont care about actual status returned
-        res = self.bus.read_byte_data(self.i2cAddress, 0);
-        log.debug("pywatcher getStatus = "+str(res))
+        try:
+            res = self.bus.read_byte_data(self.i2cAddress, 0);
+            log.debug("pywatcher getStatus = "+str(res))
+        except:
+            log.debug("Exception reading piwatcher status")
         pass
 
 
