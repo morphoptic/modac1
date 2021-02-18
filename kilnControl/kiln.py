@@ -648,7 +648,14 @@ class Kiln:
         self.targetDist = self.startDistance + self.targetDisplacement
 
         self.state = KilnState.RunningScript
-        self.scriptState = KilnScriptState.Heating # figure we always start by heating
+        # initial state was Heating, but if kiln was run before, it may be over initial temps
+        # so better to start with Cooling, which keep heaters off until target is reached.
+        if self.targetTemperature > self.kilnTemps[0]:
+            self.scriptState = KilnScriptState.Heating
+        elif self.targetTemperature > self.kilnTemps[0]:
+            self.scriptState = KilnScriptState.Holding
+        else:
+            self.scriptState = KilnScriptState.Cooling
 
         self.scriptStartTime = datetime.datetime.now()
         log.info("Starting Kiln Script .. status:" + json.dumps(self.updateStatus(), indent=4))
