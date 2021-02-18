@@ -70,6 +70,7 @@ class PyWatcher:
         # read register 0 of i2c device
         # dont care about actual status returned
         res = self.bus.read_byte_data(self.i2cAddress, 0);
+        log.debug("pywatcher getStatus = "+str(res))
         pass
 
 
