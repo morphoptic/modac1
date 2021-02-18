@@ -33,7 +33,7 @@ def init():
     try:
        if this.__watcher == None:
             this.__watcher = PyWatcher()
-           log.info("PyWatcher created")
+            log.info("PyWatcher created")
        this.__watcher.beatHeart()
     except:
         log.error("Exception happened, maybe no pi watcher board at i2c 62?", exc_info=True)
