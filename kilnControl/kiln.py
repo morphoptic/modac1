@@ -16,9 +16,7 @@
 #  emergencyShutoff() shuts down kiln (12vrelay power)
 #  runKilnScript(params): Cmd handler to run a kiln cycle. params is Dict with array of KilnStep
 #
-# TODO: why does the kilnTemp here lag the ktypes by several seconds?
-# TODO cont: because the read/publish loop is different time than kiln/PID
-# TODO: split the read/publish into two trio tasks; add moData locking
+# moData read and publish loop split w/diff timing (publish long delay, read/update quick)
 
 import sys
 this = sys.modules[__name__]
@@ -51,7 +49,7 @@ HeaterOff = False
 
 #####################
 def emergencyShutOff():
-    log.warn("EMERGENCY OFF tiggered")
+    log.warning("EMERGENCY OFF tiggered")
     # shut off 12v power
     # turn on exhaust fan
     # shut off heaters
@@ -166,6 +164,7 @@ class Kiln:
         self.state = KilnState.Starting
 
     def reset(self):
+        self.ad16ErrCount = 0
         self.processRuntime = 0
         self.totaltime = 0
         self.sleepThisStep = idleStateTimeStep
@@ -339,9 +338,33 @@ class Kiln:
                 self.updateStatus()
                 self.publishStatus()
                 break
+
+            # feb 22 moved sensor update here from kilnStep
+            # Update Data (heaters, fans, temperture, distance)
+            moHardware.updateKilnSensors()
+            # these update from moData
+            self.updateBinaryDevices()
+            self.updateTemperatures()
+            self.updateDistance()
+
+            log.debug(
+                "KilnProcess b4 step; state: " + str(self.state) + " curSeg:" + str(self.scriptIndex) + "\n    heaters:" + str(
+                    self.reportedHeaterStates)
+                + " temp:" + str(self.kilnTemps) + " heaters:" + str(self.reportedHeaterStates) +
+                " relays: e=" + str(self.exhaustFanState) + " s=" + str(self.supportFanState) + " 12v:" + str(
+                    self.v12RelayState))
+
             if ad16.isError():
-                emergencyShutOff()
-                break
+                # allow up to 10 errors reading ad16 before kill script
+                # TODO: if ever go back to AD24, this may be issue
+                self.ad16ErrCount += 1
+                if self.ad16ErrCount > 10:
+                    log.error("Kiln notes ad16 error > 10, E-Shutoff")
+                    emergencyShutOff()
+                    break
+                continue # skip rest of step and try again
+            else:
+                self.ad16ErrCount = 0
             if self.state == KilnState.Error:
                 log.error("Kiln has gone into Error state. Terminate Process")
                 self.processRunnable = False
@@ -381,17 +404,6 @@ class Kiln:
                 self.timeInHoldMinutes = self.timeInHoldSeconds/60
                 self.lastCheckHeatingTime = None
                 self.lastCheckHeatingTemp = 0
-
-        # Update Data (heaters, fans, temperture, distance)
-        moHardware.updateKilnSensors()
-        # these update from moData
-        self.updateBinaryDevices()
-        self.updateTemperatures()
-        self.updateDistance()
-
-        log.debug("KilnStep top; state: "+str(self.state)+ " curSeg:"+str(self.scriptIndex)+"\n    heaters:"+str(self.reportedHeaterStates)
-                  +" temp:"+str(self.kilnTemps) +" heaters:"+str(self.reportedHeaterStates)+
-                  " relays: e="+str(self.exhaustFanState)+" s="+str(self.supportFanState)+" 12v:"+str(self.v12RelayState))
 
         # this whole block is watching to see if kiln is supposed to be heating but isnt
         # we had a meltdown in early tests when we lost comms with AD/thermocouples and they didnt register error
