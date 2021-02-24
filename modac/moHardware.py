@@ -56,14 +56,9 @@ def update():
     try:
         # get our own timestamp
         # TODO: trio locks
-        moData.updateTimestamp()
-        binaryOutputs.update()
-        # ad24.update()
-        ad16.update()
-        kType.update()
+        updateKilnSensors()
         modacBaumerClient.update()
         #leicaDisto.update()
-        enviro.update()
         return True
     except:
         log.error("Exception in MoHardware Update", exc_info=True)
@@ -71,6 +66,8 @@ def update():
         return False
 
 def updateKilnSensors():
+    # similar to Update but only those sensors used by kiln's pid process
+    # eg. not the distance sensor
     if not __initialized == True: return
 
     try:
