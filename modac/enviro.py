@@ -49,7 +49,12 @@ def update():
         this.__status = moStatus.Error
         return
     else:
-        this.__eSensor.read()
+        try:
+            this.__eSensor.read()
+        except:
+            log.error(" Error reading enviro values, disable device?", exc_info=True)
+            this.__status = moStatus.Error
+
     # removed global timestamp from here
     #moData.update(keyForTimeStamp(), timestampStr())
     moData.update(keyForEnviro(), asDict())
