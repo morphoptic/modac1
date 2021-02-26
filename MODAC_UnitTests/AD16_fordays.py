@@ -20,7 +20,7 @@ now = datetime.datetime.now()
 nowStr = now.strftime("%Y%m%d_%H%M%S")
 logName = "ad16Test_" + nowStr + ".log"
 logFormatStr = "%(asctime)s [%(threadName)-12.12s] [%(name)s %(funcName)s %(lineno)d] [%(levelname)-5.5s] %(message)s"
-logging.basicConfig(stream=sys.stderr, level=level, format=logFormatStr)
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG, format=logFormatStr)
 rootLogger = logging.getLogger()
 logFormatter = logging.Formatter(logFormatStr)
 fileHandler = logging.handlers.RotatingFileHandler(logName, maxBytes=maxLogSize, backupCount=100)
@@ -58,8 +58,10 @@ def readChan(chan):
         print("Error reading ad16, consec err:"+str(this.errCount)+" total:"+str(this.totalErrCount))
         log.error("Error reading ad16, consec err:"+str(this.errCount)+" total:"+str(this.totalErrCount), exc_info=True)
 
-#while True:
-for i in range(100):
+i=0
+while True:
+    #for i in range(10):
+    i+=1
     readChan(chan0)
     readChan(chan1)
     readChan(chan2)
