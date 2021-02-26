@@ -13,3 +13,5 @@ from the dataToFish site:
 
 this creates a dist folder, which will contain the executable moTkShell.executable
 assuming your python install has all the right parts
+
+created makeClient.sh in modac1 repo to simplify this
