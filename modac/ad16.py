@@ -111,11 +111,11 @@ def createUpdateRecord():
     return updateRecord
 
 def update():
-    if this.__isAlive == False:
-        this.__status = moStatus.Error
-        moData.update(keyForAD16Status(), this.__status.name)
-        return
-    moData.update(keyForAD16Status(), this.__status.name)
+    # feb23 2021 dont disable device on read error.  Might allow several?
+    # if this.__isAlive == False:
+    #     this.__status = moStatus.Error
+    #     moData.update(keyForAD16Status(), this.__status.name)
+    #     return
 
     #log.debug("ad16 update()")
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
@@ -131,13 +131,15 @@ def update():
         this.__volts[1] = this.__chan1.voltage
         this.__volts[2] = this.__chan2.voltage
         this.__volts[3] = this.__chan3.voltage
+        this.__status = moStatus.Ok
     except:
-        log.error(" Error reading AD16 values, disable device", exc_info=True)
+        log.error(" Error reading AD16 values, not disabled", exc_info=True)
         this.__status = moStatus.Error
         # need to put at least one record in moData
         moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
         this.__ad16_i2c = None
-        this.__isAlive = False
+        # dont
+        #this.__isAlive = False
         this.__status = moStatus.Error
 
     # force error values
@@ -145,6 +147,7 @@ def update():
         this.__values = [0]* len(this.__values)
         this.__volts = [0.0] * this.__numChannels
     #
+    moData.update(keyForAD16Status(), this.__status.name)
     moData.update(keyForAD16(), createUpdateRecord())
     moData.update(keyForAD16Raw(), this.__values)
     moData.update(keyForAD16Status(), this.__status.name)

@@ -27,7 +27,7 @@ def isOpen():
 
 def init(filename="modacDataLog.csv"):
     print("moCSV file: ",filename)
-    this._csvFile = open(filename, "w")
+    this._csvFile = open(filename, "w", newline='')
     this._csvWriter = csv.writer(this._csvFile)
     # names = [timeKey] +  moData.arrayColNames() # this was for some odd test
     names =  moData.arrayColNames() # arrayNameOnlyAD24

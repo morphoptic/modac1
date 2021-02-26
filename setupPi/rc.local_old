@@ -20,7 +20,9 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
-sudo date >> /home/pi/mobootlog.txt
-sudo bash -c /home/pi/off.sh >>/home/pi/off.log 2>> /home/pi/mobootlog.txt
-sudo piwatcher reset >> /home/pi/mobootlog.txt
+sudo date >> /home/pi/errors
+#sudo python3 /home/pi/off.py
+#sudo bash -c /home/pi/on.sh >>/home/pi/on.log  2>> /home/pi/errors
+sudo bash -c /home/pi/off.sh >>/home/pi/off.log 2>> /home/pi/errors
+sudo piwatcher reset >> /home/pi/errors
 exit 0
