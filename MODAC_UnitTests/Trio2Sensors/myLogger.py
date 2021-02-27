@@ -12,6 +12,7 @@ import os
 import logging, logging.handlers, traceback
 #import colorlog
 
+
 __loggerInit = False
 def init(name="modac", level=logging.DEBUG):
     print("setupLogging")

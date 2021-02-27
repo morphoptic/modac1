@@ -11,26 +11,19 @@ import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-import sys
 from time import sleep
 import time
-
-#from . import moduleName
-from .moKeys import *
-from . import moData
-from .moStatus import *
 
 #for AD1115 support using adafruit circuitplayground code
 # correction - this uses the old Adafruit_Python_ADS1x15 library
 # https://github.com/adafruit/Adafruit_Python_ADS1x15
+# might be best to drop this for smbus2 version
 import board
 import busio
 import adafruit_ads1x15.ads1115 as ADS
 #import adafruit_ads1x15.ads1015 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
-__isAlive = False
-__status = moStatus.Default
 
 #7Sept2020 reduce to only one device w 4 channels on default channel
 __values = [0,0,0,0]
@@ -58,9 +51,6 @@ def init():
     ad16_i2c = busio.I2C(board.SCL, board.SDA)
     if ad16_i2c is None:
         log.error("error getting i2c bus for AD16")
-        this.__status = moStatus.Error
-        moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
-        #moData.update(keyForAD16(), this.__values)
         return
     print("Create ADS1115")
     try:
@@ -69,22 +59,8 @@ def init():
         print("ADS1115 Gain: ", this.__moAD16Device.gain)
     except (ValueError, OSError) as e:
         log.error(" Cant create ad16", exc_info=True)
-        this.__status = moStatus.Error
         raise e
-        exit(0)
-
-    if this.__status == moStatus.Error:
-        log.error("some error initializing ad16")
-        __isAlive = False
-        if this.__status == moStatus.Error:
-            this.__values = [0] * this.__numChannels
-            this.__volts  = [0.0] * this.__numChannels
-        #
-        moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
-        moData.update(keyForAD16Raw(), this.__values)
-        moData.update(keyForAD16Status(), this.__status.name)
-        print("Bad Values "+str(this.__values))
-        return
+      return
 
     print("Initialized AD16 devices, create 4 channels ")
         
@@ -98,19 +74,9 @@ def init():
     except OSError as e:
         log.error("error creating channels", exc_info=True)
         raise e
-    this.__isAlive = True
-    
+
     # now get initial values
     this.update()
-    this.__status = moStatus.OK
-
-def createUpdateRecord():
-    updateRecord = {
-        keyForStatus(): this.__status.name,
-        keyForTimeStamp(): moData.generateTimestampStr(),
-        keyForAD16(): this.__volts
-    }
-    return updateRecord
 
 def update():
     # feb23 2021 dont disable device on read error.  Might allow several?
@@ -133,27 +99,12 @@ def update():
         this.__volts[1] = this.__chan1.voltage
         this.__volts[2] = this.__chan2.voltage
         this.__volts[3] = this.__chan3.voltage
-        this.__status = moStatus.Ok
     except:
-        log.error(" Error reading AD16 values, not disabled", exc_info=True)
-        this.__status = moStatus.Error
-        # need to put at least one record in moData
-        moData.update(keyForAD16(), createUpdateRecord()) #this.__values)
-        this.__ad16_i2c = None
-        # dont
-        #this.__isAlive = False
-        this.__status = moStatus.Error
-
-    # force error values
-    if this.__status == moStatus.Error:
         this.__values = [0]* len(this.__values)
         this.__volts = [0.0] * this.__numChannels
-    #
-    moData.update(keyForAD16Status(), this.__status.name)
-    moData.update(keyForAD16(), createUpdateRecord())
-    moData.update(keyForAD16Raw(), this.__values)
-    moData.update(keyForAD16Status(), this.__status.name)
+        log.error(" Error reading AD16 values, not disabled", exc_info=True)
 
+    log.info("Ad16 volts "+str(this.__volts))
 
 def values():
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
@@ -165,18 +116,7 @@ def volts():
 
 def shutdown():
     #hmm release all the channels?
+    __moAD16Device = None
     this.__ad16dev = []
     this.__channels = []
     this.__values = []    
-
-# these two checks have slightly different meanings.  Alive may be ok until an error occurs
-def isError():
-    if this.__status == moStatus.Error:
-        return True
-    return False
-
-def isAlive():
-    return this.__isAlive()
-
-def status():
-    return this.__status
