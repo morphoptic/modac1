@@ -12,12 +12,13 @@ import logging, logging.handlers
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+import signal, datetime, time
 import trio #adding async functions use the Trio package
 
 import myLogger
 
 # import as should allow us to hide all the sensor details as long as they init/update/shutdown
-import bme280 as sensor1
+import myBME280 as sensor1
 import ads1115_AF as sensor2
 
 okToRunMainLoop = False
@@ -81,7 +82,7 @@ async def asyncMainLoop():
         this.okToRunMainLoop = True
         log.info("Nursery Open, start async sensor loops")
         nursery.start_soon(sensor1Loop)
-        nursery.start_soon(sensor1Loop)
+        nursery.start_soon(sensor2Loop)
     log.info("End asyncMainLoop()")
 
 
