@@ -60,7 +60,6 @@ def init():
     except (ValueError, OSError) as e:
         log.error(" Cant create ad16", exc_info=True)
         raise e
-    return
 
     print("Initialized AD16 devices, create 4 channels ")
         
