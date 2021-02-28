@@ -47,7 +47,7 @@ async def sensor2Loop():
     log.info("Sensor2 Loop Begins")
     while this.okToRunMainLoop: # hopefully CtrlC will kill it
         sensor2.update()
-	try:
+    try:
             await trio.sleep(this.sensor2ReadRate)
         except trio.Cancelled:
             log.warning("***Trio Cancelled caught in Sensor2 Loop")
