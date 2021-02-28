@@ -1,7 +1,9 @@
 # trio2Sensors: testing Trio w AD16 and BME280 sensors in diff threads
 # create two 'threads', one to read AD16, one to read bme280. spawn them with 10 sec delays
 # uses local versions of sensors and logger
-
+# should be easy to swap in different sensors that maintain the init/update/shutdowm interface
+# update here is simply to log.info() current data values
+# Primary purpose is to see if i2c conflicts are happening with bme280 & ad16/ads1115 code
 
 import sys
 this = sys.modules[__name__]
