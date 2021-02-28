@@ -11,6 +11,8 @@ import os
 import logging, logging.handlers, traceback
 
 #import adafruit_ads1x15.ads1015 as ADS
+# NOTE: This is the older Adafruit library, not CircuitPython
+# https://github.com/adafruit/Adafruit_Python_ADS1x15
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 
@@ -50,7 +52,7 @@ errCount=0
 totalErrCount =0
 def readChan(chan):
     try:
-        print("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
+        log.info("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
         this.errCount =0
     except:
         this.errCount +=1
@@ -66,5 +68,5 @@ while True:
     readChan(chan1)
     readChan(chan2)
     readChan(chan3)
-    print("wait",i)
+    log.info("cycle "+str(i))
     time.sleep(0.5)
