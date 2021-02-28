@@ -133,7 +133,7 @@ def update():
         this.__volts[1] = this.__chan1.voltage
         this.__volts[2] = this.__chan2.voltage
         this.__volts[3] = this.__chan3.voltage
-        this.__status = moStatus.Ok
+        this.__status = moStatus.OK
     except:
         log.error(" Error reading AD16 values, not disabled", exc_info=True)
         this.__status = moStatus.Error
