@@ -30,6 +30,7 @@ from . import pidController
 
 from modac import moData, moHardware, moServer
 from modac import ad16
+from modac import moCSV
 from modac.moKeys import *
 from .kilnConfig import *
 from .kilnState import *
@@ -374,6 +375,8 @@ class Kiln:
             self.kilnStep()
             #self.sleepThisStep = self.time_step   # TODO set this in KilnStep
             self.publishStatus()
+            moCSV.addRow()
+
             #print("bottom of forever loop sleep for",self.sleepThisStep)
             await trio.sleep(self.sleepThisStep)
             

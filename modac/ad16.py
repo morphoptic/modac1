@@ -136,8 +136,11 @@ def update():
         this.__status = moStatus.OK
         # feb 2021: chasing down flaky ad16 data
         if this.__values[0] >20000 or this.__values[2] >20000:
-            log.error("AD16 range error  "+str(this.__values)+" "+str(this.__volts))
-            log.error(" stackTrace ", exc_info=True)
+            try:
+                log.error("AD16 range error  " + str(this.__values) + " " + str(this.__volts))
+                raise Exception("AD16 Range Error")
+            except:
+                log.error(" stackTrace ", exc_info=True)
     except:
         log.error(" Error reading AD16 values, not disabled", exc_info=True)
         this.__status = moStatus.Error
