@@ -138,7 +138,7 @@ def update():
         if this.__values[0] >20000 or this.__values[2] >20000:
             try:
                 log.error("AD16 range error  " + str(this.__values) + " " + str(this.__volts))
-                raise Exception("AD16 Range Error")
+                raise Exception("AD16 Range Error").with_traceback(sys.exc_info()[2])
             except:
                 log.error(" stackTrace ", exc_info=True)
     except:

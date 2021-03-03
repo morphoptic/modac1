@@ -98,12 +98,15 @@ def update():
         this.__volts[1] = this.__chan1.voltage
         this.__volts[2] = this.__chan2.voltage
         this.__volts[3] = this.__chan3.voltage
+        for v in this.__volts:
+            if v > 20000:
+                raise Exception("AD16 Range Error ").with_traceback(sys.exc_info()[2])
     except:
-        this.__values = [0]* len(this.__values)
-        this.__volts = [0.0] * this.__numChannels
-        log.error(" Error reading AD16 values, not disabled", exc_info=True)
+       # this.__values = [0]* len(this.__values)
+        #this.__volts = [0.0] * this.__numChannels
+        log.error(" Error reading AD16 values, not disabled ", exc_info=True)
 
-    log.info("Ad16 volts "+str(this.__volts))
+    log.info("Ad16 volts "+str(this.__values))
 
 def values():
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")

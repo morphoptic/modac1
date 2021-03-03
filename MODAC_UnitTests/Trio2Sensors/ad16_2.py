@@ -30,20 +30,30 @@ chan1 = AnalogIn(ads, ADS.P1)
 chan2 = AnalogIn(ads, ADS.P2)
 chan3 = AnalogIn(ads, ADS.P3)
 
+channels = [chan0, chan1, chan2, chan3]
+
 print("{:>5}\t{:>5}".format('raw', 'v'))
 
 errCount=0
 totalErrCount =0
-def readChan(chan):
-    try:
-        log.info("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
-        this.errCount =0
-    except:
-        this.errCount +=1
-        this.totalErrCount +=1
-        print("Error reading ad16, consec err:"+str(this.errCount)+" total:"+str(this.totalErrCount))
-        log.error("Error reading ad16, consec err:"+str(this.errCount)+" total:"+str(this.totalErrCount), exc_info=True)
-
+values = [0, 0, 0, 0]
+def readChans(chan):
+    i = 0
+    for chan in channels:0
+        try:
+            values[i] = chan.value
+            #log.info("{:>5}\t{:>5.3f}".format(chan.value, chan.voltage))
+            if chan.value > 20000:
+                raise Exception("AD16 Range Error ").with_traceback(sys.exc_info()[2])
+            this.errCount =0
+            i += 1
+        except:
+            this.errCount +=1
+            this.totalErrCount +=1
+            print("Error reading ad16, consec err:"+str(this.errCount)+" total:"+str(this.totalErrCount))
+            log.error("Error reading ad16, consec err:"+str(this.errCount)+" total:"+str(this.totalErrCount), exc_info=True)
+            break
+    log.info("AD16 values: "+str(values))
 i=0
 while True:
     #for i in range(10):
