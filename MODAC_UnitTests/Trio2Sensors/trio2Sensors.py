@@ -15,7 +15,7 @@ log.setLevel(logging.INFO)
 import signal, datetime, time
 import trio #adding async functions use the Trio package
 
-import myLogger
+import myLogger, myCSV
 
 # import as should allow us to hide all the sensor details as long as they init/update/shutdown
 import myBME280 as sensor1
@@ -90,6 +90,11 @@ if __name__ == "__main__":
     myLogger.init()  # start logging (could use cmd line args config files)
     log.info("that may be the 2nd logger init. not a problem")
     signal.signal(signal.SIGINT, signalExit)
+    now = datetime.datetime.now()
+    nowStr = now.strftime("%Y%m%d_%H%M")
+    outName = "logs/trioSensors_" + nowStr + ".csv"
+    myCSV.init(outName)
+
     time.sleep(1)
     try:
         trio.run(asyncMainLoop)

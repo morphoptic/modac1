@@ -11,8 +11,8 @@ import logging, logging.handlers, traceback
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-from time import sleep
-import time
+import datetime
+import myCSV
 
 #for AD1115 support using adafruit circuitplayground code
 # correction - this uses the old Adafruit_Python_ADS1x15 library
@@ -105,8 +105,13 @@ def update():
        # this.__values = [0]* len(this.__values)
         #this.__volts = [0.0] * this.__numChannels
         log.error(" Error reading AD16 values, not disabled ", exc_info=True)
+        return
 
     log.info("Ad16 volts "+str(this.__values))
+    now = datetime.datetime.now()
+    t = now.strftime("%Y-%m-%d %H:%M:%S%Z")
+    dataArray = [t] + this.__values
+    myCSV.addRow(dataArray)
 
 def values():
     #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
