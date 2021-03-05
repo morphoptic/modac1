@@ -37,7 +37,7 @@ print("{:>5}\t{:>5}".format('raw', 'v'))
 errCount=0
 totalErrCount =0
 values = [0, 0, 0, 0]
-def readChans(chan):
+def readChans():
     i = 0
     for chan in channels:0
         try:
@@ -58,9 +58,6 @@ i=0
 while True:
     #for i in range(10):
     i+=1
-    readChan(chan0)
-    readChan(chan1)
-    readChan(chan2)
-    readChan(chan3)
+    readChans()
     log.info("cycle "+str(i))
     time.sleep(0.5)
