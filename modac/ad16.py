@@ -134,6 +134,9 @@ def update():
         this.__volts[2] = this.__chan2.voltage
         this.__volts[3] = this.__chan3.voltage
         this.__status = moStatus.OK
+        # TODO 4Mar21: add filter per channel against its running avg value.
+        # maybe an array of Chan obj?
+        # might also switch to use pure smb2 vs adafruit
         # feb 2021: chasing down flaky ad16 data
         if this.__values[0] >20000 or this.__values[2] >20000:
             try:
