@@ -19,6 +19,7 @@ import time
 from .moKeys import *
 from . import moData
 from .moStatus import *
+from .moFilteredChannel import FilteredChannel
 
 #for AD1115 support using adafruit circuitplayground code
 # correction - this uses the old Adafruit_Python_ADS1x15 library
@@ -36,21 +37,25 @@ __status = moStatus.Default
 __values = [0,0,0,0]
 __volts  = [0.0, 0.0, 0.0, 0.0]
 __numChannels = len(__volts)
-
+__fChannels[FilteredChannel(),FilteredChannel(),FilteredChannel(),FilteredChannel()]
 __moAD16Device = None
 __chan0 = None
 __chan1 = None
 __chan2 = None
 __chan3 = None
+__channels = []
 
 adsGain = 2/3
 #adsGain = 1
 
 def readChans():
-    print("0: {:>5}\t{:>5.3f}".format(this.__chan0.value, this.__chan0.voltage))
-    print("1: {:>5}\t{:>5.3f}".format(this.__chan1.value, this.__chan1.voltage))
-    print("2: {:>5}\t{:>5.3f}".format(this.__chan2.value, this.__chan2.voltage))
-    print("3: {:>5}\t{:>5.3f}".format(this.__chan3.value, this.__chan3.voltage))
+    i = 0
+    for c in this.__channels:
+        print(i,": {:>5}\t{:>5.3f}".format(c.value, c.voltage))
+        i +=1
+    #print("1: {:>5}\t{:>5.3f}".format(this.__chan1.value, this.__chan1.voltage))
+    #print("2: {:>5}\t{:>5.3f}".format(this.__chan2.value, this.__chan2.voltage))
+    #print("3: {:>5}\t{:>5.3f}".format(this.__chan3.value, this.__chan3.voltage))
 
 def init():
     log.warning("initialize AD16 - 16bit A-D converter")
@@ -91,9 +96,13 @@ def init():
     # init each channel
     try:
         this.__chan0 = AnalogIn(this.__moAD16Device, ADS.P0)
+        this.__channels.append(this.__chan0)
         this.__chan1 = AnalogIn(this.__moAD16Device, ADS.P1)
+        this.__channels.append(this.__chan1)
         this.__chan2 = AnalogIn(this.__moAD16Device, ADS.P2)
+        this.__channels.append(this.__chan2)
         this.__chan3 = AnalogIn(this.__moAD16Device, ADS.P3)
+        this.__channels.append(this.__chan3)
         readChans()
     except OSError as e:
         log.error("error creating channels", exc_info=True)
@@ -101,7 +110,8 @@ def init():
     this.__isAlive = True
     
     # now get initial values
-    this.update()
+    for i in range(10): # load up filtered channels
+        this.update()
     this.__status = moStatus.OK
 
 def createUpdateRecord():
@@ -119,31 +129,20 @@ def update():
     #     moData.update(keyForAD16Status(), this.__status.name)
     #     return
 
-    #log.debug("ad16 update()")
-    #print("ad16 has",len(__ad16chanConfig),"channels and ", len(this.__values),"values")
-    #print (this.__values)
-    # currently crude get all 8 with same default configutation
     try:
-        this.__values[0] = this.__chan0.value
-        this.__values[1] = this.__chan1.value
-        this.__values[2] = this.__chan2.value
-        this.__values[3] = this.__chan3.value
-
-        this.__volts[0] = this.__chan0.voltage
-        this.__volts[1] = this.__chan1.voltage
-        this.__volts[2] = this.__chan2.voltage
-        this.__volts[3] = this.__chan3.voltage
-        this.__status = moStatus.OK
-        # TODO 4Mar21: add filter per channel against its running avg value.
-        # maybe an array of Chan obj?
-        # might also switch to use pure smb2 vs adafruit
-        # feb 2021: chasing down flaky ad16 data
-        if this.__values[0] >20000 or this.__values[2] >20000:
+        i = 0
+        for c in this.__channels:
+            v = c.value # reads AD
             try:
-                log.error("AD16 range error  " + str(this.__values) + " " + str(this.__volts))
-                raise Exception("AD16 Range Error").with_traceback(sys.exc_info()[2])
-            except:
-                log.error(" stackTrace ", exc_info=True)
+                this.__fChannels[i].addValue(v)
+                this.__values[i] = v # passed filter, add it, and voltage
+                this.__volts[i] = this.__fChannels[i].voltage
+            except ValueError as e:
+                msg = f"ad16 chan {i} valueError {e}"
+                log.error(msg)
+            i +=1
+
+        this.__status = moStatus.OK
     except:
         log.error(" Error reading AD16 values, not disabled", exc_info=True)
         this.__status = moStatus.Error
