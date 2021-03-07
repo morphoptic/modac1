@@ -4,7 +4,7 @@ import logging, logging.handlers
 import sys
 from time import sleep
 
-from modac import enviro, moData
+from modac import enviro, moData, moLoggercd
 
 if __name__ == "__main__":
     moLogger.init()
