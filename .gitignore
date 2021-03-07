@@ -1,6 +1,7 @@
 #
 logs/
 *.csv
+*.ods
 *.glade~
 *.json
 
