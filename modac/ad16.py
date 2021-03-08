@@ -113,9 +113,9 @@ def init():
     for i in range(10): # load up filtered channels
         this.update()
 
-    # for f in this.__fChannels:
-    #     print(f)
-    #     log.info("AD16 chan initialized "+str(f))
+    for f in this.__fChannels:
+        print(f)
+        log.info("AD16 chan initialized "+str(f))
     this.__status = moStatus.OK
 
 def createUpdateRecord():
@@ -141,8 +141,8 @@ def update():
                 this.__fChannels[i].addValue(v)
                 this.__values[i] = v # passed filter, add it, and voltage
                 this.__volts[i] = c.voltage
-                msg = f"XXad16 chan{i} v:{v} {this.__fChannels[i]}"
-                log.debug(msg)
+                #msg = f"XXad16 chan{i} v:{v} {this.__fChannels[i]}"
+                #log.debug(msg)
             except ValueError as e:
                 msg = f"ad16 chan {i} valueError {e}"
                 log.error(msg)
