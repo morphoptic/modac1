@@ -113,9 +113,9 @@ def init():
     for i in range(10): # load up filtered channels
         this.update()
 
-    for f in this.__fChannels:
-        print(f)
-        log.info("AD16 chan initialized "+str(f))
+    # for f in this.__fChannels:
+    #     print(f)
+    #     log.info("AD16 chan initialized "+str(f))
     this.__status = moStatus.OK
 
 def createUpdateRecord():
