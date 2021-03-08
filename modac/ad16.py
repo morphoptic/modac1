@@ -141,6 +141,8 @@ def update():
                 this.__fChannels[i].addValue(v)
                 this.__values[i] = v # passed filter, add it, and voltage
                 this.__volts[i] = c.voltage
+                msg = f"XXad16 chan{i} v:{v} {this.__fChannel[i]}"
+                log.debug(msg)
             except ValueError as e:
                 msg = f"ad16 chan {i} valueError {e}"
                 log.error(msg)
