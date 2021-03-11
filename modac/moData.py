@@ -309,7 +309,7 @@ def arrayColNames():
         this.__appendAName(keyForAD16())
     if isValidKey(keyForKType()):
         this.__appendAName(keyForKType())
-    if  isValidKey(keyForKilnTemperatures())
+    if  isValidKey(keyForKilnTemperatures()):
         this.__appendAName(keyForKilnTemperatures())
     if isValidKey(keyForBinaryOut()):
         this.__appendAName(keyForBinaryOut())
