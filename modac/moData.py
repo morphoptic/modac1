@@ -244,7 +244,7 @@ def asRowArray():
         a += record[keyForAD16()]
     if isValidKey(keyForKType()):
         a += this.getValue(keyForKType())
-    if isValidKey(keyForKilnTemperatures())
+    if isValidKey(keyForKilnTemperatures()):
         a += this.getValue(keyForKilnTemperatures())
     if isValidKey(keyForBinaryOut()):
         a += this.getValue(keyForBinaryOut())
