@@ -314,6 +314,7 @@ class Kiln:
         #log.info("Publish Kiln Status %s" % json.dumps(status,indent=4))
         # update Status should change the one in kiln
         moData.update(keyForKilnStatus(), status)
+        moData.update(keyForKilnTemperatures(),self.kilnTemps)
         #moServer.publishData(keyForKilnStatus(), status) # separate publish? or as part of moData?
         pass
 

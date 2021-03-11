@@ -128,6 +128,7 @@ def keyForCurrentDistance(): return "Kiln Current Distance"
 def keyForCurrentDisplacement():return 'KilnCurrentDisplacement'
 
 def KilnStartTime(): return 'KilnStartTime'
+# TODO why do we duplicate these from above (used in script?)
 def keyForKilnTimeInHoldMinutes(): return 'KilnTimeInHoldMinutes'
 def keyForKilnTimeInHoldSeconds(): return 'KilnTimeInHoldSeconds'
 def keyForKilnHoldStartTime(): return "KilnHoldStartTime"
