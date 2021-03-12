@@ -43,7 +43,7 @@ class moTkTimeoutDialog( tk.Toplevel):
 
     def __init__(self, root, count):
         tk.Toplevel.__init__(self, root)
-        self.geometry('800x800') # if dont specify, it fill out too big
+        self.geometry('400x400') # if dont specify, it fill out too big
         self.protocol("WM_DELETE_WINDOW",self.closeEvent)
         my_frame = tk.Frame(self)
         my_frame.pack(expand=True, padx=20, pady=20)

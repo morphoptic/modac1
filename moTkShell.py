@@ -33,6 +33,7 @@ from moTkGui.moPanelTempPlot import moPanelTempPlot
 from moTkGui.moTabDistances import moTabDistances
 from moTkGui.moTkShared import *
 from moTkGui import moTkTimeoutDialog
+from moTkGui import moTabRelays
 
 ###############
 # ugh globals
@@ -71,10 +72,11 @@ def createTKWindow():
     this.distanceTab = moTabDistances(distanceFrame)
     this.moWindow.addTab(distanceFrame, moObject=this.distanceTab, frameTitle="Distances")
 
-    log.debug("createTKWindow() end")
+    relayFrame = tk.Frame(this.moWindow.notebook(), bg="yellow")
+    this.relayTab = moTabRelays.moTabRelays(relayFrame)
+    this.moWindow.addTab(relayFrame, moObject=this.relayTab, frameTitle="Relays")
 
-##############################
-# Trio stuff to wrap TK into async; vs using tkroot.mainloop()
+    log.debug("createTKWindow() end")
 
 ##############################
 
