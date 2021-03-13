@@ -12,7 +12,7 @@ distanceEpsilon = 0.001
 relayPower = 0  # gpio controlled power strip
 
 # heaters: idxs of BinaryOut pins
-heater_lower = 1
+heater_lower = 4 # 12Mar2021 relay 1 not responding, so switch it here
 heater_middle = 2
 heater_upper = 3
 # and an array to hold those to match ktemps/kcmds heaters

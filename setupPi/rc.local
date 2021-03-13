@@ -22,5 +22,9 @@ fi
 
 sudo date >> /home/pi/mobootlog.txt
 sudo bash -c /home/pi/off.sh >>/home/pi/off.log 2>> /home/pi/mobootlog.txt
+echo "piwatcher reset, watch 0, dump on next lines">> /home/pi/mobootlog.txt
 sudo piwatcher reset >> /home/pi/mobootlog.txt
+sudo piwatcher watch 0 >> /home/pi/mobootlog.txt
+sudo piwatcher dump >> /home/pi/mobootlog.txt
+
 exit 0
