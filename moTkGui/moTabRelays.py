@@ -29,7 +29,7 @@ class moTabRelays():
         this.__tabInstance = self
 
        # self.Texts = ["12V Power", "Lower Heater", "Middle Heater", "Upper Heater", "NC 4"
-        self.Texts = ["12V Power 0", "NC 1", "Middle Heater 2", "Upper Heater 3","Lower Heater 4",
+        self.Texts = ["12V Power 0", "NC 1", "Middle Heater 2", "Lower Heater 4", "Upper Heater 3",
                       "NC 5", "NC 6", "NC 7", "NC 8",
                       "Support Fan 9", "Exhaust Fan 10","NC 11"]
         self.CmdBVar = []

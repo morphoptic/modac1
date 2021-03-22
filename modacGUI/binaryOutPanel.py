@@ -21,8 +21,8 @@ from modac import moCommand
 
 class binaryOutPanel():
     def __init__(self):        
-        #print("initPanel")
-        self.label = Gtk.Label("BinaryOut Ctrl")
+        #print("initRelayPanel")
+        self.label = Gtk.Label("BinaryOut/Relay Ctrl")
 
         self.dataCount = 0
         builder = Gtk.Builder.new_from_file("modacGUI/binaryOutPanel.glade")
