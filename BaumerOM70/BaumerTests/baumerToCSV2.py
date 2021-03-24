@@ -15,7 +15,7 @@ import csv
 if __name__ == "__main__":
     import OM70Datum
 else:
-    from . import OM70Datum
+    from BaumerOM70 import OM70Datum
 
 class MovingAverage:
     """simple fast class to calculate moving average on the fly"""
@@ -39,7 +39,7 @@ baumer_udpAddr = ('', port) # accept any sending address
 __runable = True
 movAvgWindow = 100
 onCount = True  # print only when count == movAvgWindow; false= print every read
-minutes  = 10
+hours  = 2
 
 def signalExit(*args):
     this.__runable = False
@@ -49,7 +49,7 @@ def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
     movingAvg = MovingAverage(movAvgWindow)
     startTime = datetime.datetime.now()
-    name = startTime.strftime("om70_10Min_%H_%M_%S.csv")
+    name = startTime.strftime("om70_%H_%M_%S.csv")
     f = open(name, 'w', newline='')
     csvfile = csv.writer(f)
     headerRow = ("dateTime", "M_Avg_"+str(movAvgWindow)) + OM70Datum.names()
@@ -85,7 +85,7 @@ def receiveOm70Data():
                 f.flush()
                 count = 0
                 elapsedTime = now - startTime
-                if elapsedTime.total_seconds()/60 > minutes:
+                if elapsedTime.total_seconds()/3600 > hours:
                     # stop after an hour of data collection
                     break
         except socket.timeout:

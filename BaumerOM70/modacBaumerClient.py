@@ -55,6 +55,7 @@ def shutdown():
 
 def update():
     # TODO: data lock for concurrent access?
+    # TODO: verify this keeps datum as namedTuple; does pushing d out to moData vs
     # grab namedTuple as dict for quick access
     d = this.__currentDatum.asDict()
     # then work with dictionary

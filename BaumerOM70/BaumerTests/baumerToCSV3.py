@@ -1,4 +1,5 @@
-# Baumer OM-70 test saving data as CSV
+# Baumer OM-70 test 3 saving data as CSV
+# version 3 is for large movingAverage 1-2/min and running 6-8hr
 # our rPi is on a dedicated switch on the 198.162.2.x network
 # so that needs to be changed
 import sys
@@ -15,7 +16,16 @@ import csv
 if __name__ == "__main__":
     import OM70Datum
 else:
-    from . import OM70Datum
+    from BaumerOM70 import OM70Datum
+
+# address is set in web interface "Process Interface
+port = 12345
+baumer_udpAddr = ('', port) # accept any sending address
+
+__runable = True
+movAvgWindow = 7500 # number of read/samples to average
+onCount = True      # print only when count == movAvgWindow; false= print every read
+hoursToRun = 8.0    # how long to run test
 
 class MovingAverage:
     """simple fast class to calculate moving average on the fly"""
@@ -32,14 +42,6 @@ class MovingAverage:
             self.sum -= self.values.pop(0)
         return float(self.sum) / len(self.values)
 
-# address is set in web interface "Process Interface
-port = 12345
-baumer_udpAddr = ('', port) # accept any sending address
-
-__runable = True
-movAvgWindow = 100
-onCount = True  # print only when count == movAvgWindow; false= print every read
-minutes  = 1
 
 def signalExit(*args):
     this.__runable = False
@@ -49,7 +51,7 @@ def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
     movingAvg = MovingAverage(movAvgWindow)
     startTime = datetime.datetime.now()
-    name = startTime.strftime("om70_1min_%H_%M_%S.csv")
+    name = startTime.strftime("om70_%H_%M_%S.csv")
     f = open(name, 'w', newline='')
     csvfile = csv.writer(f)
     headerRow = ("dateTime", "M_Avg_"+str(movAvgWindow)) + OM70Datum.names()
@@ -85,7 +87,7 @@ def receiveOm70Data():
                 f.flush()
                 count = 0
                 elapsedTime = now - startTime
-                if elapsedTime.total_seconds()/60 > minutes:
+                if elapsedTime.total_seconds()/3600 > hoursToRun:
                     # stop after an hour of data collection
                     break
         except socket.timeout:
