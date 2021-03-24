@@ -117,7 +117,13 @@ class moTkWindow():
         timestamp = moData.getValue(keyForTimeStamp())
         self.moStatus.set("ModacStatus: " + moData.getValue(keyForStatus()))
 
-        adStatus = moData.getValue(keyForAD16Status())
+        adStatus = None
+        try:
+            adStatus = moData.getValue(keyForAD16Status())
+        except KeyError:
+            log.error("KeyError getting ad16 status, set to error")
+            adStatus = moStatus.Error.name
+
         self.ad16Status.set("Ad16: "+ adStatus)
         if adStatus == moStatus.Error.name:
             self.adStatusLabel.configure(bg="red")
