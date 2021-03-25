@@ -17,7 +17,7 @@ if __name__ == "__main__":
 else:
     from BaumerOM70 import OM70Datum
 
-__MovingAvgWindow = 1
+__MovingAvgWindow = 100
 
 class MovingAverage:
     """simple fast class to calculate moving average on the fly"""
