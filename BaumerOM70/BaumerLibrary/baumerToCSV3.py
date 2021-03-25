@@ -1,6 +1,6 @@
-# Baumer OM-70 test saving data as CSV
-# our rPi is on a dedicated switch on the 198.162.2.x network
-# so that needs to be changed
+# Baumer OM-70 test 3 saving data as CSV
+# version 3 is for large movingAverage 1-2/min and running 6-8hr
+# csv is only distance
 import sys
 this = sys.modules[__name__]
 import socket
@@ -10,11 +10,21 @@ log.setLevel(logging.DEBUG)
 
 import signal
 import datetime
+import csv
 
 if __name__ == "__main__":
     import OM70Datum
 else:
     from BaumerOM70 import OM70Datum
+
+# address is set in web interface "Process Interface
+port = 12345
+baumer_udpAddr = ('', port) # accept any sending address
+
+__runable = True
+movAvgWindow = 7500 # number of read/samples to average
+onCount = True      # print only when count == movAvgWindow; false= print every read
+hoursToRun = 8.0    # how long to run test
 
 class MovingAverage:
     """simple fast class to calculate moving average on the fly"""
@@ -31,21 +41,25 @@ class MovingAverage:
             self.sum -= self.values.pop(0)
         return float(self.sum) / len(self.values)
 
-# address is set in web interface "Process Interface
-port = 12345
-baumer_udpAddr = ('', port) # accept any sending address
 
-__runable = True
 def signalExit(*args):
     this.__runable = False
     print("caught ctrlC end loop")
 
 def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
-    movingAvg = MovingAverage(100)
-    t = datetime.datetime.now()
-    name = t.strftime("om70_%H_%M_%S.csv")
-    f = open(name, 'w')
+    movingAvg = MovingAverage(movAvgWindow)
+    startTime = datetime.datetime.now()
+    name = startTime.strftime("om70_%H_%M_%S.csv")
+    f = open(name, 'w', newline='')
+    csvfile = csv.writer(f)
+    headerRow = ("dateTime", "M_Avg_"+str(movAvgWindow)) + OM70Datum.names()
+    csvfile.writerow(headerRow)
+    # datum = OM70Datum.makeRandomOm70()
+    # row = [name, 100.0, *datum]
+    # csvfile.writerow(row)
+    # csvfile.writerow(row)
+    # f.close()
     try:
         udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         udp_sock.settimeout(10.0)
@@ -55,18 +69,26 @@ def receiveOm70Data():
         return
     data = bytearray(OM70Datum.byteSize())
     buffSize = OM70Datum.byteSize()
+    count = 0
     while this.__runable:
         # recvfrom
         try:
             data, address = udp_sock.recvfrom(buffSize)
             datum = OM70Datum.fromBuffer(data)
-            print("  OM70 dist:", datum.distancemm())
-            dist = datum[OM70Datum.DISTANCEMM_IDX]
-            t = datetime.datetime.now()
-            time = t.strftime("%H:%M:%S.%f")
-            ma = movingAvg.update(dist)
-            print(time,",",dist, ",", ma, file= f)
-            f.flush()
+            ma = movingAvg.update(datum[OM70Datum.DISTANCEMM_IDX])
+            count += 1
+            if (onCount and count == movAvgWindow) or not onCount:
+                now = datetime.datetime.now()
+                time = now.strftime("%H:%M:%S.%f")
+                row = [time, ma, *datum]
+                print(row)
+                csvfile.writerow(row)
+                f.flush()
+                count = 0
+                elapsedTime = now - startTime
+                if elapsedTime.total_seconds()/3600 > hoursToRun:
+                    # stop after an hour of data collection
+                    break
         except socket.timeout:
             print("Timeout on socket")
         except:

@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 import math
-from . import OM70Datum
+from BaumerLibrary import OM70Datum
 from modac.moKeys import *
 from modac import moData
 

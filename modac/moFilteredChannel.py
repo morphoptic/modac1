@@ -82,6 +82,14 @@ class FilteredChannel:
     def curValue(self):
         return self._curvalue
 
+    def reset(self):
+        self._curvalue = 0.0
+        self.cumulativeSum = 0.0
+        self._average = 0
+        self.count = 0
+        self.slope = 0
+        self.cache.clear()
+
 if __name__ == '__main__':
     # initialize 4 channels, first 3 are limited
     chans = []

@@ -37,7 +37,11 @@ __status = moStatus.Default
 __values = [0,0,0,0]
 __volts  = [0.0, 0.0, 0.0, 0.0]
 __numChannels = len(__volts)
-__fChannels = [FilteredChannel(),FilteredChannel(),FilteredChannel(),FilteredChannel()]
+__FilteredWindowSize = 5
+__fChannels = [FilteredChannel(window=__FilteredWindowSize),
+               FilteredChannel(window=__FilteredWindowSize),
+               FilteredChannel(window=__FilteredWindowSize),
+               FilteredChannel(window=__FilteredWindowSize)]
 __moAD16Device = None
 __chan0 = None
 __chan1 = None
@@ -45,7 +49,7 @@ __chan2 = None
 __chan3 = None
 __channels = []
 
-adsGain = 2/3
+__adsGain = 2 / 3
 #adsGain = 1
 
 def readChans():
@@ -70,7 +74,7 @@ def init():
     print("Create ADS1115")
     try:
         this.__moAD16Device = ADS.ADS1115(ad16_i2c)
-        this.__moAD16Device.gain = adsGain
+        this.__moAD16Device.gain = __adsGain
         print("ADS1115 Gain: ", this.__moAD16Device.gain)
     except (ValueError, OSError) as e:
         log.error(" Cant create ad16", exc_info=True)
@@ -126,6 +130,18 @@ def createUpdateRecord():
     }
     return updateRecord
 
+valueErrorCount = 0
+valueErrorResetThreshold = 50
+
+def resetPerValueError():
+    # TODO: reset ad16?
+    # reset filtered channels
+    for f in this.__fChannels:
+        f.reset()
+
+    for i in range(10): # load up filtered channels
+        this.update()
+
 def update():
     # feb23 2021 dont disable device on read error.  Might allow several?
     # if this.__isAlive == False:
@@ -146,6 +162,9 @@ def update():
             except ValueError as e:
                 msg = f"ad16 chan {i} valueError {e}"
                 log.error(msg)
+                this.valueErrorCount +=1
+                if this.valueErrorCount > this.valueErrorResetThreshold:
+                    resetPerValueError()
             i +=1
 
         this.__status = moStatus.OK
