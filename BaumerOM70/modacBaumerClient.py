@@ -14,6 +14,7 @@ import math
 from BaumerOM70.BaumerLibrary import OM70Datum
 from modac.moKeys import *
 from modac import moData
+from math import isnan
 
 # address is set in web interface "Process Interface
 __port = 12345
@@ -32,6 +33,9 @@ class MovingAverage:
         self.latest = 0.0
 
     def update(self, value):
+        if isnan(value) :
+            log.warning("NAN received in MovingAverage")
+            return self.latest
         self.values.append(value)
         self.sum += value
         if len(self.values) > self.window_size:
@@ -83,7 +87,7 @@ async def baumerAsyncReceiveTask():
                 #print("Received data from:", address)
             this.__currentDatum = OM70Datum.fromBuffer(data)
             d = this.__currentDatum[OM70Datum.DISTANCEMM_IDX]
-            if not math.isnan(d):
+            if not isnan(d):
                 __mvAvg.update(d)
         except trio.Cancelled:
             log.warning("***Trio Cancelled anotherTask")

@@ -5,17 +5,41 @@ import sys
 this = sys.modules[__name__]
 import socket
 import logging
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-
 import signal
 import datetime
 import csv
+from math import isnan
 
 if __name__ == "__main__":
     import OM70Datum
 else:
     from BaumerOM70 import OM70Datum
+
+def logInit(name, level = logging.INFO):
+    maxLogSize = (1024 * 1000)
+    # setup logger
+    now = datetime.datetime.now()
+    nowStr = now.strftime("%Y%m%d_%H%M%S")
+    logName = name + nowStr + ".log"
+    logFormatStr = "%(asctime)s [%(threadName)-12.12s] [%(name)s %(funcName)s %(lineno)d] [%(levelname)-5.5s] %(message)s"
+    # setup base level logging to stderr (console?)
+
+    print("print Logging to stderr and " + logName)
+
+    logging.basicConfig(stream=sys.stderr, level=level, format=logFormatStr)
+    rootLogger = logging.getLogger()
+    logFormatter = logging.Formatter(logFormatStr)
+
+    # chain rotating file handler so logs go to stderr as well as logName file
+    fileHandler = logging.handlers.RotatingFileHandler(logName, maxBytes=maxLogSize, backupCount=100)
+    fileHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(fileHandler)
+
+    logging.captureWarnings(True)
+    logging.info("Logging Initialized")
+
+logInit("BaumerCSV_")
+log = logging.getLogger(__name__)
 
 __MovingAvgWindow = 100
 
@@ -28,6 +52,9 @@ class MovingAverage:
         self.sum = 0.0
 
     def update(self, value):
+        if isnan(value) :
+            log.warning("NAN received in MovingAverage")
+            return self.latest
         self.values.append(value)
         self.sum += value
         if len(self.values) > self.window_size:
@@ -40,11 +67,18 @@ baumer_udpAddr = ('', port) # accept any sending address
 
 __runable = True
 onCount = True  # print only when count == movAvgWindow; false= print every read
-hours  = 2
+hours  = 8  # stop after this many hours, or ctrl c
+
+udp_sock = None
+
+def doExit():
+    this.udp_sock.shutdown(socket.SHUT_RDWR)
+    this.udp_sock.close()
+    this.__runable = False
 
 def signalExit(*args):
-    this.__runable = False
     print("caught ctrlC end loop")
+    this.__runable = False
 
 def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
@@ -53,17 +87,12 @@ def receiveOm70Data():
     name = startTime.strftime("om70_%H_%M_%S.csv")
     f = open(name, 'w', newline='')
     csvfile = csv.writer(f)
-    headerRow = ("dateTime", "M_Avg_"+str(__MovingAvgWindow)) + OM70Datum.names()
+    headerRow = ("Date","Time", "M_Avg_"+str(__MovingAvgWindow)) + OM70Datum.names()
     csvfile.writerow(headerRow)
-    # datum = OM70Datum.makeRandomOm70()
-    # row = [name, 100.0, *datum]
-    # csvfile.writerow(row)
-    # csvfile.writerow(row)
-    # f.close()
     try:
-        udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        udp_sock.settimeout(10.0)
-        udp_sock.bind(baumer_udpAddr)
+        this.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        this.udp_sock.settimeout(10.0)
+        this.udp_sock.bind(baumer_udpAddr)
     except:
         log.error("Exception caught creating socket: ", exc_info=True)
         return
@@ -71,16 +100,16 @@ def receiveOm70Data():
     buffSize = OM70Datum.byteSize()
     count = 0
     while this.__runable:
-        # recvfrom
         try:
-            data, address = udp_sock.recvfrom(buffSize)
+            data, address = this.udp_sock.recvfrom(buffSize)
             datum = OM70Datum.fromBuffer(data)
             ma = movingAvg.update(datum[OM70Datum.DISTANCEMM_IDX])
             count += 1
             if (onCount and count == __MovingAvgWindow) or not onCount:
                 now = datetime.datetime.now()
+                date = now.strftime("%Y-%m-%d")
                 time = now.strftime("%H:%M:%S.%f")
-                row = [time, ma, *datum]
+                row = [date, time, ma, *datum]
                 print(row)
                 csvfile.writerow(row)
                 f.flush()
@@ -88,14 +117,17 @@ def receiveOm70Data():
                 elapsedTime = now - startTime
                 if elapsedTime.total_seconds()/3600 > hours:
                     # stop after an hour of data collection
+                    this.__runable = False
                     break
         except socket.timeout:
-            print("Timeout on socket")
+            log.info("Timeout waiting on Baumer")
         except:
             log.error("Exception caught in Forever Loop: ", exc_info=True)
             break
-    print("End receiveOm70Data")
+    log.info("End receiveOm70Data")
     f.close()
+    doExit()
+
 
 
 if __name__ == "__main__":
