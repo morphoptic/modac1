@@ -4,7 +4,7 @@
 import sys
 this = sys.modules[__name__]
 import socket
-import logging
+import logging, logging.handlers
 import signal
 import datetime
 import csv
@@ -66,13 +66,12 @@ port = 12345
 baumer_udpAddr = ('', port) # accept any sending address
 
 __runable = True
-onCount = True  # print only when count == movAvgWindow; false= print every read
+onCount = False # True  # print only when count == movAvgWindow; false= print every read
 hours  = 8  # stop after this many hours, or ctrl c
 
 udp_sock = None
 
 def doExit():
-    this.udp_sock.shutdown(socket.SHUT_RDWR)
     this.udp_sock.close()
     this.__runable = False
 
@@ -84,7 +83,7 @@ def receiveOm70Data():
     print("Begin receiveOm70Data ", baumer_udpAddr)
     movingAvg = MovingAverage(__MovingAvgWindow)
     startTime = datetime.datetime.now()
-    name = startTime.strftime("om70_%H_%M_%S.csv")
+    name = startTime.strftime("om70_%m%d_%H_%M_%S.csv")
     f = open(name, 'w', newline='')
     csvfile = csv.writer(f)
     headerRow = ("Date","Time", "M_Avg_"+str(__MovingAvgWindow)) + OM70Datum.names()
